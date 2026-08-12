@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Site content (hero, categories, products, settings, about):
+    // anyone can read (public website), only a signed-in admin can write.
+    match /content/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Orders (quote requests): anyone can create one (the public quote
+    // form), nobody can read/update/delete except a signed-in admin —
+    // this protects customer phone numbers from being scraped publicly.
+    match /orders/{orderId} {
+      allow create: if true;
+      allow read, update, delete: if request.auth != null;
+    }
+  }
+}
