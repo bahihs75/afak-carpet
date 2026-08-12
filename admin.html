@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة التحكم — AFAK CARPET</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ===================== LOGIN ===================== -->
+<div class="admin-login" id="loginScreen">
+  <div class="admin-login-box">
+    <h2 class="center">تسجيل دخول الأدمن</h2>
+    <form id="loginForm" class="mt-4">
+      <div class="field">
+        <label for="loginEmail">البريد الإلكتروني</label>
+        <input type="email" id="loginEmail" required>
+      </div>
+      <div class="field">
+        <label for="loginPassword">كلمة المرور</label>
+        <input type="password" id="loginPassword" required>
+      </div>
+      <p class="form-note" id="loginError" style="color:var(--danger); display:none"></p>
+      <button type="submit" class="btn btn-primary btn-block mt-3">دخول</button>
+    </form>
+  </div>
+</div>
+
+<!-- ===================== ADMIN SHELL ===================== -->
+<div class="admin-shell" id="adminShell" style="display:none">
+  <div class="admin-topbar">
+    <span style="font-weight:700">لوحة تحكم AFAK CARPET</span>
+    <div style="display:flex; align-items:center; gap:16px">
+      <a href="index.html" target="_blank" style="font-size:13px; opacity:.8">عرض الموقع ↗</a>
+      <button class="btn btn-outline-light" id="logoutBtn" style="height:36px; padding:0 16px">خروج</button>
+    </div>
+  </div>
+
+  <div class="admin-tabs" id="adminTabs">
+    <button class="admin-tab is-active" data-tab="settings">الإعدادات العامة</button>
+    <button class="admin-tab" data-tab="hero">السلايدر الرئيسي</button>
+    <button class="admin-tab" data-tab="categories">الأقسام</button>
+    <button class="admin-tab" data-tab="products">المنتجات</button>
+    <button class="admin-tab" data-tab="about">من نحن</button>
+    <button class="admin-tab" data-tab="orders">الطلبات</button>
+  </div>
+
+  <div class="admin-panel">
+
+    <!-- ---- SETTINGS ---- -->
+    <div class="admin-tab-panel" data-panel="settings">
+      <div class="admin-card">
+        <h3>هوية الموقع</h3>
+        <div class="admin-grid-2">
+          <div class="field"><label>اسم الموقع</label><input type="text" id="setSiteName"></div>
+          <div class="field">
+            <label>الشعار (Logo)</label>
+            <div class="img-upload-field">
+              <img id="setLogoPreview" style="display:none">
+              <input type="file" id="setLogoFile" accept="image/*">
+              <div class="form-note">يُرفع مباشرة إلى imgbb ويُخزَّن الرابط فقط.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="admin-card">
+        <h3>بيانات التواصل</h3>
+        <div class="admin-grid-2">
+          <div class="field"><label>الهاتف</label><input type="text" id="setPhone" placeholder="0550000000"></div>
+          <div class="field"><label>واتساب</label><input type="text" id="setWhatsapp" placeholder="213550000000"></div>
+          <div class="field"><label>البريد الإلكتروني</label><input type="email" id="setEmail"></div>
+          <div class="field"><label>العنوان</label><input type="text" id="setAddress"></div>
+        </div>
+      </div>
+      <div class="admin-card">
+        <h3>روابط التواصل الاجتماعي</h3>
+        <div class="admin-grid-2">
+          <div class="field"><label>Instagram</label><input type="url" id="setInstagram" placeholder="https://instagram.com/..."></div>
+          <div class="field"><label>Facebook</label><input type="url" id="setFacebook" placeholder="https://facebook.com/..."></div>
+          <div class="field"><label>TikTok</label><input type="url" id="setTiktok" placeholder="https://tiktok.com/..."></div>
+          <div class="field"><label>LinkedIn</label><input type="url" id="setLinkedin" placeholder="https://linkedin.com/..."></div>
+        </div>
+      </div>
+      <div class="admin-card">
+        <h3>مفتاح imgbb API</h3>
+        <div class="field"><label>API Key</label><input type="text" id="setImgbbKey"></div>
+        <p class="form-note">يمكنك تغييره من هنا في أي وقت دون الحاجة لتعديل الكود. الحصول على مفتاح جديد من api.imgbb.com</p>
+      </div>
+      <button class="btn btn-primary" id="saveSettingsBtn">حفظ الإعدادات</button>
+    </div>
+
+    <!-- ---- HERO SLIDER ---- -->
+    <div class="admin-tab-panel" data-panel="hero" style="display:none">
+      <div class="admin-card">
+        <h3>شرائح السلايدر الرئيسي</h3>
+        <div id="heroSlidesList"></div>
+        <button class="btn btn-outline mt-3" id="addSlideBtn">+ إضافة شريحة جديدة</button>
+      </div>
+      <button class="btn btn-primary" id="saveHeroBtn">حفظ السلايدر</button>
+    </div>
+
+    <!-- ---- CATEGORIES ---- -->
+    <div class="admin-tab-panel" data-panel="categories" style="display:none">
+      <div class="admin-card">
+        <h3>الأقسام الأربعة</h3>
+        <p class="form-note mt-2">هذه الأقسام ثابتة في بنية الموقع (المساجد، الفنادق، الروضات، القاعات) — يمكنك تعديل الاسم والوصف والصورة فقط.</p>
+        <div id="categoriesList" class="mt-4"></div>
+      </div>
+      <button class="btn btn-primary" id="saveCategoriesBtn">حفظ الأقسام</button>
+    </div>
+
+    <!-- ---- PRODUCTS ---- -->
+    <div class="admin-tab-panel" data-panel="products" style="display:none">
+      <div class="admin-card">
+        <h3>إضافة منتج جديد</h3>
+        <div class="admin-grid-2">
+          <div class="field"><label>اسم المنتج *</label><input type="text" id="pName"></div>
+          <div class="field">
+            <label>القسم *</label>
+            <select id="pCategory">
+              <option value="mosques">المساجد</option>
+              <option value="hotels">الفنادق</option>
+              <option value="schools">الروضات</option>
+              <option value="halls">قاعات المؤتمرات والمساحات الكبرى</option>
+            </select>
+          </div>
+          <div class="field"><label>المقاس</label><input type="text" id="pSize" placeholder="مثال: 3م × 5م"></div>
+          <div class="field"><label>اللون</label><input type="text" id="pColor" placeholder="مثال: كحلي"></div>
+          <div class="field"><label>الخامة</label><input type="text" id="pMaterial" placeholder="مثال: صوف طبيعي"></div>
+          <div class="field"><label>السعر (دج)</label><input type="number" id="pPrice"></div>
+        </div>
+        <div class="field"><label>الوصف</label><textarea id="pDesc"></textarea></div>
+        <div class="field">
+          <label><input type="checkbox" id="pFeatured"> منتج مميز (يظهر في سلايدر المساجد)</label>
+        </div>
+        <div class="field">
+          <label>صور المنتج (يمكن اختيار أكثر من صورة)</label>
+          <div class="img-upload-field">
+            <div id="pImagesPreview" style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center"></div>
+            <input type="file" id="pImagesFile" accept="image/*" multiple>
+          </div>
+        </div>
+        <input type="hidden" id="pEditId">
+        <button class="btn btn-primary mt-3" id="saveProductBtn">إضافة المنتج</button>
+        <button class="btn btn-outline mt-3" id="cancelEditBtn" style="display:none">إلغاء التعديل</button>
+      </div>
+
+      <div class="admin-card">
+        <h3>كل المنتجات</h3>
+        <table class="admin-table">
+          <thead><tr><th>الصورة</th><th>الاسم</th><th>القسم</th><th>السعر</th><th>مميز</th><th>إجراءات</th></tr></thead>
+          <tbody id="productsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ---- ABOUT ---- -->
+    <div class="admin-tab-panel" data-panel="about" style="display:none">
+      <div class="admin-card">
+        <h3>قسم "من نحن"</h3>
+        <div class="field"><label>العنوان</label><input type="text" id="aboutTitleInput"></div>
+        <div class="field"><label>النص</label><textarea id="aboutTextInput" style="height:140px"></textarea></div>
+        <div class="field">
+          <label>صورة القسم</label>
+          <div class="img-upload-field">
+            <img id="aboutImgPreview" style="display:none">
+            <input type="file" id="aboutImgFile" accept="image/*">
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-primary" id="saveAboutBtn">حفظ</button>
+    </div>
+
+    <!-- ---- ORDERS ---- -->
+    <div class="admin-tab-panel" data-panel="orders" style="display:none">
+      <div class="admin-card">
+        <h3>طلبات عروض الأسعار</h3>
+        <table class="admin-table">
+          <thead><tr><th>الاسم</th><th>الهاتف</th><th>المجال</th><th>الولاية / البلدية</th><th>ملاحظات</th><th>التاريخ</th></tr></thead>
+          <tbody id="ordersTableBody"></tbody>
+        </table>
+        <p class="empty-state" id="ordersEmpty" style="display:none">لا توجد طلبات بعد.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { auth, db } from "./firebase-init.js";
+import {
+  signInWithEmailAndPassword, onAuthStateChanged, signOut
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+import {
+  collection, query, orderBy, onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import {
+  getSiteOnce, saveSite, uploadToImgbb, esc, uid, money
+} from "./app.js";
+
+let SITE = null;
+
+/* ---------------- Auth ---------------- */
+onAuthStateChanged(auth, (user) => {
+  document.getElementById("loginScreen").style.display = user ? "none" : "flex";
+  document.getElementById("adminShell").style.display = user ? "block" : "none";
+  if (user) boot();
+});
+
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const errEl = document.getElementById("loginError");
+  errEl.style.display = "none";
+  try{
+    await signInWithEmailAndPassword(auth,
+      document.getElementById("loginEmail").value.trim(),
+      document.getElementById("loginPassword").value
+    );
+  } catch(err){
+    errEl.textContent = "بيانات الدخول غير صحيحة.";
+    errEl.style.display = "block";
+  }
+});
+document.getElementById("logoutBtn").addEventListener("click", () => signOut(auth));
+
+/* ---------------- Tabs ---------------- */
+document.querySelectorAll(".admin-tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".admin-tab").forEach(t => t.classList.remove("is-active"));
+    tab.classList.add("is-active");
+    const target = tab.dataset.tab;
+    document.querySelectorAll(".admin-tab-panel").forEach(p => {
+      p.style.display = p.dataset.panel === target ? "block" : "none";
+    });
+  });
+});
+
+/* ---------------- Toast ---------------- */
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("is-open");
+  setTimeout(() => t.classList.remove("is-open"), 2400);
+}
+
+/* ---------------- imgbb upload helper (single) ---------------- */
+async function uploadOne(file){
+  const key = document.getElementById("setImgbbKey").value || SITE.settings.imgbbKey;
+  return uploadToImgbb(file, key);
+}
+
+/* ---------------- Boot: load site once + render all tabs ---------------- */
+async function boot(){
+  SITE = await getSiteOnce();
+  renderSettings();
+  renderHeroTab();
+  renderCategoriesTab();
+  renderProductsTab();
+  renderAboutTab();
+  listenOrders();
+}
+
+/* ---------------- SETTINGS TAB ---------------- */
+function renderSettings(){
+  const s = SITE.settings;
+  document.getElementById("setSiteName").value = s.siteName || "";
+  document.getElementById("setPhone").value = s.phone || "";
+  document.getElementById("setWhatsapp").value = s.whatsapp || "";
+  document.getElementById("setEmail").value = s.email || "";
+  document.getElementById("setAddress").value = s.address || "";
+  document.getElementById("setInstagram").value = s.socials?.instagram || "";
+  document.getElementById("setFacebook").value = s.socials?.facebook || "";
+  document.getElementById("setTiktok").value = s.socials?.tiktok || "";
+  document.getElementById("setLinkedin").value = s.socials?.linkedin || "";
+  document.getElementById("setImgbbKey").value = s.imgbbKey || "";
+  if (s.logoUrl){
+    const img = document.getElementById("setLogoPreview");
+    img.src = s.logoUrl; img.style.display = "block";
+  }
+}
+document.getElementById("setLogoFile").addEventListener("change", async (e) => {
+  const file = e.target.files[0]; if (!file) return;
+  toast("جارٍ رفع الشعار...");
+  try{
+    const url = await uploadOne(file);
+    SITE.settings.logoUrl = url;
+    const img = document.getElementById("setLogoPreview");
+    img.src = url; img.style.display = "block";
+    toast("تم رفع الشعار");
+  } catch(err){ toast("فشل الرفع: " + err.message); }
+});
+document.getElementById("saveSettingsBtn").addEventListener("click", async () => {
+  SITE.settings = {
+    ...SITE.settings,
+    siteName: document.getElementById("setSiteName").value.trim(),
+    phone: document.getElementById("setPhone").value.trim(),
+    whatsapp: document.getElementById("setWhatsapp").value.trim(),
+    email: document.getElementById("setEmail").value.trim(),
+    address: document.getElementById("setAddress").value.trim(),
+    imgbbKey: document.getElementById("setImgbbKey").value.trim(),
+    socials: {
+      instagram: document.getElementById("setInstagram").value.trim(),
+      facebook: document.getElementById("setFacebook").value.trim(),
+      tiktok: document.getElementById("setTiktok").value.trim(),
+      linkedin: document.getElementById("setLinkedin").value.trim()
+    }
+  };
+  await saveSite({ settings: SITE.settings });
+  toast("تم حفظ الإعدادات");
+});
+
+/* ---------------- HERO TAB ---------------- */
+function renderHeroTab(){
+  const list = document.getElementById("heroSlidesList");
+  list.innerHTML = "";
+  SITE.hero.slides.forEach((slide) => {
+    const row = document.createElement("div");
+    row.className = "admin-card";
+    row.style.background = "var(--canvas-soft)";
+    row.dataset.id = slide.id;
+    row.innerHTML = `
+      <div class="admin-grid-2">
+        <div class="field"><label>العنوان</label><input type="text" class="s-title" value="${esc(slide.title)}"></div>
+        <div class="field"><label>نص العنوان الفرعي (Eyebrow)</label><input type="text" class="s-eyebrow" value="${esc(slide.eyebrow)}"></div>
+      </div>
+      <div class="field"><label>الوصف</label><textarea class="s-text">${esc(slide.text)}</textarea></div>
+      <div class="field"><label>نص الزر</label><input type="text" class="s-cta" value="${esc(slide.ctaLabel)}"></div>
+      <div class="field">
+        <label>صورة الخلفية</label>
+        <div class="img-upload-field">
+          <img class="s-preview" src="${esc(slide.image)}" style="${slide.image ? "" : "display:none"}">
+          <input type="file" class="s-file" accept="image/*">
+        </div>
+      </div>
+      <button class="btn btn-outline remove-slide" style="border-color:var(--danger); color:var(--danger)">حذف الشريحة</button>
+    `;
+    row.querySelector(".s-file").addEventListener("change", async (e) => {
+      const file = e.target.files[0]; if (!file) return;
+      toast("جارٍ رفع الصورة...");
+      try{
+        const url = await uploadOne(file);
+        slide.image = url;
+        const prev = row.querySelector(".s-preview");
+        prev.src = url; prev.style.display = "block";
+        toast("تم رفع الصورة");
+      } catch(err){ toast("فشل الرفع: " + err.message); }
+    });
+    row.querySelector(".remove-slide").addEventListener("click", () => {
+      SITE.hero.slides = SITE.hero.slides.filter(s => s.id !== slide.id);
+      renderHeroTab();
+    });
+    list.appendChild(row);
+  });
+}
+document.getElementById("addSlideBtn").addEventListener("click", () => {
+  SITE.hero.slides.push({ id: uid(), image:"", eyebrow:"AFAK CARPET", title:"عنوان جديد", text:"", ctaLabel:"اطلب عرض سعر", ctaTarget:"#quote" });
+  renderHeroTab();
+});
+document.getElementById("saveHeroBtn").addEventListener("click", async () => {
+  document.querySelectorAll("#heroSlidesList > div").forEach(row => {
+    const slide = SITE.hero.slides.find(s => s.id === row.dataset.id);
+    if (!slide) return;
+    slide.title = row.querySelector(".s-title").value.trim();
+    slide.eyebrow = row.querySelector(".s-eyebrow").value.trim();
+    slide.text = row.querySelector(".s-text").value.trim();
+    slide.ctaLabel = row.querySelector(".s-cta").value.trim();
+  });
+  await saveSite({ hero: SITE.hero });
+  toast("تم حفظ السلايدر");
+});
+
+/* ---------------- CATEGORIES TAB ---------------- */
+function renderCategoriesTab(){
+  const list = document.getElementById("categoriesList");
+  list.innerHTML = "";
+  SITE.categories.forEach((cat) => {
+    const row = document.createElement("div");
+    row.className = "admin-card";
+    row.style.background = "var(--canvas-soft)";
+    row.dataset.id = cat.id;
+    row.innerHTML = `
+      <div class="admin-grid-2">
+        <div class="field"><label>الاسم</label><input type="text" class="c-name" value="${esc(cat.name)}"></div>
+        <div class="field"><label>الوصف القصير</label><input type="text" class="c-desc" value="${esc(cat.desc||"")}"></div>
+      </div>
+      <div class="field">
+        <label>صورة البطاقة</label>
+        <div class="img-upload-field">
+          <img class="c-preview" src="${esc(cat.image)}" style="${cat.image ? "" : "display:none"}">
+          <input type="file" class="c-file" accept="image/*">
+        </div>
+      </div>
+    `;
+    row.querySelector(".c-file").addEventListener("change", async (e) => {
+      const file = e.target.files[0]; if (!file) return;
+      toast("جارٍ رفع الصورة...");
+      try{
+        const url = await uploadOne(file);
+        cat.image = url;
+        const prev = row.querySelector(".c-preview");
+        prev.src = url; prev.style.display = "block";
+        toast("تم رفع الصورة");
+      } catch(err){ toast("فشل الرفع: " + err.message); }
+    });
+    list.appendChild(row);
+  });
+}
+document.getElementById("saveCategoriesBtn").addEventListener("click", async () => {
+  document.querySelectorAll("#categoriesList > div").forEach(row => {
+    const cat = SITE.categories.find(c => c.id === row.dataset.id);
+    if (!cat) return;
+    cat.name = row.querySelector(".c-name").value.trim();
+    cat.desc = row.querySelector(".c-desc").value.trim();
+  });
+  await saveSite({ categories: SITE.categories });
+  toast("تم حفظ الأقسام");
+});
+
+/* ---------------- PRODUCTS TAB ---------------- */
+let pendingImages = [];
+document.getElementById("pImagesFile").addEventListener("change", async (e) => {
+  const files = Array.from(e.target.files || []);
+  if (!files.length) return;
+  toast("جارٍ رفع الصور...");
+  try{
+    for (const file of files){
+      const url = await uploadOne(file);
+      pendingImages.push(url);
+    }
+    renderPendingImages();
+    toast("تم رفع الصور");
+  } catch(err){ toast("فشل الرفع: " + err.message); }
+});
+function renderPendingImages(){
+  const wrap = document.getElementById("pImagesPreview");
+  wrap.innerHTML = pendingImages.map((url,i) => `
+    <div style="position:relative">
+      <img src="${esc(url)}" style="width:70px; height:70px; object-fit:cover; border:1px solid var(--hairline)">
+      <button type="button" data-i="${i}" style="position:absolute; top:-6px; left:-6px; width:20px; height:20px; border-radius:50%; border:none; background:var(--danger); color:#fff; font-size:11px; cursor:pointer">✕</button>
+    </div>`).join("");
+  wrap.querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      pendingImages.splice(Number(btn.dataset.i), 1);
+      renderPendingImages();
+    });
+  });
+}
+
+function resetProductForm(){
+  ["pName","pSize","pColor","pMaterial","pPrice","pDesc"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("pFeatured").checked = false;
+  document.getElementById("pEditId").value = "";
+  document.getElementById("cancelEditBtn").style.display = "none";
+  document.getElementById("saveProductBtn").textContent = "إضافة المنتج";
+  pendingImages = [];
+  renderPendingImages();
+}
+
+document.getElementById("saveProductBtn").addEventListener("click", async () => {
+  const name = document.getElementById("pName").value.trim();
+  if (!name){ toast("الرجاء إدخال اسم المنتج"); return; }
+  const editId = document.getElementById("pEditId").value;
+  const productData = {
+    id: editId || uid(),
+    categoryId: document.getElementById("pCategory").value,
+    name,
+    size: document.getElementById("pSize").value.trim(),
+    color: document.getElementById("pColor").value.trim(),
+    material: document.getElementById("pMaterial").value.trim(),
+    price: document.getElementById("pPrice").value.trim(),
+    desc: document.getElementById("pDesc").value.trim(),
+    featured: document.getElementById("pFeatured").checked,
+    images: pendingImages.length ? pendingImages : (editId ? (SITE.products.find(p=>p.id===editId)?.images||[]) : [])
+  };
+  if (editId){
+    SITE.products = SITE.products.map(p => p.id === editId ? productData : p);
+  } else {
+    SITE.products.push(productData);
+  }
+  await saveSite({ products: SITE.products });
+  toast(editId ? "تم تعديل المنتج" : "تمت إضافة المنتج");
+  resetProductForm();
+  renderProductsTab();
+});
+document.getElementById("cancelEditBtn").addEventListener("click", resetProductForm);
+
+function renderProductsTab(){
+  const catNames = Object.fromEntries(SITE.categories.map(c => [c.id, c.name]));
+  const body = document.getElementById("productsTableBody");
+  if (!SITE.products.length){
+    body.innerHTML = `<tr><td colspan="6" class="empty-state">لا توجد منتجات بعد.</td></tr>`;
+    return;
+  }
+  body.innerHTML = SITE.products.map(p => `
+    <tr>
+      <td><img src="${esc((p.images&&p.images[0])||'')}" style="width:44px; height:44px; object-fit:cover; border:1px solid var(--hairline)"></td>
+      <td>${esc(p.name)}</td>
+      <td>${esc(catNames[p.categoryId]||p.categoryId)}</td>
+      <td>${esc(money(p.price))}</td>
+      <td>${p.featured ? '<span class="pill new">مميز</span>' : "—"}</td>
+      <td class="admin-row-actions">
+        <button data-edit="${esc(p.id)}">تعديل</button>
+        <button class="danger" data-del="${esc(p.id)}">حذف</button>
+      </td>
+    </tr>`).join("");
+  body.querySelectorAll("[data-edit]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const p = SITE.products.find(x => x.id === btn.dataset.edit);
+      if (!p) return;
+      document.getElementById("pName").value = p.name;
+      document.getElementById("pCategory").value = p.categoryId;
+      document.getElementById("pSize").value = p.size || "";
+      document.getElementById("pColor").value = p.color || "";
+      document.getElementById("pMaterial").value = p.material || "";
+      document.getElementById("pPrice").value = p.price || "";
+      document.getElementById("pDesc").value = p.desc || "";
+      document.getElementById("pFeatured").checked = !!p.featured;
+      document.getElementById("pEditId").value = p.id;
+      document.getElementById("saveProductBtn").textContent = "حفظ التعديل";
+      document.getElementById("cancelEditBtn").style.display = "inline-flex";
+      pendingImages = [...(p.images || [])];
+      renderPendingImages();
+      document.querySelector('.admin-tab[data-tab="products"]').click();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  });
+  body.querySelectorAll("[data-del]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      if (!confirm("هل تريد حذف هذا المنتج؟")) return;
+      SITE.products = SITE.products.filter(p => p.id !== btn.dataset.del);
+      await saveSite({ products: SITE.products });
+      renderProductsTab();
+      toast("تم حذف المنتج");
+    });
+  });
+}
+
+/* ---------------- ABOUT TAB ---------------- */
+function renderAboutTab(){
+  document.getElementById("aboutTitleInput").value = SITE.about.title || "";
+  document.getElementById("aboutTextInput").value = SITE.about.text || "";
+  if (SITE.about.image){
+    const img = document.getElementById("aboutImgPreview");
+    img.src = SITE.about.image; img.style.display = "block";
+  }
+}
+document.getElementById("aboutImgFile").addEventListener("change", async (e) => {
+  const file = e.target.files[0]; if (!file) return;
+  toast("جارٍ رفع الصورة...");
+  try{
+    const url = await uploadOne(file);
+    SITE.about.image = url;
+    const img = document.getElementById("aboutImgPreview");
+    img.src = url; img.style.display = "block";
+    toast("تم رفع الصورة");
+  } catch(err){ toast("فشل الرفع: " + err.message); }
+});
+document.getElementById("saveAboutBtn").addEventListener("click", async () => {
+  SITE.about.title = document.getElementById("aboutTitleInput").value.trim();
+  SITE.about.text = document.getElementById("aboutTextInput").value.trim();
+  await saveSite({ about: SITE.about });
+  toast("تم الحفظ");
+});
+
+/* ---------------- ORDERS TAB (live) ---------------- */
+function listenOrders(){
+  const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
+  onSnapshot(q, (snap) => {
+    const body = document.getElementById("ordersTableBody");
+    const empty = document.getElementById("ordersEmpty");
+    if (snap.empty){ body.innerHTML = ""; empty.style.display = "block"; return; }
+    empty.style.display = "none";
+    const catNames = Object.fromEntries(SITE.categories.map(c => [c.id, c.name]));
+    body.innerHTML = snap.docs.map(d => {
+      const o = d.data();
+      const date = o.createdAt?.toDate ? o.createdAt.toDate().toLocaleString("ar-DZ") : "—";
+      return `<tr>
+        <td>${esc(o.name)}</td>
+        <td><a href="tel:${esc(o.phone)}">${esc(o.phone)}</a></td>
+        <td>${esc(catNames[o.category] || o.category || "—")}</td>
+        <td>${esc(o.wilayaName || "")} ${o.commune ? "/ " + esc(o.commune) : ""}</td>
+        <td>${esc(o.message || "—")}</td>
+        <td style="font-family:var(--font-mono); font-size:12px">${date}</td>
+      </tr>`;
+    }).join("");
+  });
+}
+</script>
+</body>
+</html>
