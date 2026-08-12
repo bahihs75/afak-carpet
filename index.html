@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AFAK CARPET — سجاد المساجد والفنادق والمؤسسات</title>
+<meta name="description" content="آفاق كاربت: توريد وتفصيل السجاد للمساجد والفنادق والروضات وقاعات المؤتمرات في الجزائر.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ===================== HEADER ===================== -->
+<header class="site-header on-dark" id="siteHeader">
+  <div class="container">
+    <a href="#top" class="brand" id="brandLink">
+      <img id="logoImg" src="" alt="" style="display:none">
+      <span id="brandName">AFAK CARPET</span>
+    </a>
+    <nav class="nav-links">
+      <a class="nav-link" href="#mosques">المساجد</a>
+      <a class="nav-link" href="#hotels">الفنادق</a>
+      <a class="nav-link" href="#schools">الروضات</a>
+      <a class="nav-link" href="#halls">القاعات والمساحات الكبرى</a>
+      <a class="nav-link" href="#about">من نحن</a>
+      <a class="nav-link" href="#contact">تواصل معنا</a>
+    </nav>
+    <div class="nav-cta">
+      <button class="btn btn-primary" data-open-quote>اطلب عرض سعر</button>
+      <button class="hamburger" id="hamburgerBtn" aria-label="القائمة"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</header>
+
+<!-- Mobile drawer -->
+<div class="drawer" id="drawer">
+  <div class="drawer-head">
+    <span class="brand">AFAK CARPET</span>
+    <button class="drawer-close" id="drawerClose" aria-label="إغلاق">✕</button>
+  </div>
+  <ul class="drawer-links">
+    <li><a href="#mosques">المساجد</a></li>
+    <li><a href="#hotels">الفنادق</a></li>
+    <li><a href="#schools">الروضات</a></li>
+    <li><a href="#halls">القاعات والمساحات الكبرى</a></li>
+    <li><a href="#about">من نحن</a></li>
+    <li><a href="#contact">تواصل معنا</a></li>
+  </ul>
+</div>
+
+<main id="top">
+
+  <!-- ===================== HERO SLIDER (Tesla-style) ===================== -->
+  <section class="hero-slider" id="heroSlider">
+    <!-- slides injected by JS -->
+    <button class="hero-arrow prev" id="heroPrev" aria-label="السابق">›</button>
+    <button class="hero-arrow next" id="heroNext" aria-label="التالي">‹</button>
+    <div class="hero-dots" id="heroDots"></div>
+    <span class="hero-scroll-hint">مرّر للأسفل</span>
+  </section>
+
+  <!-- ===================== CATEGORIES ===================== -->
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <span class="label-eyebrow">مجالات العمل</span>
+        <h2>سجاد لكل فضاء يستحق العناية</h2>
+        <p>نصمّم وننفّذ حسب طبيعة كل مكان — من محراب المسجد إلى ردهة الفندق.</p>
+      </div>
+      <div class="cat-grid" id="catGrid"></div>
+    </div>
+  </section>
+
+  <!-- ===================== MOSQUES — signature catalog experience ===================== -->
+  <section class="section section-soft" id="mosques">
+    <div class="container">
+      <div class="section-head">
+        <span class="label-eyebrow">01 — المساجد</span>
+        <h2>سجاد المحراب والمصلى</h2>
+        <p>كل سجادة تُفصَّل على مقاس المسجد، بمحاذاة دقيقة للصفوف والقبلة.</p>
+      </div>
+
+      <div class="filters-row">
+        <select class="filter-select" id="mosqueColorFilter"><option value="">كل الألوان</option></select>
+        <select class="filter-select" id="mosqueSizeFilter"><option value="">كل المقاسات</option></select>
+      </div>
+
+      <div class="mosque-slider" id="mosqueSliderWrap" style="display:none">
+        <div class="mosque-slider-track" id="mosqueSliderTrack"></div>
+      </div>
+
+      <div class="product-grid" id="mosqueGrid"></div>
+      <p class="empty-state" id="mosqueEmpty" style="display:none">لا توجد منتجات مضافة بعد لهذا القسم.</p>
+    </div>
+  </section>
+
+  <!-- ===================== HOTELS ===================== -->
+  <section class="segment-hero" id="hotels-hero">
+    <div class="container">
+      <span class="label-eyebrow" style="color:rgba(255,255,255,.6)">02 — الفنادق</span>
+      <h1>سجاد بلمسة فندقية راقية</h1>
+      <p>للردهات وغرف النزلاء وقاعات الاستقبال.</p>
+    </div>
+  </section>
+  <section class="section" id="hotels">
+    <div class="container">
+      <div class="product-grid" id="hotelsGrid"></div>
+      <p class="empty-state" id="hotelsEmpty" style="display:none">لا توجد منتجات مضافة بعد لهذا القسم.</p>
+      <div class="center mt-4"><button class="btn btn-outline" data-open-quote>اطلب عرض سعر لفندقك</button></div>
+    </div>
+  </section>
+
+  <!-- ===================== SCHOOLS ===================== -->
+  <section class="segment-hero" id="schools-hero">
+    <div class="container">
+      <span class="label-eyebrow" style="color:rgba(255,255,255,.6)">03 — الروضات</span>
+      <h1>سجاد آمن لفضاءات الأطفال</h1>
+      <p>خامات مريحة وسهلة الصيانة لفضاءات الروضات والمدارس.</p>
+    </div>
+  </section>
+  <section class="section section-soft" id="schools">
+    <div class="container">
+      <div class="product-grid" id="schoolsGrid"></div>
+      <p class="empty-state" id="schoolsEmpty" style="display:none">لا توجد منتجات مضافة بعد لهذا القسم.</p>
+      <div class="center mt-4"><button class="btn btn-outline" data-open-quote>اطلب عرض سعر لروضتك</button></div>
+    </div>
+  </section>
+
+  <!-- ===================== HALLS ===================== -->
+  <section class="segment-hero" id="halls-hero">
+    <div class="container">
+      <span class="label-eyebrow" style="color:rgba(255,255,255,.6)">04 — القاعات والمساحات الكبرى</span>
+      <h1>تغطية شاملة للمساحات الواسعة</h1>
+      <p>قاعات المؤتمرات، المعارض، والمساحات المؤسساتية الكبرى.</p>
+    </div>
+  </section>
+  <section class="section" id="halls">
+    <div class="container">
+      <div class="product-grid" id="hallsGrid"></div>
+      <p class="empty-state" id="hallsEmpty" style="display:none">لا توجد منتجات مضافة بعد لهذا القسم.</p>
+      <div class="center mt-4"><button class="btn btn-outline" data-open-quote>اطلب عرض سعر لقاعتك</button></div>
+    </div>
+  </section>
+
+  <!-- ===================== ABOUT ===================== -->
+  <section class="section section-soft" id="about">
+    <div class="container about-grid">
+      <div class="img-wrap"><img id="aboutImg" src="" alt="من نحن"></div>
+      <div class="about-copy">
+        <span class="label-eyebrow">من نحن</span>
+        <h2 id="aboutTitle">من نحن</h2>
+        <p id="aboutText"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CONTACT ===================== -->
+  <section class="section" id="contact">
+    <div class="container contact-grid">
+      <div>
+        <span class="label-eyebrow">تواصل معنا</span>
+        <h2 class="mt-2">نسعد بخدمتكم</h2>
+        <ul class="contact-info mt-4" id="contactList"></ul>
+        <div class="social-row" id="socialRow"></div>
+      </div>
+      <div>
+        <button class="btn btn-primary btn-block" data-open-quote style="height:56px">اطلب عرض سعر الآن</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ===================== FOOTER ===================== -->
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div>
+      <h4 id="footerBrand">AFAK CARPET</h4>
+      <p>سجاد يُصنع ليُصلَّى عليه ويدوم.</p>
+    </div>
+    <div>
+      <h4>الأقسام</h4>
+      <ul>
+        <li><a href="#mosques">المساجد</a></li>
+        <li><a href="#hotels">الفنادق</a></li>
+        <li><a href="#schools">الروضات</a></li>
+        <li><a href="#halls">القاعات الكبرى</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>الشركة</h4>
+      <ul>
+        <li><a href="#about">من نحن</a></li>
+        <li><a href="#contact">تواصل معنا</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>تواصل</h4>
+      <ul id="footerContact"></ul>
+    </div>
+  </div>
+  <div class="container footer-bottom">
+    <span>© <span id="year"></span> AFAK CARPET. جميع الحقوق محفوظة.</span>
+    <a href="admin.html" style="opacity:.5">لوحة التحكم</a>
+  </div>
+</footer>
+
+<!-- ===================== PRODUCT DETAIL OVERLAY ===================== -->
+<div class="detail-overlay" id="detailOverlay">
+  <div class="detail-head">
+    <button class="detail-back" id="detailClose">‹ رجوع</button>
+  </div>
+  <div class="detail-body">
+    <div class="detail-hero"><img id="detailImg" src="" alt=""></div>
+    <span class="label-eyebrow" id="detailCat">—</span>
+    <h1 class="detail-title" id="detailName">—</h1>
+    <p class="mt-3" id="detailDesc"></p>
+    <div class="detail-spec-table" id="detailSpecs"></div>
+    <div class="detail-gallery" id="detailGallery"></div>
+    <button class="btn btn-primary mt-4" data-open-quote>اطلب عرض سعر لهذا المنتج</button>
+  </div>
+</div>
+
+<!-- ===================== QUOTE MODAL (unified form) ===================== -->
+<div class="modal-overlay" id="quoteModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>اطلب عرض سعر</h3>
+      <button class="modal-close" id="quoteClose" aria-label="إغلاق">✕</button>
+    </div>
+    <form id="quoteForm">
+      <div class="field">
+        <label for="qName">الاسم الكامل *</label>
+        <input type="text" id="qName" required>
+      </div>
+      <div class="field">
+        <label for="qPhone">رقم الهاتف *</label>
+        <input type="tel" id="qPhone" required placeholder="05xxxxxxxx">
+      </div>
+      <div class="field">
+        <label for="qCategory">المجال المطلوب *</label>
+        <select id="qCategory" required>
+          <option value="">اختر المجال</option>
+          <option value="mosques">المساجد</option>
+          <option value="hotels">الفنادق</option>
+          <option value="schools">الروضات</option>
+          <option value="halls">قاعات المؤتمرات والمساحات الكبرى</option>
+        </select>
+      </div>
+      <div class="admin-grid-2">
+        <div class="field">
+          <label for="qWilaya">الولاية *</label>
+          <select id="qWilaya" required><option value="">اختر الولاية</option></select>
+        </div>
+        <div class="field">
+          <label for="qCommune">البلدية *</label>
+          <select id="qCommune" required><option value="">اختر البلدية</option></select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="qMessage">تفاصيل إضافية (المساحة، الكمية...)</label>
+        <textarea id="qMessage" placeholder="مثال: قاعة صلاة 200م²"></textarea>
+      </div>
+      <input type="hidden" id="qProductRef">
+      <button type="submit" class="btn btn-primary btn-block">إرسال الطلب</button>
+      <p class="form-note">سنتواصل معكم في أقرب وقت لتأكيد التفاصيل والسعر.</p>
+    </form>
+    <div class="form-success" id="quoteSuccess" style="display:none">
+      <div class="icon">✓</div>
+      <h3>تم إرسال طلبكم بنجاح</h3>
+      <p class="mt-2">سيتواصل معكم فريقنا قريبًا.</p>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initSiteListener, subscribeSite, submitOrder, esc, money } from "./app.js";
+import { WILAYAS, communesOf } from "./algeria-data.js";
+
+let SITE = null;
+let mosqueList = [];
+let currentProductRef = null;
+
+/* ---------------- Header scroll + drawer ---------------- */
+const header = document.getElementById("siteHeader");
+window.addEventListener("scroll", () => {
+  const scrolled = window.scrollY > 60;
+  header.classList.toggle("is-scrolled", scrolled);
+  header.classList.toggle("on-dark", !scrolled);
+}, { passive: true });
+
+const drawer = document.getElementById("drawer");
+document.getElementById("hamburgerBtn").addEventListener("click", () => drawer.classList.add("is-open"));
+document.getElementById("drawerClose").addEventListener("click", () => drawer.classList.remove("is-open"));
+drawer.querySelectorAll("a").forEach(a => a.addEventListener("click", () => drawer.classList.remove("is-open")));
+
+/* ---------------- Wilaya / commune selects ---------------- */
+function fillWilayaSelect(sel){
+  WILAYAS.forEach(w => {
+    const opt = document.createElement("option");
+    opt.value = w.code; opt.textContent = `${w.code} - ${w.ar}`;
+    sel.appendChild(opt);
+  });
+}
+const qWilaya = document.getElementById("qWilaya");
+const qCommune = document.getElementById("qCommune");
+fillWilayaSelect(qWilaya);
+qWilaya.addEventListener("change", () => {
+  qCommune.innerHTML = '<option value="">اختر البلدية</option>';
+  communesOf(qWilaya.value).forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = c; opt.textContent = c;
+    qCommune.appendChild(opt);
+  });
+});
+
+/* ---------------- Quote modal ---------------- */
+const quoteModal = document.getElementById("quoteModal");
+const quoteForm = document.getElementById("quoteForm");
+const quoteSuccess = document.getElementById("quoteSuccess");
+
+function openQuote(productRef){
+  currentProductRef = productRef || null;
+  document.getElementById("qProductRef").value = productRef ? `${productRef.categoryId}:${productRef.name}` : "";
+  if (productRef && productRef.categoryId){
+    document.getElementById("qCategory").value = productRef.categoryId;
+  }
+  quoteForm.style.display = "block";
+  quoteSuccess.style.display = "none";
+  quoteModal.classList.add("is-open");
+}
+document.addEventListener("click", (e) => {
+  const trigger = e.target.closest("[data-open-quote]");
+  if (trigger) openQuote(currentProductRef);
+});
+document.getElementById("quoteClose").addEventListener("click", () => quoteModal.classList.remove("is-open"));
+quoteModal.addEventListener("click", (e) => { if (e.target === quoteModal) quoteModal.classList.remove("is-open"); });
+
+quoteForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const submitBtn = quoteForm.querySelector("button[type=submit]");
+  submitBtn.disabled = true;
+  try{
+    await submitOrder({
+      name: document.getElementById("qName").value.trim(),
+      phone: document.getElementById("qPhone").value.trim(),
+      category: document.getElementById("qCategory").value,
+      wilayaCode: qWilaya.value,
+      wilayaName: qWilaya.options[qWilaya.selectedIndex]?.text || "",
+      commune: qCommune.value,
+      message: document.getElementById("qMessage").value.trim(),
+      productRef: document.getElementById("qProductRef").value || null
+    });
+    quoteForm.style.display = "none";
+    quoteSuccess.style.display = "block";
+    quoteForm.reset();
+  } catch(err){
+    alert("حدث خطأ أثناء إرسال الطلب، حاول مجددًا: " + err.message);
+  } finally {
+    submitBtn.disabled = false;
+  }
+});
+
+/* ---------------- Product detail overlay ---------------- */
+const detailOverlay = document.getElementById("detailOverlay");
+document.getElementById("detailClose").addEventListener("click", () => detailOverlay.classList.remove("is-open"));
+
+function openDetail(p, categoryName){
+  currentProductRef = { categoryId: p.categoryId, name: p.name };
+  document.getElementById("detailImg").src = (p.images && p.images[0]) || "";
+  document.getElementById("detailCat").textContent = categoryName || "";
+  document.getElementById("detailName").textContent = p.name || "";
+  document.getElementById("detailDesc").textContent = p.desc || "";
+  const specs = document.getElementById("detailSpecs");
+  specs.innerHTML = "";
+  const rows = [["المقاس", p.size], ["اللون", p.color], ["الخامة", p.material], ["السعر", money(p.price)]];
+  rows.forEach(([k,v]) => {
+    if (!v) return;
+    const div = document.createElement("div");
+    div.innerHTML = `<span class="k">${esc(k)}</span><span>${esc(v)}</span>`;
+    specs.appendChild(div);
+  });
+  const gallery = document.getElementById("detailGallery");
+  gallery.innerHTML = "";
+  (p.images || []).slice(1).forEach(url => {
+    const fig = document.createElement("figure");
+    fig.innerHTML = `<img src="${esc(url)}" alt="${esc(p.name)}">`;
+    gallery.appendChild(fig);
+  });
+  detailOverlay.classList.add("is-open");
+  detailOverlay.scrollTop = 0;
+}
+
+/* ---------------- Render: hero slider ---------------- */
+let heroIndex = 0, heroTimer = null;
+function renderHero(slides){
+  const wrap = document.getElementById("heroSlider");
+  const dotsWrap = document.getElementById("heroDots");
+  wrap.querySelectorAll(".hero-slide").forEach(n => n.remove());
+  dotsWrap.innerHTML = "";
+  if (!slides.length) return;
+  slides.forEach((s, i) => {
+    const el = document.createElement("div");
+    el.className = "hero-slide" + (i === 0 ? " is-active" : "");
+    el.innerHTML = `
+      <img src="${esc(s.image)}" alt="">
+      <div class="hero-slide-content">
+        <span class="label-eyebrow">${esc(s.eyebrow || "")}</span>
+        <h1>${esc(s.title || "")}</h1>
+        <p>${esc(s.text || "")}</p>
+        <div class="hero-slide-actions">
+          <button class="btn btn-primary" data-open-quote>${esc(s.ctaLabel || "اطلب عرض سعر")}</button>
+          <a class="btn btn-outline-light" href="#mosques">استكشف المنتجات</a>
+        </div>
+      </div>`;
+    wrap.insertBefore(el, wrap.firstChild);
+    const dot = document.createElement("button");
+    dot.className = "hero-dot" + (i === 0 ? " is-active" : "");
+    dot.addEventListener("click", () => goToHero(i));
+    dotsWrap.appendChild(dot);
+  });
+  heroIndex = 0;
+  restartHeroTimer(slides.length);
+}
+function goToHero(i){
+  const slides = document.querySelectorAll(".hero-slide");
+  const dots = document.querySelectorAll(".hero-dot");
+  if (!slides.length) return;
+  heroIndex = (i + slides.length) % slides.length;
+  slides.forEach((s, idx) => s.classList.toggle("is-active", idx === heroIndex));
+  dots.forEach((d, idx) => d.classList.toggle("is-active", idx === heroIndex));
+}
+function restartHeroTimer(count){
+  clearInterval(heroTimer);
+  if (count > 1) heroTimer = setInterval(() => goToHero(heroIndex + 1), 6000);
+}
+document.getElementById("heroNext").addEventListener("click", () => goToHero(heroIndex + 1));
+document.getElementById("heroPrev").addEventListener("click", () => goToHero(heroIndex - 1));
+
+/* ---------------- Render: categories ---------------- */
+function renderCategories(cats){
+  const grid = document.getElementById("catGrid");
+  grid.innerHTML = "";
+  [...cats].sort((a,b) => (a.order||0)-(b.order||0)).forEach(c => {
+    const anchor = document.createElement("a");
+    anchor.href = "#" + c.id;
+    anchor.className = "cat-card";
+    anchor.innerHTML = `
+      <img src="${esc(c.image)}" alt="${esc(c.name)}">
+      <div class="cat-card-label">
+        <span class="label-eyebrow">${esc(c.name)}</span>
+        <h3>${esc(c.desc || "")}</h3>
+      </div>`;
+    grid.appendChild(anchor);
+  });
+}
+
+/* ---------------- Render: mosques (filters + slider preview + grid) ---------------- */
+function renderMosques(products, categories){
+  mosqueList = products.filter(p => p.categoryId === "mosques");
+  const catName = categories.find(c => c.id === "mosques")?.name || "المساجد";
+
+  const colorSel = document.getElementById("mosqueColorFilter");
+  const sizeSel = document.getElementById("mosqueSizeFilter");
+  const colors = [...new Set(mosqueList.map(p => p.color).filter(Boolean))];
+  const sizes = [...new Set(mosqueList.map(p => p.size).filter(Boolean))];
+  colorSel.innerHTML = '<option value="">كل الألوان</option>' + colors.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("");
+  sizeSel.innerHTML = '<option value="">كل المقاسات</option>' + sizes.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join("");
+
+  function applyFilters(){
+    const c = colorSel.value, s = sizeSel.value;
+    return mosqueList.filter(p => (!c || p.color === c) && (!s || p.size === s));
+  }
+
+  function renderSlider(list){
+    const wrap = document.getElementById("mosqueSliderWrap");
+    const track = document.getElementById("mosqueSliderTrack");
+    const featured = list.filter(p => p.featured);
+    const items = featured.length ? featured : list.slice(0, 6);
+    if (!items.length){ wrap.style.display = "none"; return; }
+    wrap.style.display = "block";
+    track.innerHTML = items.map(p => `
+      <div class="mosque-slide-card" data-name="${esc(p.name)}">
+        <div class="img"><img src="${esc((p.images&&p.images[0])||'')}" alt="${esc(p.name)}"></div>
+        <div class="info">
+          <div class="name">${esc(p.name)}</div>
+          <div class="price">${esc(money(p.price))}</div>
+        </div>
+      </div>`).join("");
+    track.querySelectorAll(".mosque-slide-card").forEach((card, i) => {
+      card.addEventListener("click", () => openDetail(items[i], catName));
+    });
+  }
+
+  function renderGrid(list){
+    const grid = document.getElementById("mosqueGrid");
+    const empty = document.getElementById("mosqueEmpty");
+    if (!list.length){ grid.innerHTML = ""; empty.style.display = "block"; return; }
+    empty.style.display = "none";
+    grid.innerHTML = list.map(p => `
+      <div class="product-card" data-name="${esc(p.name)}">
+        <div class="img"><img src="${esc((p.images&&p.images[0])||'')}" alt="${esc(p.name)}"></div>
+        <div class="info">
+          <div class="name">${esc(p.name)}</div>
+          <div class="meta">${esc(p.size||"")} ${p.size && p.color ? "·" : ""} ${esc(p.color||"")}</div>
+          <div class="price">${esc(money(p.price))}</div>
+        </div>
+      </div>`).join("");
+    grid.querySelectorAll(".product-card").forEach((card, i) => {
+      card.addEventListener("click", () => openDetail(list[i], catName));
+    });
+  }
+
+  function refresh(){
+    const list = applyFilters();
+    renderSlider(mosqueList);
+    renderGrid(list);
+  }
+
+  colorSel.addEventListener("change", refresh);
+  sizeSel.addEventListener("change", refresh);
+
+  refresh();
+}
+
+/* ---------------- Render: plain segment grids ---------------- */
+function renderPlainGrid(products, categoryId, gridId, emptyId, categories){
+  const list = products.filter(p => p.categoryId === categoryId);
+  const catName = categories.find(c => c.id === categoryId)?.name || "";
+  const grid = document.getElementById(gridId);
+  const empty = document.getElementById(emptyId);
+  if (!list.length){ grid.innerHTML = ""; empty.style.display = "block"; return; }
+  empty.style.display = "none";
+  grid.innerHTML = list.map(p => `
+    <div class="product-card" data-name="${esc(p.name)}">
+      <div class="img"><img src="${esc((p.images&&p.images[0])||'')}" alt="${esc(p.name)}"></div>
+      <div class="info">
+        <div class="name">${esc(p.name)}</div>
+        <div class="meta">${esc(p.size||"")} ${p.size && p.color ? "·" : ""} ${esc(p.color||"")}</div>
+        <div class="price">${esc(money(p.price))}</div>
+      </div>
+    </div>`).join("");
+  grid.querySelectorAll(".product-card").forEach((card, i) => {
+    card.addEventListener("click", () => openDetail(list[i], catName));
+  });
+}
+
+/* ---------------- Render: about / contact / footer ---------------- */
+function renderAboutContact(site){
+  document.getElementById("aboutTitle").textContent = site.about.title;
+  document.getElementById("aboutText").textContent = site.about.text;
+  document.getElementById("aboutImg").src = site.about.image || "";
+
+  const s = site.settings;
+  const contactList = document.getElementById("contactList");
+  const footerContact = document.getElementById("footerContact");
+  const rows = [
+    ["الهاتف", s.phone, s.phone ? `tel:${s.phone}` : null],
+    ["واتساب", s.whatsapp, s.whatsapp ? `https://wa.me/${s.whatsapp.replace(/\D/g,"")}` : null],
+    ["البريد الإلكتروني", s.email, s.email ? `mailto:${s.email}` : null],
+    ["العنوان", s.address, null]
+  ].filter(r => r[1]);
+  contactList.innerHTML = rows.map(([k,v,href]) => `
+    <li><span class="k">${esc(k)}</span>${href ? `<a href="${esc(href)}">${esc(v)}</a>` : `<span>${esc(v)}</span>`}</li>
+  `).join("") || '<li class="empty-state">أضف بيانات التواصل من لوحة التحكم.</li>';
+  footerContact.innerHTML = rows.map(([k,v,href]) => `
+    <li>${href ? `<a href="${esc(href)}">${esc(v)}</a>` : esc(v)}</li>
+  `).join("");
+
+  const socialRow = document.getElementById("socialRow");
+  const socialIcons = { instagram:"IG", facebook:"FB", tiktok:"TT", linkedin:"IN" };
+  socialRow.innerHTML = Object.entries(s.socials || {})
+    .filter(([,url]) => url)
+    .map(([key,url]) => `<a href="${esc(url)}" target="_blank" rel="noopener" aria-label="${esc(key)}">${socialIcons[key]||"•"}</a>`)
+    .join("");
+
+  document.getElementById("brandName").textContent = s.siteName;
+  document.getElementById("footerBrand").textContent = s.siteName;
+  if (s.logoUrl){
+    document.getElementById("logoImg").src = s.logoUrl;
+    document.getElementById("logoImg").style.display = "block";
+    document.getElementById("brandName").style.display = "none";
+  }
+}
+
+/* ---------------- Boot ---------------- */
+document.getElementById("year").textContent = new Date().getFullYear();
+initSiteListener();
+subscribeSite((site) => {
+  SITE = site;
+  renderHero(site.hero.slides || []);
+  renderCategories(site.categories || []);
+  renderMosques(site.products || [], site.categories || []);
+  renderPlainGrid(site.products || [], "hotels", "hotelsGrid", "hotelsEmpty", site.categories);
+  renderPlainGrid(site.products || [], "schools", "schoolsGrid", "schoolsEmpty", site.categories);
+  renderPlainGrid(site.products || [], "halls", "hallsGrid", "hallsEmpty", site.categories);
+  renderAboutContact(site);
+});
+</script>
+</body>
+</html>
