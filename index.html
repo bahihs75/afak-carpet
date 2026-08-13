@@ -19,15 +19,18 @@
       <span id="brandName">AFAK CARPET</span>
     </a>
     <nav class="nav-links">
-      <a class="nav-link" href="#mosques">المساجد</a>
-      <a class="nav-link" href="#hotels">الفنادق</a>
-      <a class="nav-link" href="#schools">الروضات</a>
-      <a class="nav-link" href="#halls">القاعات والمساحات الكبرى</a>
-      <a class="nav-link" href="#about">من نحن</a>
-      <a class="nav-link" href="#contact">تواصل معنا</a>
+      <a class="nav-link" href="#mosques" data-i18n="nav.mosques">المساجد</a>
+      <a class="nav-link" href="#hotels" data-i18n="nav.hotels">الفنادق</a>
+      <a class="nav-link" href="#schools" data-i18n="nav.schools">الروضات</a>
+      <a class="nav-link" href="#halls" data-i18n="nav.halls">القاعات والمساحات الكبرى</a>
+      <a class="nav-link" href="#about" data-i18n="nav.about">من نحن</a>
+      <a class="nav-link" href="#contact" data-i18n="nav.contact">تواصل معنا</a>
     </nav>
     <div class="nav-cta">
-      <button class="btn btn-primary" data-open-quote>اطلب عرض سعر</button>
+      <button class="lang-toggle" id="langToggle" aria-label="Switch language">
+        <span data-lang-btn="ar" class="is-active">AR</span><span data-lang-btn="en">EN</span>
+      </button>
+      <button class="btn btn-primary" data-open-quote data-i18n="cta.quote">اطلب عرض سعر</button>
       <button class="hamburger" id="hamburgerBtn" aria-label="القائمة"><span></span><span></span><span></span></button>
     </div>
   </div>
@@ -40,12 +43,12 @@
     <button class="drawer-close" id="drawerClose" aria-label="إغلاق">✕</button>
   </div>
   <ul class="drawer-links">
-    <li><a href="#mosques">المساجد</a></li>
-    <li><a href="#hotels">الفنادق</a></li>
-    <li><a href="#schools">الروضات</a></li>
-    <li><a href="#halls">القاعات والمساحات الكبرى</a></li>
-    <li><a href="#about">من نحن</a></li>
-    <li><a href="#contact">تواصل معنا</a></li>
+    <li><a href="#mosques" data-i18n="nav.mosques">المساجد</a></li>
+    <li><a href="#hotels" data-i18n="nav.hotels">الفنادق</a></li>
+    <li><a href="#schools" data-i18n="nav.schools">الروضات</a></li>
+    <li><a href="#halls" data-i18n="nav.halls">القاعات والمساحات الكبرى</a></li>
+    <li><a href="#about" data-i18n="nav.about">من نحن</a></li>
+    <li><a href="#contact" data-i18n="nav.contact">تواصل معنا</a></li>
   </ul>
 </div>
 
@@ -64,9 +67,9 @@
   <section class="section">
     <div class="container">
       <div class="section-head">
-        <span class="label-eyebrow">مجالات العمل</span>
-        <h2>سجاد لكل فضاء يستحق العناية</h2>
-        <p>نصمّم وننفّذ حسب طبيعة كل مكان — من محراب المسجد إلى ردهة الفندق.</p>
+        <span class="label-eyebrow" data-i18n="cats.eyebrow">مجالات العمل</span>
+        <h2 data-i18n="cats.title">سجاد لكل فضاء يستحق العناية</h2>
+        <p data-i18n="cats.text">نصمّم وننفّذ حسب طبيعة كل مكان — من محراب المسجد إلى ردهة الفندق.</p>
       </div>
       <div class="cat-grid" id="catGrid"></div>
     </div>
@@ -76,70 +79,70 @@
   <section class="section section-soft" id="mosques">
     <div class="container">
       <div class="section-head">
-        <span class="label-eyebrow">01 — المساجد</span>
-        <h2>سجاد المحراب والمصلى</h2>
-        <p>كل سجادة تُفصَّل على مقاس المسجد، بمحاذاة دقيقة للصفوف والقبلة.</p>
+        <span class="label-eyebrow">01 — <span data-i18n="nav.mosques">المساجد</span></span>
+        <h2 data-i18n="mosques.title">سجاد المحراب والمصلى</h2>
+        <p data-i18n="mosques.text">كل سجادة تُفصَّل على مقاس المسجد، بمحاذاة دقيقة للصفوف والقبلة.</p>
       </div>
 
-      <div class="filters-row">
-        <select class="filter-select" id="mosqueColorFilter"><option value="">كل الألوان</option></select>
-        <select class="filter-select" id="mosqueSizeFilter"><option value="">كل المقاسات</option></select>
-      </div>
+      <div class="color-swatches" id="mosquesSwatches"></div>
 
       <div class="mosque-slider" id="mosqueSliderWrap" style="display:none">
         <div class="mosque-slider-track" id="mosqueSliderTrack"></div>
       </div>
 
       <div class="product-grid" id="mosqueGrid"></div>
-      <p class="empty-state" id="mosqueEmpty" style="display:none">لا توجد منتجات مضافة بعد لهذا القسم.</p>
+      <p class="empty-state" id="mosqueEmpty" style="display:none" data-i18n="empty.products">لا توجد منتجات مضافة بعد لهذا القسم.</p>
     </div>
   </section>
 
   <!-- ===================== HOTELS ===================== -->
   <section class="segment-hero" id="hotels-hero">
     <div class="container">
-      <span class="label-eyebrow" style="color:rgba(255,255,255,.6)">02 — الفنادق</span>
-      <h1>سجاد بلمسة فندقية راقية</h1>
-      <p>للردهات وغرف النزلاء وقاعات الاستقبال.</p>
+      <span class="label-eyebrow" style="color:rgba(255,255,255,.6)">02 — <span data-i18n="nav.hotels">الفنادق</span></span>
+      <h1 data-i18n="hotels.title">سجاد بلمسة فندقية راقية</h1>
+      <p data-i18n="hotels.text">للردهات وغرف النزلاء وقاعات الاستقبال.</p>
     </div>
   </section>
   <section class="section" id="hotels">
     <div class="container">
+      <div class="color-swatches" id="hotelsSwatches"></div>
       <div class="product-grid" id="hotelsGrid"></div>
-      <p class="empty-state" id="hotelsEmpty" style="display:none">لا توجد منتجات مضافة بعد لهذا القسم.</p>
-      <div class="center mt-4"><button class="btn btn-outline" data-open-quote>اطلب عرض سعر لفندقك</button></div>
+      <p class="empty-state" id="hotelsEmpty" style="display:none" data-i18n="empty.products">لا توجد منتجات مضافة بعد لهذا القسم.</p>
+      <div class="center mt-4"><button class="btn btn-outline" data-open-quote data-i18n="hotels.cta">اطلب عرض سعر لفندقك</button></div>
     </div>
   </section>
 
   <!-- ===================== SCHOOLS ===================== -->
   <section class="segment-hero" id="schools-hero">
     <div class="container">
-      <span class="label-eyebrow" style="color:rgba(255,255,255,.6)">03 — الروضات</span>
-      <h1>سجاد آمن لفضاءات الأطفال</h1>
-      <p>خامات مريحة وسهلة الصيانة لفضاءات الروضات والمدارس.</p>
+      <span class="label-eyebrow" style="color:rgba(255,255,255,.6)">03 — <span data-i18n="nav.schools">الروضات</span></span>
+      <h1 data-i18n="schools.title">سجاد آمن لفضاءات الأطفال</h1>
+      <p data-i18n="schools.text">خامات مريحة وسهلة الصيانة لفضاءات الروضات والمدارس.</p>
     </div>
   </section>
   <section class="section section-soft" id="schools">
     <div class="container">
+      <div class="color-swatches" id="schoolsSwatches"></div>
       <div class="product-grid" id="schoolsGrid"></div>
-      <p class="empty-state" id="schoolsEmpty" style="display:none">لا توجد منتجات مضافة بعد لهذا القسم.</p>
-      <div class="center mt-4"><button class="btn btn-outline" data-open-quote>اطلب عرض سعر لروضتك</button></div>
+      <p class="empty-state" id="schoolsEmpty" style="display:none" data-i18n="empty.products">لا توجد منتجات مضافة بعد لهذا القسم.</p>
+      <div class="center mt-4"><button class="btn btn-outline" data-open-quote data-i18n="schools.cta">اطلب عرض سعر لروضتك</button></div>
     </div>
   </section>
 
   <!-- ===================== HALLS ===================== -->
   <section class="segment-hero" id="halls-hero">
     <div class="container">
-      <span class="label-eyebrow" style="color:rgba(255,255,255,.6)">04 — القاعات والمساحات الكبرى</span>
-      <h1>تغطية شاملة للمساحات الواسعة</h1>
-      <p>قاعات المؤتمرات، المعارض، والمساحات المؤسساتية الكبرى.</p>
+      <span class="label-eyebrow" style="color:rgba(255,255,255,.6)">04 — <span data-i18n="nav.halls">القاعات والمساحات الكبرى</span></span>
+      <h1 data-i18n="halls.title">تغطية شاملة للمساحات الواسعة</h1>
+      <p data-i18n="halls.text">قاعات المؤتمرات، المعارض، والمساحات المؤسساتية الكبرى.</p>
     </div>
   </section>
   <section class="section" id="halls">
     <div class="container">
+      <div class="color-swatches" id="hallsSwatches"></div>
       <div class="product-grid" id="hallsGrid"></div>
-      <p class="empty-state" id="hallsEmpty" style="display:none">لا توجد منتجات مضافة بعد لهذا القسم.</p>
-      <div class="center mt-4"><button class="btn btn-outline" data-open-quote>اطلب عرض سعر لقاعتك</button></div>
+      <p class="empty-state" id="hallsEmpty" style="display:none" data-i18n="empty.products">لا توجد منتجات مضافة بعد لهذا القسم.</p>
+      <div class="center mt-4"><button class="btn btn-outline" data-open-quote data-i18n="halls.cta">اطلب عرض سعر لقاعتك</button></div>
     </div>
   </section>
 
@@ -148,7 +151,7 @@
     <div class="container about-grid">
       <div class="img-wrap"><img id="aboutImg" src="" alt="من نحن"></div>
       <div class="about-copy">
-        <span class="label-eyebrow">من نحن</span>
+        <span class="label-eyebrow" data-i18n="nav.about">من نحن</span>
         <h2 id="aboutTitle">من نحن</h2>
         <p id="aboutText"></p>
       </div>
@@ -159,13 +162,13 @@
   <section class="section" id="contact">
     <div class="container contact-grid">
       <div>
-        <span class="label-eyebrow">تواصل معنا</span>
-        <h2 class="mt-2">نسعد بخدمتكم</h2>
+        <span class="label-eyebrow" data-i18n="nav.contact">تواصل معنا</span>
+        <h2 class="mt-2" data-i18n="contact.title">نسعد بخدمتكم</h2>
         <ul class="contact-info mt-4" id="contactList"></ul>
         <div class="social-row" id="socialRow"></div>
       </div>
       <div>
-        <button class="btn btn-primary btn-block" data-open-quote style="height:56px">اطلب عرض سعر الآن</button>
+        <button class="btn btn-primary btn-block" data-open-quote style="height:56px" data-i18n="contact.cta">اطلب عرض سعر الآن</button>
       </div>
     </div>
   </section>
@@ -177,39 +180,39 @@
   <div class="container footer-grid">
     <div>
       <h4 id="footerBrand">AFAK CARPET</h4>
-      <p>سجاد يُصنع ليُصلَّى عليه ويدوم.</p>
+      <p data-i18n="footer.tagline">سجاد يُصنع ليُصلَّى عليه ويدوم.</p>
     </div>
     <div>
-      <h4>الأقسام</h4>
+      <h4 data-i18n="footer.sections">الأقسام</h4>
       <ul>
-        <li><a href="#mosques">المساجد</a></li>
-        <li><a href="#hotels">الفنادق</a></li>
-        <li><a href="#schools">الروضات</a></li>
-        <li><a href="#halls">القاعات الكبرى</a></li>
+        <li><a href="#mosques" data-i18n="nav.mosques">المساجد</a></li>
+        <li><a href="#hotels" data-i18n="nav.hotels">الفنادق</a></li>
+        <li><a href="#schools" data-i18n="nav.schools">الروضات</a></li>
+        <li><a href="#halls" data-i18n="footer.hallsShort">القاعات الكبرى</a></li>
       </ul>
     </div>
     <div>
-      <h4>الشركة</h4>
+      <h4 data-i18n="footer.company">الشركة</h4>
       <ul>
-        <li><a href="#about">من نحن</a></li>
-        <li><a href="#contact">تواصل معنا</a></li>
+        <li><a href="#about" data-i18n="nav.about">من نحن</a></li>
+        <li><a href="#contact" data-i18n="nav.contact">تواصل معنا</a></li>
       </ul>
     </div>
     <div>
-      <h4>تواصل</h4>
+      <h4 data-i18n="footer.contact">تواصل</h4>
       <ul id="footerContact"></ul>
     </div>
   </div>
   <div class="container footer-bottom">
-    <span>© <span id="year"></span> AFAK CARPET. جميع الحقوق محفوظة.</span>
-    <a href="admin.html" style="opacity:.5">لوحة التحكم</a>
+    <span>© <span id="year"></span> AFAK CARPET. <span data-i18n="footer.rights">جميع الحقوق محفوظة.</span></span>
+    <a href="admin.html" style="opacity:.5" data-i18n="footer.admin">لوحة التحكم</a>
   </div>
 </footer>
 
 <!-- ===================== PRODUCT DETAIL OVERLAY ===================== -->
 <div class="detail-overlay" id="detailOverlay">
   <div class="detail-head">
-    <button class="detail-back" id="detailClose">‹ رجوع</button>
+    <button class="detail-back" id="detailClose">‹ <span data-i18n="detail.back">رجوع</span></button>
   </div>
   <div class="detail-body">
     <div class="detail-hero"><img id="detailImg" src="" alt=""></div>
@@ -218,7 +221,7 @@
     <p class="mt-3" id="detailDesc"></p>
     <div class="detail-spec-table" id="detailSpecs"></div>
     <div class="detail-gallery" id="detailGallery"></div>
-    <button class="btn btn-primary mt-4" data-open-quote>اطلب عرض سعر لهذا المنتج</button>
+    <button class="btn btn-primary mt-4" data-open-quote data-i18n="detail.cta">اطلب عرض سعر لهذا المنتج</button>
   </div>
 </div>
 
@@ -226,50 +229,56 @@
 <div class="modal-overlay" id="quoteModal">
   <div class="modal-box">
     <div class="modal-head">
-      <h3>اطلب عرض سعر</h3>
+      <h3 data-i18n="quote.title">اطلب عرض سعر</h3>
       <button class="modal-close" id="quoteClose" aria-label="إغلاق">✕</button>
+    </div>
+    <div class="quote-product-ref" id="quoteProductRefBox" style="display:none; margin-bottom:16px; padding:12px; background:var(--canvas-soft); border:1px solid var(--hairline); display:flex; align-items:center; gap:12px;">
+      <img id="quoteProductRefImg" style="width:48px; height:48px; object-fit:contain; background:#fff; border:1px solid var(--hairline)">
+      <div>
+        <div style="font-size:12px; color:var(--muted)" data-i18n="quote.aboutProduct">بخصوص المنتج:</div>
+        <div id="quoteProductRefName" style="font-weight:700; font-size:14px"></div>
+      </div>
     </div>
     <form id="quoteForm">
       <div class="field">
-        <label for="qName">الاسم الكامل *</label>
+        <label for="qName" data-i18n="quote.name">الاسم الكامل *</label>
         <input type="text" id="qName" required>
       </div>
       <div class="field">
-        <label for="qPhone">رقم الهاتف *</label>
+        <label for="qPhone" data-i18n="quote.phone">رقم الهاتف *</label>
         <input type="tel" id="qPhone" required placeholder="05xxxxxxxx">
       </div>
       <div class="field">
-        <label for="qCategory">المجال المطلوب *</label>
+        <label for="qCategory" data-i18n="quote.category">المجال المطلوب *</label>
         <select id="qCategory" required>
-          <option value="">اختر المجال</option>
-          <option value="mosques">المساجد</option>
-          <option value="hotels">الفنادق</option>
-          <option value="schools">الروضات</option>
-          <option value="halls">قاعات المؤتمرات والمساحات الكبرى</option>
+          <option value="" data-i18n="quote.categoryPlaceholder">اختر المجال</option>
+          <option value="mosques" data-i18n="nav.mosques">المساجد</option>
+          <option value="hotels" data-i18n="nav.hotels">الفنادق</option>
+          <option value="schools" data-i18n="nav.schools">الروضات</option>
+          <option value="halls" data-i18n="nav.halls">قاعات المؤتمرات والمساحات الكبرى</option>
         </select>
       </div>
       <div class="admin-grid-2">
         <div class="field">
-          <label for="qWilaya">الولاية *</label>
-          <select id="qWilaya" required><option value="">اختر الولاية</option></select>
+          <label for="qWilaya" data-i18n="quote.wilaya">الولاية *</label>
+          <select id="qWilaya" required><option value="" data-i18n="quote.wilayaPlaceholder">اختر الولاية</option></select>
         </div>
         <div class="field">
-          <label for="qCommune">البلدية *</label>
-          <select id="qCommune" required><option value="">اختر البلدية</option></select>
+          <label for="qCommune" data-i18n="quote.commune">البلدية *</label>
+          <select id="qCommune" required><option value="" data-i18n="quote.communePlaceholder">اختر البلدية</option></select>
         </div>
       </div>
       <div class="field">
-        <label for="qMessage">تفاصيل إضافية (المساحة، الكمية...)</label>
-        <textarea id="qMessage" placeholder="مثال: قاعة صلاة 200م²"></textarea>
+        <label for="qMessage" data-i18n="quote.message">تفاصيل إضافية (المساحة، الكمية...)</label>
+        <textarea id="qMessage" data-i18n-placeholder="quote.messagePlaceholder" placeholder="مثال: قاعة صلاة 200م²"></textarea>
       </div>
-      <input type="hidden" id="qProductRef">
-      <button type="submit" class="btn btn-primary btn-block">إرسال الطلب</button>
-      <p class="form-note">سنتواصل معكم في أقرب وقت لتأكيد التفاصيل والسعر.</p>
+      <button type="submit" class="btn btn-primary btn-block" data-i18n="quote.submit">إرسال الطلب</button>
+      <p class="form-note" data-i18n="quote.note">سنتواصل معكم في أقرب وقت لتأكيد التفاصيل والسعر.</p>
     </form>
     <div class="form-success" id="quoteSuccess" style="display:none">
       <div class="icon">✓</div>
-      <h3>تم إرسال طلبكم بنجاح</h3>
-      <p class="mt-2">سيتواصل معكم فريقنا قريبًا.</p>
+      <h3 data-i18n="quote.successTitle">تم إرسال طلبكم بنجاح</h3>
+      <p class="mt-2" data-i18n="quote.successText">سيتواصل معكم فريقنا قريبًا.</p>
     </div>
   </div>
 </div>
@@ -280,7 +289,111 @@ import { WILAYAS, communesOf } from "./algeria-data.js";
 
 let SITE = null;
 let mosqueList = [];
-let currentProductRef = null;
+let currentProductRef = null; // full product snapshot object, or null
+
+// selected color-filter id per section ("" = no filter)
+const colorFilterState = { mosques: "", hotels: "", schools: "", halls: "" };
+
+/* ==================================================================
+   i18n — static chrome only (Phase 1). Dynamic admin content (product
+   names, descriptions, hero text, about, category names) stays in the
+   language the admin typed it in (Arabic for now) regardless of this
+   toggle — full bilingual content fields are a planned Phase 2.
+   ================================================================== */
+const I18N = {
+  ar: {
+    "nav.mosques": "المساجد", "nav.hotels": "الفنادق", "nav.schools": "الروضات",
+    "nav.halls": "القاعات والمساحات الكبرى", "nav.about": "من نحن", "nav.contact": "تواصل معنا",
+    "cta.quote": "اطلب عرض سعر",
+    "cats.eyebrow": "مجالات العمل", "cats.title": "سجاد لكل فضاء يستحق العناية",
+    "cats.text": "نصمّم وننفّذ حسب طبيعة كل مكان — من محراب المسجد إلى ردهة الفندق.",
+    "mosques.title": "سجاد المحراب والمصلى",
+    "mosques.text": "كل سجادة تُفصَّل على مقاس المسجد، بمحاذاة دقيقة للصفوف والقبلة.",
+    "hotels.title": "سجاد بلمسة فندقية راقية", "hotels.text": "للردهات وغرف النزلاء وقاعات الاستقبال.",
+    "hotels.cta": "اطلب عرض سعر لفندقك",
+    "schools.title": "سجاد آمن لفضاءات الأطفال", "schools.text": "خامات مريحة وسهلة الصيانة لفضاءات الروضات والمدارس.",
+    "schools.cta": "اطلب عرض سعر لروضتك",
+    "halls.title": "تغطية شاملة للمساحات الواسعة", "halls.text": "قاعات المؤتمرات، المعارض، والمساحات المؤسساتية الكبرى.",
+    "halls.cta": "اطلب عرض سعر لقاعتك",
+    "empty.products": "لا توجد منتجات مضافة بعد لهذا القسم.",
+    "contact.title": "نسعد بخدمتكم", "contact.cta": "اطلب عرض سعر الآن",
+    "footer.tagline": "سجاد يُصنع ليُصلَّى عليه ويدوم.", "footer.sections": "الأقسام",
+    "footer.hallsShort": "القاعات الكبرى", "footer.company": "الشركة", "footer.contact": "تواصل",
+    "footer.rights": "جميع الحقوق محفوظة.", "footer.admin": "لوحة التحكم",
+    "quote.title": "اطلب عرض سعر", "quote.aboutProduct": "بخصوص المنتج:",
+    "quote.name": "الاسم الكامل *", "quote.phone": "رقم الهاتف *",
+    "quote.category": "المجال المطلوب *", "quote.categoryPlaceholder": "اختر المجال",
+    "quote.wilaya": "الولاية *", "quote.wilayaPlaceholder": "اختر الولاية",
+    "quote.commune": "البلدية *", "quote.communePlaceholder": "اختر البلدية",
+    "quote.message": "تفاصيل إضافية (المساحة، الكمية...)", "quote.messagePlaceholder": "مثال: قاعة صلاة 200م²",
+    "quote.submit": "إرسال الطلب", "quote.note": "سنتواصل معكم في أقرب وقت لتأكيد التفاصيل والسعر.",
+    "quote.successTitle": "تم إرسال طلبكم بنجاح", "quote.successText": "سيتواصل معكم فريقنا قريبًا.",
+    "detail.back": "رجوع", "detail.cta": "اطلب عرض سعر لهذا المنتج",
+    "hero.explore": "استكشف المنتجات", "card.quote": "اطلب عرض سعر"
+  },
+  en: {
+    "nav.mosques": "Mosques", "nav.hotels": "Hotels", "nav.schools": "Kindergartens",
+    "nav.halls": "Conference Halls", "nav.about": "About Us", "nav.contact": "Contact Us",
+    "cta.quote": "Get a Quote",
+    "cats.eyebrow": "What We Do", "cats.title": "Carpets for every space that deserves care",
+    "cats.text": "Designed and executed for each place's nature — from the mosque's mihrab to the hotel lobby.",
+    "mosques.title": "Mihrab & Prayer Hall Carpets",
+    "mosques.text": "Every carpet is tailored to the mosque's exact size, precisely aligned with rows and qibla.",
+    "hotels.title": "Carpets with a refined hotel touch", "hotels.text": "For lobbies, guest rooms, and reception halls.",
+    "hotels.cta": "Get a quote for your hotel",
+    "schools.title": "Safe carpets for children's spaces", "schools.text": "Comfortable, easy-to-maintain materials for kindergartens and schools.",
+    "schools.cta": "Get a quote for your kindergarten",
+    "halls.title": "Full coverage for large spaces", "halls.text": "Conference halls, exhibitions, and large institutional spaces.",
+    "halls.cta": "Get a quote for your hall",
+    "empty.products": "No products added yet for this section.",
+    "contact.title": "We're happy to help", "contact.cta": "Get a Quote Now",
+    "footer.tagline": "Carpets made to be prayed on, and to last.", "footer.sections": "Sections",
+    "footer.hallsShort": "Large Halls", "footer.company": "Company", "footer.contact": "Contact",
+    "footer.rights": "All rights reserved.", "footer.admin": "Admin Panel",
+    "quote.title": "Request a Quote", "quote.aboutProduct": "About this product:",
+    "quote.name": "Full Name *", "quote.phone": "Phone Number *",
+    "quote.category": "Field of interest *", "quote.categoryPlaceholder": "Choose a field",
+    "quote.wilaya": "Wilaya *", "quote.wilayaPlaceholder": "Choose wilaya",
+    "quote.commune": "Commune *", "quote.communePlaceholder": "Choose commune",
+    "quote.message": "Additional details (area, quantity...)", "quote.messagePlaceholder": "e.g. 200m² prayer hall",
+    "quote.submit": "Send Request", "quote.note": "We'll contact you shortly to confirm details and pricing.",
+    "quote.successTitle": "Your request was sent successfully", "quote.successText": "Our team will reach out to you soon.",
+    "detail.back": "Back", "detail.cta": "Request a quote for this product",
+    "hero.explore": "Explore Products", "card.quote": "Get a Quote"
+  }
+};
+let currentLang = localStorage.getItem("afak_lang") || "ar";
+
+function applyTranslations(){
+  document.documentElement.lang = currentLang;
+  document.documentElement.dir = currentLang === "ar" ? "rtl" : "ltr";
+  document.body.style.textAlign = currentLang === "ar" ? "right" : "left";
+  const dict = I18N[currentLang];
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    const key = el.dataset.i18n;
+    if (dict[key] !== undefined) el.textContent = dict[key];
+  });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
+    const key = el.dataset.i18nPlaceholder;
+    if (dict[key] !== undefined) el.placeholder = dict[key];
+  });
+  document.querySelectorAll("[data-lang-btn]").forEach(el => {
+    el.classList.toggle("is-active", el.dataset.langBtn === currentLang);
+  });
+  // re-render dynamic bits that embed translated strings
+  if (SITE){
+    renderHero(SITE.hero.slides || []);
+    renderMosques(SITE.products || [], SITE.categories || []);
+    renderPlainGrid(SITE.products || [], "hotels", "hotelsGrid", "hotelsEmpty", "hotelsSwatches", SITE.categories);
+    renderPlainGrid(SITE.products || [], "schools", "schoolsGrid", "schoolsEmpty", "schoolsSwatches", SITE.categories);
+    renderPlainGrid(SITE.products || [], "halls", "hallsGrid", "hallsEmpty", "hallsSwatches", SITE.categories);
+  }
+}
+document.getElementById("langToggle").addEventListener("click", () => {
+  currentLang = currentLang === "ar" ? "en" : "ar";
+  localStorage.setItem("afak_lang", currentLang);
+  applyTranslations();
+});
 
 /* ---------------- Header scroll + drawer ---------------- */
 const header = document.getElementById("siteHeader");
@@ -307,7 +420,7 @@ const qWilaya = document.getElementById("qWilaya");
 const qCommune = document.getElementById("qCommune");
 fillWilayaSelect(qWilaya);
 qWilaya.addEventListener("change", () => {
-  qCommune.innerHTML = '<option value="">اختر البلدية</option>';
+  qCommune.innerHTML = `<option value="">${esc(I18N[currentLang]["quote.communePlaceholder"])}</option>`;
   communesOf(qWilaya.value).forEach(c => {
     const opt = document.createElement("option");
     opt.value = c; opt.textContent = c;
@@ -319,12 +432,18 @@ qWilaya.addEventListener("change", () => {
 const quoteModal = document.getElementById("quoteModal");
 const quoteForm = document.getElementById("quoteForm");
 const quoteSuccess = document.getElementById("quoteSuccess");
+const quoteProductRefBox = document.getElementById("quoteProductRefBox");
 
-function openQuote(productRef){
-  currentProductRef = productRef || null;
-  document.getElementById("qProductRef").value = productRef ? `${productRef.categoryId}:${productRef.name}` : "";
-  if (productRef && productRef.categoryId){
-    document.getElementById("qCategory").value = productRef.categoryId;
+function openQuote(productSnapshot){
+  currentProductRef = productSnapshot || null;
+  if (currentProductRef){
+    document.getElementById("qCategory").value = currentProductRef.categoryId || "";
+    document.getElementById("quoteProductRefImg").src = currentProductRef.image || "";
+    document.getElementById("quoteProductRefName").textContent =
+      `${currentProductRef.name || ""}${currentProductRef.price ? " — " + money(currentProductRef.price) : ""}`;
+    quoteProductRefBox.style.display = "flex";
+  } else {
+    quoteProductRefBox.style.display = "none";
   }
   quoteForm.style.display = "block";
   quoteSuccess.style.display = "none";
@@ -332,7 +451,12 @@ function openQuote(productRef){
 }
 document.addEventListener("click", (e) => {
   const trigger = e.target.closest("[data-open-quote]");
-  if (trigger) openQuote(currentProductRef);
+  if (!trigger) return;
+  // if the trigger is a generic CTA (not a per-card quote button), don't
+  // attach whatever product happened to be open in the detail overlay
+  // unless it explicitly came from the detail overlay's own CTA.
+  const fromDetail = trigger.closest("#detailOverlay");
+  openQuote(fromDetail ? currentProductRef : (trigger.dataset.productSnapshot ? JSON.parse(trigger.dataset.productSnapshot) : null));
 });
 document.getElementById("quoteClose").addEventListener("click", () => quoteModal.classList.remove("is-open"));
 quoteModal.addEventListener("click", (e) => { if (e.target === quoteModal) quoteModal.classList.remove("is-open"); });
@@ -350,7 +474,7 @@ quoteForm.addEventListener("submit", async (e) => {
       wilayaName: qWilaya.options[qWilaya.selectedIndex]?.text || "",
       commune: qCommune.value,
       message: document.getElementById("qMessage").value.trim(),
-      productRef: document.getElementById("qProductRef").value || null
+      product: currentProductRef || null
     });
     quoteForm.style.display = "none";
     quoteSuccess.style.display = "block";
@@ -366,8 +490,16 @@ quoteForm.addEventListener("submit", async (e) => {
 const detailOverlay = document.getElementById("detailOverlay");
 document.getElementById("detailClose").addEventListener("click", () => detailOverlay.classList.remove("is-open"));
 
+function snapshotOf(p, categoryName){
+  return {
+    categoryId: p.categoryId, name: p.name, price: p.price || "",
+    size: p.size || "", color: p.color || "", secondaryColor: p.secondaryColor || "",
+    image: (p.images && p.images[0]) || "", categoryName: categoryName || ""
+  };
+}
+
 function openDetail(p, categoryName){
-  currentProductRef = { categoryId: p.categoryId, name: p.name };
+  currentProductRef = snapshotOf(p, categoryName);
   document.getElementById("detailImg").src = (p.images && p.images[0]) || "";
   document.getElementById("detailCat").textContent = categoryName || "";
   document.getElementById("detailName").textContent = p.name || "";
@@ -410,8 +542,8 @@ function renderHero(slides){
         <h1>${esc(s.title || "")}</h1>
         <p>${esc(s.text || "")}</p>
         <div class="hero-slide-actions">
-          <button class="btn btn-primary" data-open-quote>${esc(s.ctaLabel || "اطلب عرض سعر")}</button>
-          <a class="btn btn-outline-light" href="#mosques">استكشف المنتجات</a>
+          <button class="btn btn-primary" data-open-quote>${esc(s.ctaLabel || I18N[currentLang]["cta.quote"])}</button>
+          <a class="btn btn-outline-light" href="#mosques">${esc(I18N[currentLang]["hero.explore"])}</a>
         </div>
       </div>`;
     wrap.insertBefore(el, wrap.firstChild);
@@ -456,37 +588,83 @@ function renderCategories(cats){
   });
 }
 
+/* ---------------- Color swatch filter (shared by all 4 sections) ---------------- */
+function renderSwatches(containerId, sectionKey, show, onChange){
+  const wrap = document.getElementById(containerId);
+  if (!show || !SITE.settings.colorPalette || !SITE.settings.colorPalette.length){
+    wrap.style.display = "none"; wrap.innerHTML = ""; return;
+  }
+  wrap.style.display = "flex";
+  wrap.innerHTML = SITE.settings.colorPalette.map(c => `
+    <button type="button" class="color-swatch${colorFilterState[sectionKey]===c.id ? ' is-active':''}"
+      style="--sw-color:${esc(c.hex)}" data-color="${esc(c.id)}" title="${esc(c.name)}">
+      <span class="sr-only">${esc(c.name)}</span>
+    </button>`).join("");
+  wrap.querySelectorAll(".color-swatch").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.color;
+      colorFilterState[sectionKey] = colorFilterState[sectionKey] === id ? "" : id;
+      renderSwatches(containerId, sectionKey, show, onChange);
+      onChange();
+    });
+  });
+}
+
+/* ---------------- Product card builder (shared template) ---------------- */
+function productCardHTML(p){
+  const base = (p.images && p.images[0]) || "";
+  const hover = p.hoverImage || "";
+  const snap = JSON.stringify(snapshotOf(p)).replace(/"/g, "&quot;");
+  return `
+    <div class="product-card" data-name="${esc(p.name)}">
+      <div class="img">
+        <img class="img-base" src="${esc(base)}" alt="${esc(p.name)}">
+        ${hover ? `<img class="img-hover" src="${esc(hover)}" alt="${esc(p.name)}">` : ""}
+      </div>
+      <div class="info">
+        <span class="name">${esc(p.name)}</span>
+        <span class="price">${esc(money(p.price))}</span>
+      </div>
+      <button type="button" class="card-quote-btn" data-open-quote data-product-snapshot="${snap}">${esc(I18N[currentLang]["card.quote"])}</button>
+    </div>`;
+}
+function wireProductCards(container, list, categoryName){
+  container.querySelectorAll(".product-card").forEach((card, i) => {
+    card.addEventListener("click", (e) => {
+      if (e.target.closest(".card-quote-btn")) return; // handled by global data-open-quote listener
+      openDetail(list[i], categoryName);
+    });
+  });
+}
+
 /* ---------------- Render: mosques (filters + slider preview + grid) ---------------- */
 function renderMosques(products, categories){
-  mosqueList = products.filter(p => p.categoryId === "mosques");
-  const catName = categories.find(c => c.id === "mosques")?.name || "المساجد";
+  const all = products.filter(p => p.categoryId === "mosques" && p.visible !== false);
+  mosqueList = all;
+  const cat = categories.find(c => c.id === "mosques");
+  const catName = cat?.name || "المساجد";
 
-  const colorSel = document.getElementById("mosqueColorFilter");
-  const sizeSel = document.getElementById("mosqueSizeFilter");
-  const colors = [...new Set(mosqueList.map(p => p.color).filter(Boolean))];
-  const sizes = [...new Set(mosqueList.map(p => p.size).filter(Boolean))];
-  colorSel.innerHTML = '<option value="">كل الألوان</option>' + colors.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("");
-  sizeSel.innerHTML = '<option value="">كل المقاسات</option>' + sizes.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join("");
+  renderSwatches("mosquesSwatches", "mosques", cat?.showColorFilter !== false, refresh);
 
-  function applyFilters(){
-    const c = colorSel.value, s = sizeSel.value;
-    return mosqueList.filter(p => (!c || p.color === c) && (!s || p.size === s));
+  function applyFilter(){
+    const c = colorFilterState.mosques;
+    return c ? all.filter(p => p.secondaryColor === c) : all;
   }
 
   function renderSlider(list){
     const wrap = document.getElementById("mosqueSliderWrap");
     const track = document.getElementById("mosqueSliderTrack");
+    if (list.length <= 6){ wrap.style.display = "none"; track.innerHTML = ""; return; }
     const featured = list.filter(p => p.featured);
-    const items = featured.length ? featured : list.slice(0, 6);
-    if (!items.length){ wrap.style.display = "none"; return; }
+    const items = featured.length ? featured : list.slice(0, 8);
     wrap.style.display = "block";
     track.innerHTML = items.map(p => `
       <div class="mosque-slide-card" data-name="${esc(p.name)}">
-        <div class="img"><img src="${esc((p.images&&p.images[0])||'')}" alt="${esc(p.name)}"></div>
-        <div class="info">
-          <div class="name">${esc(p.name)}</div>
-          <div class="price">${esc(money(p.price))}</div>
+        <div class="img">
+          <img class="img-base" src="${esc((p.images&&p.images[0])||'')}" alt="${esc(p.name)}">
+          ${p.hoverImage ? `<img class="img-hover" src="${esc(p.hoverImage)}" alt="${esc(p.name)}">` : ""}
         </div>
+        <div class="info"><span class="name">${esc(p.name)}</span><span class="price">${esc(money(p.price))}</span></div>
       </div>`).join("");
     track.querySelectorAll(".mosque-slide-card").forEach((card, i) => {
       card.addEventListener("click", () => openDetail(items[i], catName));
@@ -498,52 +676,37 @@ function renderMosques(products, categories){
     const empty = document.getElementById("mosqueEmpty");
     if (!list.length){ grid.innerHTML = ""; empty.style.display = "block"; return; }
     empty.style.display = "none";
-    grid.innerHTML = list.map(p => `
-      <div class="product-card" data-name="${esc(p.name)}">
-        <div class="img"><img src="${esc((p.images&&p.images[0])||'')}" alt="${esc(p.name)}"></div>
-        <div class="info">
-          <div class="name">${esc(p.name)}</div>
-          <div class="meta">${esc(p.size||"")} ${p.size && p.color ? "·" : ""} ${esc(p.color||"")}</div>
-          <div class="price">${esc(money(p.price))}</div>
-        </div>
-      </div>`).join("");
-    grid.querySelectorAll(".product-card").forEach((card, i) => {
-      card.addEventListener("click", () => openDetail(list[i], catName));
-    });
+    grid.innerHTML = list.map(productCardHTML).join("");
+    wireProductCards(grid, list, catName);
   }
 
   function refresh(){
-    const list = applyFilters();
-    renderSlider(mosqueList);
+    const list = applyFilter();
+    renderSlider(all);
     renderGrid(list);
   }
-
-  colorSel.addEventListener("change", refresh);
-  sizeSel.addEventListener("change", refresh);
-
   refresh();
 }
 
-/* ---------------- Render: plain segment grids ---------------- */
-function renderPlainGrid(products, categoryId, gridId, emptyId, categories){
-  const list = products.filter(p => p.categoryId === categoryId);
-  const catName = categories.find(c => c.id === categoryId)?.name || "";
-  const grid = document.getElementById(gridId);
-  const empty = document.getElementById(emptyId);
-  if (!list.length){ grid.innerHTML = ""; empty.style.display = "block"; return; }
-  empty.style.display = "none";
-  grid.innerHTML = list.map(p => `
-    <div class="product-card" data-name="${esc(p.name)}">
-      <div class="img"><img src="${esc((p.images&&p.images[0])||'')}" alt="${esc(p.name)}"></div>
-      <div class="info">
-        <div class="name">${esc(p.name)}</div>
-        <div class="meta">${esc(p.size||"")} ${p.size && p.color ? "·" : ""} ${esc(p.color||"")}</div>
-        <div class="price">${esc(money(p.price))}</div>
-      </div>
-    </div>`).join("");
-  grid.querySelectorAll(".product-card").forEach((card, i) => {
-    card.addEventListener("click", () => openDetail(list[i], catName));
-  });
+/* ---------------- Render: plain segment grids (hotels/schools/halls) ---------------- */
+function renderPlainGrid(products, categoryId, gridId, emptyId, swatchId, categories){
+  const all = products.filter(p => p.categoryId === categoryId && p.visible !== false);
+  const cat = categories.find(c => c.id === categoryId);
+  const catName = cat?.name || "";
+
+  renderSwatches(swatchId, categoryId, cat?.showColorFilter !== false, refresh);
+
+  function refresh(){
+    const c = colorFilterState[categoryId];
+    const list = c ? all.filter(p => p.secondaryColor === c) : all;
+    const grid = document.getElementById(gridId);
+    const empty = document.getElementById(emptyId);
+    if (!list.length){ grid.innerHTML = ""; empty.style.display = "block"; return; }
+    empty.style.display = "none";
+    grid.innerHTML = list.map(productCardHTML).join("");
+    wireProductCards(grid, list, catName);
+  }
+  refresh();
 }
 
 /* ---------------- Render: about / contact / footer ---------------- */
@@ -592,12 +755,13 @@ subscribeSite((site) => {
   renderHero(site.hero.slides || []);
   renderCategories(site.categories || []);
   renderMosques(site.products || [], site.categories || []);
-  renderPlainGrid(site.products || [], "hotels", "hotelsGrid", "hotelsEmpty", site.categories);
-  renderPlainGrid(site.products || [], "schools", "schoolsGrid", "schoolsEmpty", site.categories);
-  renderPlainGrid(site.products || [], "halls", "hallsGrid", "hallsEmpty", site.categories);
+  renderPlainGrid(site.products || [], "hotels", "hotelsGrid", "hotelsEmpty", "hotelsSwatches", site.categories);
+  renderPlainGrid(site.products || [], "schools", "schoolsGrid", "schoolsEmpty", "schoolsSwatches", site.categories);
+  renderPlainGrid(site.products || [], "halls", "hallsGrid", "hallsEmpty", "hallsSwatches", site.categories);
   renderAboutContact(site);
+  applyTranslations();
 });
+applyTranslations();
 </script>
 </body>
-</html>
 </html>
