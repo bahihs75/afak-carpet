@@ -43,6 +43,7 @@
     <button class="admin-tab" data-tab="hero">السلايدر الرئيسي</button>
     <button class="admin-tab" data-tab="categories">الأقسام</button>
     <button class="admin-tab" data-tab="products">المنتجات</button>
+    <button class="admin-tab" data-tab="media">مكتبة الصور</button>
     <button class="admin-tab" data-tab="about">من نحن</button>
     <button class="admin-tab" data-tab="orders">الطلبات</button>
   </div>
@@ -60,6 +61,7 @@
             <div class="img-upload-field">
               <img id="setLogoPreview" style="display:none">
               <input type="file" id="setLogoFile" accept="image/*">
+              <button type="button" class="media-picker-btn" data-picker-for="setLogoPreview">اختر من المكتبة</button>
               <div class="form-note">يُرفع مباشرة إلى imgbb ويُخزَّن الرابط فقط.</div>
             </div>
           </div>
@@ -84,6 +86,12 @@
         </div>
       </div>
       <div class="admin-card">
+        <h3>لوحة الألوان (فلتر المنتجات)</h3>
+        <p class="form-note mt-2">هذه الألوان تظهر كمربعات صغيرة في فلتر أي قسم يفعّل الفلتر (من تبويب "الأقسام"). كل منتج يُربط بلون عام واحد من هذي القائمة.</p>
+        <div id="paletteList" class="mt-3"></div>
+        <button class="btn btn-outline mt-2" id="addColorBtn">+ إضافة لون</button>
+      </div>
+      <div class="admin-card">
         <h3>مفتاح imgbb API</h3>
         <div class="field"><label>API Key</label><input type="text" id="setImgbbKey"></div>
         <p class="form-note">يمكنك تغييره من هنا في أي وقت دون الحاجة لتعديل الكود. الحصول على مفتاح جديد من api.imgbb.com</p>
@@ -105,7 +113,7 @@
     <div class="admin-tab-panel" data-panel="categories" style="display:none">
       <div class="admin-card">
         <h3>الأقسام الأربعة</h3>
-        <p class="form-note mt-2">هذه الأقسام ثابتة في بنية الموقع (المساجد، الفنادق، الروضات، القاعات) — يمكنك تعديل الاسم والوصف والصورة فقط.</p>
+        <p class="form-note mt-2">هذه الأقسام ثابتة في بنية الموقع — يمكنك تعديل الاسم والوصف والصورة، وتفعيل/تعطيل فلتر الألوان لكل قسم على حدة.</p>
         <div id="categoriesList" class="mt-4"></div>
       </div>
       <button class="btn btn-primary" id="saveCategoriesBtn">حفظ الأقسام</button>
@@ -114,7 +122,7 @@
     <!-- ---- PRODUCTS ---- -->
     <div class="admin-tab-panel" data-panel="products" style="display:none">
       <div class="admin-card">
-        <h3>إضافة منتج جديد</h3>
+        <h3 id="productFormTitle">إضافة منتج جديد</h3>
         <div class="admin-grid-2">
           <div class="field"><label>اسم المنتج *</label><input type="text" id="pName"></div>
           <div class="field">
@@ -127,20 +135,30 @@
             </select>
           </div>
           <div class="field"><label>المقاس</label><input type="text" id="pSize" placeholder="مثال: 3م × 5م"></div>
-          <div class="field"><label>اللون</label><input type="text" id="pColor" placeholder="مثال: كحلي"></div>
+          <div class="field"><label>اللون الحقيقي (كما هو مكتوب في المنتج)</label><input type="text" id="pColor" placeholder="مثال: Gris Bleu"></div>
+          <div class="field">
+            <label>اللون العام (للفلتر) *</label>
+            <select id="pSecondaryColor"><option value="">— اختر —</option></select>
+          </div>
           <div class="field"><label>الخامة</label><input type="text" id="pMaterial" placeholder="مثال: صوف طبيعي"></div>
           <div class="field"><label>السعر (دج)</label><input type="number" id="pPrice"></div>
         </div>
         <div class="field"><label>الوصف</label><textarea id="pDesc"></textarea></div>
-        <div class="field">
-          <label><input type="checkbox" id="pFeatured"> منتج مميز (يظهر في سلايدر المساجد)</label>
+        <div class="admin-grid-2">
+          <div class="field"><label><input type="checkbox" id="pFeatured"> منتج مميز (يظهر في سلايدر المساجد)</label></div>
+          <div class="field"><label><input type="checkbox" id="pVisible" checked> ظاهر في الموقع (ألغِ التحديد لإخفائه مؤقتًا)</label></div>
         </div>
         <div class="field">
           <label>صور المنتج (يمكن اختيار أكثر من صورة)</label>
           <div class="img-upload-field">
             <div id="pImagesPreview" style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center"></div>
             <input type="file" id="pImagesFile" accept="image/*" multiple>
+            <button type="button" class="media-picker-btn" id="pMediaPickerBtn">+ أضف من مكتبة الصور</button>
           </div>
+        </div>
+        <div class="field">
+          <label>صورة المرور (Hover) — تظهر بدل الصورة الأساسية عند مرور الفأرة على البطاقة</label>
+          <select id="pHoverImage"><option value="">بدون صورة مرور</option></select>
         </div>
         <input type="hidden" id="pEditId">
         <button class="btn btn-primary mt-3" id="saveProductBtn">إضافة المنتج</button>
@@ -150,9 +168,22 @@
       <div class="admin-card">
         <h3>كل المنتجات</h3>
         <table class="admin-table">
-          <thead><tr><th>الصورة</th><th>الاسم</th><th>القسم</th><th>السعر</th><th>مميز</th><th>إجراءات</th></tr></thead>
+          <thead><tr><th>الصورة</th><th>الاسم</th><th>القسم</th><th>السعر</th><th>الحالة</th><th>إجراءات</th></tr></thead>
           <tbody id="productsTableBody"></tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- ---- MEDIA LIBRARY ---- -->
+    <div class="admin-tab-panel" data-panel="media" style="display:none">
+      <div class="admin-card">
+        <h3>مكتبة الصور</h3>
+        <p class="form-note mt-2">
+          كل صورة رفعتها من قبل (شعار، سلايدر، أقسام، منتجات، من نحن) تُحفظ هنا تلقائيًا لإعادة استخدامها بلا رفع جديد.
+          ملاحظة مهمة: imgbb لا يوفر حذف تلقائي عبر الكود — زر "إزالة من المكتبة" يشيل الصورة من هالقائمة فقط (ما يمسحهاش من سيرفر imgbb نفسه).
+        </p>
+        <div class="media-grid mt-4" id="mediaLibraryGrid"></div>
+        <p class="empty-state" id="mediaEmpty" style="display:none">لا توجد صور مرفوعة بعد.</p>
       </div>
     </div>
 
@@ -167,6 +198,7 @@
           <div class="img-upload-field">
             <img id="aboutImgPreview" style="display:none">
             <input type="file" id="aboutImgFile" accept="image/*">
+            <button type="button" class="media-picker-btn" data-picker-for="aboutImgPreview">اختر من المكتبة</button>
           </div>
         </div>
       </div>
@@ -178,13 +210,25 @@
       <div class="admin-card">
         <h3>طلبات عروض الأسعار</h3>
         <table class="admin-table">
-          <thead><tr><th>الاسم</th><th>الهاتف</th><th>المجال</th><th>الولاية / البلدية</th><th>ملاحظات</th><th>التاريخ</th></tr></thead>
+          <thead><tr><th>الاسم</th><th>الهاتف</th><th>المجال</th><th>الولاية / البلدية</th><th>المنتج المرتبط</th><th>ملاحظات</th><th>التاريخ</th></tr></thead>
           <tbody id="ordersTableBody"></tbody>
         </table>
         <p class="empty-state" id="ordersEmpty" style="display:none">لا توجد طلبات بعد.</p>
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- ===================== MEDIA PICKER MODAL ===================== -->
+<div class="modal-overlay media-modal" id="mediaPickerModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>اختر صورة من المكتبة</h3>
+      <button class="modal-close" id="mediaPickerClose" aria-label="إغلاق">✕</button>
+    </div>
+    <div class="media-grid" id="mediaPickerGrid"></div>
+    <p class="empty-state" id="mediaPickerEmpty" style="display:none">لا توجد صور في المكتبة بعد. ارفع صورة أولاً.</p>
   </div>
 </div>
 
@@ -236,6 +280,7 @@ document.querySelectorAll(".admin-tab").forEach(tab => {
     document.querySelectorAll(".admin-tab-panel").forEach(p => {
       p.style.display = p.dataset.panel === target ? "block" : "none";
     });
+    if (target === "media") renderMediaLibraryTab();
   });
 });
 
@@ -247,18 +292,98 @@ function toast(msg){
   setTimeout(() => t.classList.remove("is-open"), 2400);
 }
 
-/* ---------------- imgbb upload helper (single) ---------------- */
+/* ---------------- imgbb upload + media library tracking ---------------- */
 async function uploadOne(file){
   const key = document.getElementById("setImgbbKey").value || SITE.settings.imgbbKey;
-  return uploadToImgbb(file, key);
+  const url = await uploadToImgbb(file, key);
+  if (!SITE.mediaLibrary.includes(url)){
+    SITE.mediaLibrary.push(url);
+    saveSite({ mediaLibrary: SITE.mediaLibrary }).catch(() => {});
+  }
+  return url;
+}
+
+/* ---------------- Media picker modal (reusable) ---------------- */
+const mediaPickerModal = document.getElementById("mediaPickerModal");
+let mediaPickerCallback = null;
+function openMediaPicker(onSelect){
+  mediaPickerCallback = onSelect;
+  const grid = document.getElementById("mediaPickerGrid");
+  const empty = document.getElementById("mediaPickerEmpty");
+  const lib = SITE.mediaLibrary || [];
+  if (!lib.length){ grid.innerHTML = ""; empty.style.display = "block"; }
+  else {
+    empty.style.display = "none";
+    grid.innerHTML = lib.map(url => `
+      <div class="media-item" data-url="${esc(url)}" style="cursor:pointer">
+        <img src="${esc(url)}">
+      </div>`).join("");
+    grid.querySelectorAll(".media-item").forEach(item => {
+      item.addEventListener("click", () => {
+        mediaPickerCallback && mediaPickerCallback(item.dataset.url);
+        mediaPickerModal.classList.remove("is-open");
+      });
+    });
+  }
+  mediaPickerModal.classList.add("is-open");
+}
+document.getElementById("mediaPickerClose").addEventListener("click", () => mediaPickerModal.classList.remove("is-open"));
+mediaPickerModal.addEventListener("click", (e) => { if (e.target === mediaPickerModal) mediaPickerModal.classList.remove("is-open"); });
+
+// Wire simple single-image "اختر من المكتبة" buttons declared via data-picker-for="previewImgId"
+document.querySelectorAll(".media-picker-btn[data-picker-for]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const previewId = btn.dataset.pickerFor;
+    openMediaPicker((url) => {
+      const img = document.getElementById(previewId);
+      img.src = url; img.style.display = "block";
+      img.dataset.value = url;
+    });
+  });
+});
+
+/* ---------------- Media Library tab ---------------- */
+function renderMediaLibraryTab(){
+  const grid = document.getElementById("mediaLibraryGrid");
+  const empty = document.getElementById("mediaEmpty");
+  const lib = SITE.mediaLibrary || [];
+  if (!lib.length){ grid.innerHTML = ""; empty.style.display = "block"; return; }
+  empty.style.display = "none";
+  grid.innerHTML = lib.map(url => `
+    <div class="media-item" data-url="${esc(url)}">
+      <img src="${esc(url)}">
+      <div class="media-actions">
+        <button type="button" class="copy-btn">نسخ الرابط</button>
+        <button type="button" class="danger remove-btn">إزالة</button>
+      </div>
+    </div>`).join("");
+  grid.querySelectorAll(".copy-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const url = btn.closest(".media-item").dataset.url;
+      navigator.clipboard?.writeText(url);
+      toast("تم نسخ الرابط");
+    });
+  });
+  grid.querySelectorAll(".remove-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      if (!confirm("إزالة هذه الصورة من المكتبة؟ (لن تُحذف من سيرفر imgbb، فقط من هذه القائمة)")) return;
+      const url = btn.closest(".media-item").dataset.url;
+      SITE.mediaLibrary = SITE.mediaLibrary.filter(u => u !== url);
+      await saveSite({ mediaLibrary: SITE.mediaLibrary });
+      renderMediaLibraryTab();
+      toast("تمت الإزالة من المكتبة");
+    });
+  });
 }
 
 /* ---------------- Boot: load site once + render all tabs ---------------- */
 async function boot(){
   SITE = await getSiteOnce();
   renderSettings();
+  renderPalette();
   renderHeroTab();
   renderCategoriesTab();
+  renderSecondaryColorOptions();
   renderProductsTab();
   renderAboutTab();
   listenOrders();
@@ -279,7 +404,7 @@ function renderSettings(){
   document.getElementById("setImgbbKey").value = s.imgbbKey || "";
   if (s.logoUrl){
     const img = document.getElementById("setLogoPreview");
-    img.src = s.logoUrl; img.style.display = "block";
+    img.src = s.logoUrl; img.style.display = "block"; img.dataset.value = s.logoUrl;
   }
 }
 document.getElementById("setLogoFile").addEventListener("change", async (e) => {
@@ -289,14 +414,16 @@ document.getElementById("setLogoFile").addEventListener("change", async (e) => {
     const url = await uploadOne(file);
     SITE.settings.logoUrl = url;
     const img = document.getElementById("setLogoPreview");
-    img.src = url; img.style.display = "block";
+    img.src = url; img.style.display = "block"; img.dataset.value = url;
     toast("تم رفع الشعار");
   } catch(err){ toast("فشل الرفع: " + err.message); }
 });
 document.getElementById("saveSettingsBtn").addEventListener("click", async () => {
+  const logoImg = document.getElementById("setLogoPreview");
   SITE.settings = {
     ...SITE.settings,
     siteName: document.getElementById("setSiteName").value.trim(),
+    logoUrl: logoImg.dataset.value || SITE.settings.logoUrl || "",
     phone: document.getElementById("setPhone").value.trim(),
     whatsapp: document.getElementById("setWhatsapp").value.trim(),
     email: document.getElementById("setEmail").value.trim(),
@@ -307,11 +434,58 @@ document.getElementById("saveSettingsBtn").addEventListener("click", async () =>
       facebook: document.getElementById("setFacebook").value.trim(),
       tiktok: document.getElementById("setTiktok").value.trim(),
       linkedin: document.getElementById("setLinkedin").value.trim()
-    }
+    },
+    colorPalette: collectPaletteFromDOM()
   };
   await saveSite({ settings: SITE.settings });
+  renderSecondaryColorOptions();
   toast("تم حفظ الإعدادات");
 });
+
+/* ---------------- COLOR PALETTE MANAGER ---------------- */
+function renderPalette(){
+  const list = document.getElementById("paletteList");
+  list.innerHTML = "";
+  (SITE.settings.colorPalette || []).forEach((c) => {
+    const row = document.createElement("div");
+    row.className = "palette-row";
+    row.dataset.id = c.id;
+    row.innerHTML = `
+      <input type="color" class="col-hex" value="${esc(c.hex)}">
+      <input type="text" class="col-name" value="${esc(c.name)}" placeholder="اسم اللون">
+      <button type="button" class="remove-color">✕</button>
+    `;
+    row.querySelector(".remove-color").addEventListener("click", () => row.remove());
+    list.appendChild(row);
+  });
+}
+document.getElementById("addColorBtn").addEventListener("click", () => {
+  const list = document.getElementById("paletteList");
+  const row = document.createElement("div");
+  row.className = "palette-row";
+  row.dataset.id = uid();
+  row.innerHTML = `
+    <input type="color" class="col-hex" value="#888888">
+    <input type="text" class="col-name" value="" placeholder="اسم اللون">
+    <button type="button" class="remove-color">✕</button>
+  `;
+  row.querySelector(".remove-color").addEventListener("click", () => row.remove());
+  list.appendChild(row);
+});
+function collectPaletteFromDOM(){
+  return Array.from(document.querySelectorAll("#paletteList .palette-row")).map(row => ({
+    id: row.dataset.id,
+    name: row.querySelector(".col-name").value.trim() || "لون",
+    hex: row.querySelector(".col-hex").value
+  })).filter(c => c.name);
+}
+function renderSecondaryColorOptions(){
+  const sel = document.getElementById("pSecondaryColor");
+  const current = sel.value;
+  sel.innerHTML = '<option value="">— اختر —</option>' +
+    (SITE.settings.colorPalette || []).map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join("");
+  sel.value = current;
+}
 
 /* ---------------- HERO TAB ---------------- */
 function renderHeroTab(){
@@ -334,6 +508,7 @@ function renderHeroTab(){
         <div class="img-upload-field">
           <img class="s-preview" src="${esc(slide.image)}" style="${slide.image ? "" : "display:none"}">
           <input type="file" class="s-file" accept="image/*">
+          <button type="button" class="media-picker-btn s-pick-btn">اختر من المكتبة</button>
         </div>
       </div>
       <button class="btn btn-outline remove-slide" style="border-color:var(--danger); color:var(--danger)">حذف الشريحة</button>
@@ -348,6 +523,13 @@ function renderHeroTab(){
         prev.src = url; prev.style.display = "block";
         toast("تم رفع الصورة");
       } catch(err){ toast("فشل الرفع: " + err.message); }
+    });
+    row.querySelector(".s-pick-btn").addEventListener("click", () => {
+      openMediaPicker((url) => {
+        slide.image = url;
+        const prev = row.querySelector(".s-preview");
+        prev.src = url; prev.style.display = "block";
+      });
     });
     row.querySelector(".remove-slide").addEventListener("click", () => {
       SITE.hero.slides = SITE.hero.slides.filter(s => s.id !== slide.id);
@@ -392,7 +574,11 @@ function renderCategoriesTab(){
         <div class="img-upload-field">
           <img class="c-preview" src="${esc(cat.image)}" style="${cat.image ? "" : "display:none"}">
           <input type="file" class="c-file" accept="image/*">
+          <button type="button" class="media-picker-btn c-pick-btn">اختر من المكتبة</button>
         </div>
+      </div>
+      <div class="field mt-2">
+        <label><input type="checkbox" class="c-show-filter" ${cat.showColorFilter !== false ? "checked" : ""}> إظهار فلتر الألوان في صفحة هذا القسم</label>
       </div>
     `;
     row.querySelector(".c-file").addEventListener("change", async (e) => {
@@ -406,6 +592,13 @@ function renderCategoriesTab(){
         toast("تم رفع الصورة");
       } catch(err){ toast("فشل الرفع: " + err.message); }
     });
+    row.querySelector(".c-pick-btn").addEventListener("click", () => {
+      openMediaPicker((url) => {
+        cat.image = url;
+        const prev = row.querySelector(".c-preview");
+        prev.src = url; prev.style.display = "block";
+      });
+    });
     list.appendChild(row);
   });
 }
@@ -415,6 +608,7 @@ document.getElementById("saveCategoriesBtn").addEventListener("click", async () 
     if (!cat) return;
     cat.name = row.querySelector(".c-name").value.trim();
     cat.desc = row.querySelector(".c-desc").value.trim();
+    cat.showColorFilter = row.querySelector(".c-show-filter").checked;
   });
   await saveSite({ categories: SITE.categories });
   toast("تم حفظ الأقسام");
@@ -435,6 +629,12 @@ document.getElementById("pImagesFile").addEventListener("change", async (e) => {
     toast("تم رفع الصور");
   } catch(err){ toast("فشل الرفع: " + err.message); }
 });
+document.getElementById("pMediaPickerBtn").addEventListener("click", () => {
+  openMediaPicker((url) => {
+    pendingImages.push(url);
+    renderPendingImages();
+  });
+});
 function renderPendingImages(){
   const wrap = document.getElementById("pImagesPreview");
   wrap.innerHTML = pendingImages.map((url,i) => `
@@ -448,14 +648,22 @@ function renderPendingImages(){
       renderPendingImages();
     });
   });
+  const hoverSel = document.getElementById("pHoverImage");
+  const current = hoverSel.value;
+  hoverSel.innerHTML = '<option value="">بدون صورة مرور</option>' +
+    pendingImages.map((url,i) => `<option value="${esc(url)}">الصورة ${i+1}</option>`).join("");
+  hoverSel.value = pendingImages.includes(current) ? current : "";
 }
 
 function resetProductForm(){
   ["pName","pSize","pColor","pMaterial","pPrice","pDesc"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("pSecondaryColor").value = "";
   document.getElementById("pFeatured").checked = false;
+  document.getElementById("pVisible").checked = true;
   document.getElementById("pEditId").value = "";
   document.getElementById("cancelEditBtn").style.display = "none";
   document.getElementById("saveProductBtn").textContent = "إضافة المنتج";
+  document.getElementById("productFormTitle").textContent = "إضافة منتج جديد";
   pendingImages = [];
   renderPendingImages();
 }
@@ -470,10 +678,13 @@ document.getElementById("saveProductBtn").addEventListener("click", async () => 
     name,
     size: document.getElementById("pSize").value.trim(),
     color: document.getElementById("pColor").value.trim(),
+    secondaryColor: document.getElementById("pSecondaryColor").value,
     material: document.getElementById("pMaterial").value.trim(),
     price: document.getElementById("pPrice").value.trim(),
     desc: document.getElementById("pDesc").value.trim(),
     featured: document.getElementById("pFeatured").checked,
+    visible: document.getElementById("pVisible").checked,
+    hoverImage: document.getElementById("pHoverImage").value,
     images: pendingImages.length ? pendingImages : (editId ? (SITE.products.find(p=>p.id===editId)?.images||[]) : [])
   };
   if (editId){
@@ -501,7 +712,10 @@ function renderProductsTab(){
       <td>${esc(p.name)}</td>
       <td>${esc(catNames[p.categoryId]||p.categoryId)}</td>
       <td>${esc(money(p.price))}</td>
-      <td>${p.featured ? '<span class="pill new">مميز</span>' : "—"}</td>
+      <td>
+        ${p.featured ? '<span class="pill new">مميز</span> ' : ""}
+        ${p.visible === false ? '<span class="pill muted">مخفي</span>' : '<span class="pill">ظاهر</span>'}
+      </td>
       <td class="admin-row-actions">
         <button data-edit="${esc(p.id)}">تعديل</button>
         <button class="danger" data-del="${esc(p.id)}">حذف</button>
@@ -515,15 +729,19 @@ function renderProductsTab(){
       document.getElementById("pCategory").value = p.categoryId;
       document.getElementById("pSize").value = p.size || "";
       document.getElementById("pColor").value = p.color || "";
+      document.getElementById("pSecondaryColor").value = p.secondaryColor || "";
       document.getElementById("pMaterial").value = p.material || "";
       document.getElementById("pPrice").value = p.price || "";
       document.getElementById("pDesc").value = p.desc || "";
       document.getElementById("pFeatured").checked = !!p.featured;
+      document.getElementById("pVisible").checked = p.visible !== false;
       document.getElementById("pEditId").value = p.id;
       document.getElementById("saveProductBtn").textContent = "حفظ التعديل";
+      document.getElementById("productFormTitle").textContent = "تعديل: " + p.name;
       document.getElementById("cancelEditBtn").style.display = "inline-flex";
       pendingImages = [...(p.images || [])];
       renderPendingImages();
+      document.getElementById("pHoverImage").value = p.hoverImage || "";
       document.querySelector('.admin-tab[data-tab="products"]').click();
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
@@ -545,7 +763,7 @@ function renderAboutTab(){
   document.getElementById("aboutTextInput").value = SITE.about.text || "";
   if (SITE.about.image){
     const img = document.getElementById("aboutImgPreview");
-    img.src = SITE.about.image; img.style.display = "block";
+    img.src = SITE.about.image; img.style.display = "block"; img.dataset.value = SITE.about.image;
   }
 }
 document.getElementById("aboutImgFile").addEventListener("change", async (e) => {
@@ -555,13 +773,15 @@ document.getElementById("aboutImgFile").addEventListener("change", async (e) => 
     const url = await uploadOne(file);
     SITE.about.image = url;
     const img = document.getElementById("aboutImgPreview");
-    img.src = url; img.style.display = "block";
+    img.src = url; img.style.display = "block"; img.dataset.value = url;
     toast("تم رفع الصورة");
   } catch(err){ toast("فشل الرفع: " + err.message); }
 });
 document.getElementById("saveAboutBtn").addEventListener("click", async () => {
+  const img = document.getElementById("aboutImgPreview");
   SITE.about.title = document.getElementById("aboutTitleInput").value.trim();
   SITE.about.text = document.getElementById("aboutTextInput").value.trim();
+  SITE.about.image = img.dataset.value || SITE.about.image || "";
   await saveSite({ about: SITE.about });
   toast("تم الحفظ");
 });
@@ -578,11 +798,22 @@ function listenOrders(){
     body.innerHTML = snap.docs.map(d => {
       const o = d.data();
       const date = o.createdAt?.toDate ? o.createdAt.toDate().toLocaleString("ar-DZ") : "—";
+      const prod = o.product;
+      const prodCell = prod
+        ? `<div style="display:flex; align-items:center; gap:6px">
+             ${prod.image ? `<img src="${esc(prod.image)}" style="width:32px;height:32px;object-fit:cover;border:1px solid var(--hairline)">` : ""}
+             <div>
+               <div style="font-weight:700">${esc(prod.name||"")}</div>
+               <div style="font-size:11px; color:var(--muted)">${esc(money(prod.price))} ${prod.size?"· "+esc(prod.size):""}</div>
+             </div>
+           </div>`
+        : '<span class="pill muted">بدون منتج محدد</span>';
       return `<tr>
         <td>${esc(o.name)}</td>
         <td><a href="tel:${esc(o.phone)}">${esc(o.phone)}</a></td>
         <td>${esc(catNames[o.category] || o.category || "—")}</td>
         <td>${esc(o.wilayaName || "")} ${o.commune ? "/ " + esc(o.commune) : ""}</td>
+        <td>${prodCell}</td>
         <td>${esc(o.message || "—")}</td>
         <td style="font-family:var(--font-mono); font-size:12px">${date}</td>
       </tr>`;
