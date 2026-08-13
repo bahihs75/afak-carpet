@@ -24,46 +24,58 @@ export const DEFAULT_SITE = {
     email: "",
     address: "",
     socials: { instagram: "", facebook: "", tiktok: "", linkedin: "" },
-    // Shared color-swatch palette used by the filter on any section that
-    // enables it (category.showColorFilter). Admin can add/remove/edit hex.
     colorPalette: [
       { id: "blue", name: "أزرق", hex: "#1F4E8C" },
       { id: "bordeaux", name: "بوردو", hex: "#6D1B2A" },
       { id: "gris", name: "رمادي", hex: "#8A8D91" },
       { id: "green", name: "أخضر", hex: "#2F6B3A" }
-    ]
+    ],
+    // Optional analytics/marketing pixels — scripts are only injected on the
+    // public site when a field is non-empty, so nothing loads by default.
+    cfAnalyticsToken: "",
+    metaPixelId: "",
+    tiktokPixelId: "",
+    // Independent visibility switches for the "trust" blocks — a block also
+    // auto-hides itself when it has zero items, regardless of this switch.
+    sectionsVisible: { projects: true, testimonials: true, stats: true, certifications: true }
   },
   hero: {
     slides: [
       {
         id: "s1",
         image: "",
-        eyebrow: "AFAK CARPET",
-        title: "سجاد يُصنع ليُصلَّى عليه ويدوم",
-        text: "تجهيز المساجد والفنادق والمؤسسات بسجاد عالي الجودة، بمقاسات مخصصة وتنفيذ دقيق.",
-        ctaLabel: "اطلب عرض سعر",
-        ctaTarget: "#quote"
+        eyebrow: "AFAK CARPET", eyebrowEn: "",
+        title: "سجاد يُصنع ليُصلَّى عليه ويدوم", titleEn: "",
+        text: "تجهيز المساجد والفنادق والمؤسسات بسجاد عالي الجودة، بمقاسات مخصصة وتنفيذ دقيق.", textEn: "",
+        ctaLabel: "اطلب عرض سعر", ctaLabelEn: "",
+        // secondary button — fully admin-customizable text + destination
+        // (destination can be an in-page anchor like "#mosques" or any URL)
+        secondaryLabel: "استكشف المنتجات", secondaryLabelEn: "",
+        secondaryLink: "#mosques"
       }
     ]
   },
   categories: [
-    { id: "mosques", order: 1, name: "المساجد", image: "", desc: "سجاد المحراب والمصلى بمقاسات دقيقة ومطابقة للمساحة.", showColorFilter: true },
-    { id: "hotels", order: 2, name: "الفنادق", image: "", desc: "سجاد للردهات والغرف والقاعات بلمسة فندقية راقية.", showColorFilter: true },
-    { id: "schools", order: 3, name: "الروضات", image: "", desc: "سجاد آمن ومريح لفضاءات الأطفال.", showColorFilter: true },
-    { id: "halls", order: 4, name: "قاعات المؤتمرات والمساحات الكبرى", image: "", desc: "تغطية شاملة للمساحات الواسعة والقاعات الرسمية.", showColorFilter: true }
+    { id: "mosques", order: 1, name: "المساجد", nameEn: "", image: "", desc: "سجاد المحراب والمصلى بمقاسات دقيقة ومطابقة للمساحة.", descEn: "", showColorFilter: true },
+    { id: "hotels", order: 2, name: "الفنادق", nameEn: "", image: "", desc: "سجاد للردهات والغرف والقاعات بلمسة فندقية راقية.", descEn: "", showColorFilter: true },
+    { id: "schools", order: 3, name: "الروضات", nameEn: "", image: "", desc: "سجاد آمن ومريح لفضاءات الأطفال.", descEn: "", showColorFilter: true },
+    { id: "halls", order: 4, name: "قاعات المؤتمرات والمساحات الكبرى", nameEn: "", image: "", desc: "تغطية شاملة للمساحات الواسعة والقاعات الرسمية.", descEn: "", showColorFilter: true }
   ],
-  // product: { id, categoryId, name, price, size, color, secondaryColor,
-  //   material, desc, images:[], hoverImage, featured, visible, order }
+  // product: { id, categoryId, name, nameEn, price, size, sizeEn, color,
+  //   secondaryColor, material, materialEn, sku, desc, descEn, images:[],
+  //   hoverImage, featured, visible, order }
   products: [],
   about: {
-    title: "من نحن",
-    text: "آفاق كاربت شركة جزائرية متخصصة في توريد وتفصيل السجاد للمساجد والفنادق والمؤسسات، نجمع بين جودة الخامة ودقة التنفيذ لخدمة الفضاءات التي تستحق عناية خاصة.",
+    title: "من نحن", titleEn: "",
+    text: "آفاق كاربت شركة جزائرية متخصصة في توريد وتفصيل السجاد للمساجد والفنادق والمؤسسات، نجمع بين جودة الخامة ودقة التنفيذ لخدمة الفضاءات التي تستحق عناية خاصة.", textEn: "",
     image: ""
   },
-  // Every image ever uploaded via the admin panel (logo, hero, category,
-  // product, about) gets tracked here so it can be reused without
-  // re-uploading. Removing an entry only untracks it locally — imgbb has
-  // no API-based delete, only a one-time delete_url shown at upload time.
+  // "مشاريعنا" — a simple, admin-editable gallery of completed installations.
+  projects: [], // { id, image, caption, captionEn, order }
+  // Trust block content — each independently toggleable via settings.sectionsVisible.
+  testimonials: [], // { id, name, nameEn, role, roleEn, quote, quoteEn, order }
+  stats: [],        // { id, label, labelEn, number, order }
+  certifications: [], // { id, image, name, nameEn, order }
   mediaLibrary: [],
   ordersCount: 0
 };
@@ -127,12 +139,40 @@ function deepMerge(base, override){
 }
 
 /* ------------------------------------------------------------------ */
+/* Client-side image compression before upload — keeps the site fast   */
+/* even when the marketing team uploads large phone-camera photos.     */
+/* Resizes to a max dimension and re-encodes as JPEG at 82% quality.   */
+/* Falls back to the original file if compression fails for any reason.*/
+/* ------------------------------------------------------------------ */
+export async function compressImage(file, maxDimension = 1600, quality = 0.82){
+  try{
+    if (!file.type.startsWith("image/") || file.type === "image/svg+xml") return file;
+    const bitmap = await createImageBitmap(file);
+    let { width, height } = bitmap;
+    if (width > maxDimension || height > maxDimension){
+      const scale = maxDimension / Math.max(width, height);
+      width = Math.round(width * scale);
+      height = Math.round(height * scale);
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = width; canvas.height = height;
+    canvas.getContext("2d").drawImage(bitmap, 0, 0, width, height);
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/jpeg", quality));
+    if (!blob || blob.size >= file.size) return file; // compression didn't help, keep original
+    return new File([blob], file.name.replace(/\.\w+$/, ".jpg"), { type: "image/jpeg" });
+  } catch {
+    return file; // never block an upload because compression failed
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /* imgbb upload — used only from the admin panel                      */
 /* ------------------------------------------------------------------ */
 export async function uploadToImgbb(file, apiKey){
   const key = apiKey || DEFAULT_IMGBB_KEY;
+  const compressed = await compressImage(file);
   const formData = new FormData();
-  formData.append("image", file);
+  formData.append("image", compressed);
   const res = await fetch(`https://api.imgbb.com/1/upload?key=${key}`, {
     method: "POST",
     body: formData
@@ -145,6 +185,16 @@ export async function uploadToImgbb(file, apiKey){
 /* ------------------------------------------------------------------ */
 /* Small utils shared by index.html + admin.html                      */
 /* ------------------------------------------------------------------ */
+/* Bilingual content getter — returns the English field (e.g. "nameEn") when
+   lang is "en" AND that field was actually filled in by the admin,
+   otherwise falls back to the Arabic field. English content is optional
+   everywhere, so nothing breaks if it was never entered. */
+export function tf(obj, field, lang){
+  if (!obj) return "";
+  if (lang === "en" && obj[field + "En"]) return obj[field + "En"];
+  return obj[field] || "";
+}
+
 export function esc(str=""){
   return String(str).replace(/[&<>"']/g, c => ({
     "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
