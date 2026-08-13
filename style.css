@@ -126,6 +126,12 @@ ul{ margin:0; padding:0; list-style:none; }
 .nav-link:hover::after{ transform:scaleX(1); }
 
 .nav-cta{ display:flex; align-items:center; gap:var(--sp-3); }
+.lang-toggle{
+  display:flex; align-items:center; height:38px; border:1px solid currentColor; background:transparent;
+  cursor:pointer; font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:.04em; color:inherit; overflow:hidden;
+}
+.lang-toggle span{ padding:0 12px; height:100%; display:flex; align-items:center; transition:background var(--dur) var(--ease), color var(--dur) var(--ease); }
+.lang-toggle span.is-active{ background:var(--navy); color:#fff; }
 .hamburger{ display:none; width:44px; height:44px; border:none; background:none; cursor:pointer; }
 .hamburger span{ display:block; width:22px; height:2px; background:currentColor; margin:5px auto; transition:transform var(--dur) var(--ease); }
 
@@ -215,21 +221,32 @@ ul{ margin:0; padding:0; list-style:none; }
    MOSQUES — plain filters + slider preview + grid (no decorative framing;
    photos display exactly as uploaded, uncropped)
    ========================================================================== */
-.filters-row{ display:flex; gap:var(--sp-2); flex-wrap:wrap; justify-content:center; margin-bottom:var(--sp-5); }
-.filter-select{
-  height:44px; padding:0 var(--sp-3); border:1px solid var(--hairline); background:#fff;
-  font-size:14px; color:var(--ink); min-width:140px;
+.color-swatches{ display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-bottom:var(--sp-5); }
+.color-swatch{
+  width:38px; height:38px; border:2px solid var(--hairline); background:var(--sw-color, #ccc);
+  cursor:pointer; padding:0; position:relative; transition:transform var(--dur-fast) var(--ease), border-color var(--dur) var(--ease);
 }
+.color-swatch:hover{ transform:scale(1.08); }
+.color-swatch.is-active{ border-color:var(--navy); box-shadow:0 0 0 3px rgba(23,35,63,.12); }
+.color-swatch.is-active::after{
+  content:"✓"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  color:#fff; font-size:15px; font-weight:700; text-shadow:0 1px 3px rgba(0,0,0,.5);
+}
+.color-swatch .sr-only{ position:absolute; }
 
 .mosque-slider{ position:relative; overflow:hidden; margin-top:var(--sp-7); }
 .mosque-slider-track{ display:flex; gap:var(--sp-3); overflow-x:auto; scroll-snap-type:x mandatory; padding-bottom:var(--sp-2); scrollbar-width:none; }
 .mosque-slider-track::-webkit-scrollbar{ display:none; }
 .mosque-slide-card{ flex:0 0 260px; scroll-snap-align:start; border:1px solid var(--hairline); background:#fff; cursor:pointer; }
-.mosque-slide-card .img{ aspect-ratio:4/3; overflow:hidden; background:var(--canvas-strong); display:flex; align-items:center; justify-content:center; }
-.mosque-slide-card img{ width:100%; height:100%; object-fit:contain; }
-.mosque-slide-card .info{ padding:var(--sp-3); }
-.mosque-slide-card .info .name{ font-weight:700; color:var(--ink); font-size:15px; }
-.mosque-slide-card .info .price{ font-family:var(--font-mono); font-size:13px; color:var(--muted); margin-top:4px; }
+.mosque-slide-card .img{ position:relative; aspect-ratio:4/3; overflow:hidden; background:var(--canvas-strong); }
+.mosque-slide-card .img img{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
+.mosque-slide-card .img .img-base{ opacity:1; transition:opacity var(--dur) var(--ease); }
+.mosque-slide-card .img .img-hover{ opacity:0; transition:opacity var(--dur) var(--ease); }
+.mosque-slide-card:hover .img-hover{ opacity:1; }
+.mosque-slide-card:hover .img-base{ opacity:0; }
+.mosque-slide-card .info{ padding:10px var(--sp-3); display:flex; align-items:center; justify-content:space-between; gap:var(--sp-2); border-top:1px solid var(--hairline-soft); }
+.mosque-slide-card .info .name{ font-weight:700; color:var(--ink); font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mosque-slide-card .info .price{ font-family:inherit; font-size:14px; font-weight:700; color:var(--navy); white-space:nowrap; flex-shrink:0; }
 
 /* ---- Product grid (mosques full list, and plain grid for other 3 segments) ---- */
 .product-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--sp-4); margin-top:var(--sp-6); }
@@ -237,12 +254,25 @@ ul{ margin:0; padding:0; list-style:none; }
 @media (max-width:560px){ .product-grid{ grid-template-columns:1fr; } }
 .product-card{ border:1px solid var(--hairline); background:#fff; cursor:pointer; transition:box-shadow var(--dur) var(--ease); }
 .product-card:hover{ box-shadow:0 4px 16px rgba(20,23,31,.08); }
-.product-card .img{ aspect-ratio:4/3; overflow:hidden; background:var(--canvas-strong); display:flex; align-items:center; justify-content:center; }
-.product-card .img img{ width:100%; height:100%; object-fit:contain; }
-.product-card .info{ padding:var(--sp-3) var(--sp-4); }
-.product-card .name{ font-weight:700; color:var(--ink); }
-.product-card .meta{ font-family:var(--font-mono); font-size:12px; color:var(--muted); margin-top:6px; }
-.product-card .price{ margin-top:var(--sp-2); font-weight:700; color:var(--navy); }
+.product-card .img{ position:relative; aspect-ratio:4/3; overflow:hidden; background:var(--canvas-strong); }
+.product-card .img img{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
+.product-card .img .img-base{ opacity:1; transition:opacity var(--dur) var(--ease); }
+.product-card .img .img-hover{ opacity:0; transition:opacity var(--dur) var(--ease); }
+.product-card:hover .img-hover{ opacity:1; }
+.product-card:hover .img-base{ opacity:0; }
+.product-card .info{
+  padding:10px var(--sp-3); display:flex; align-items:center; justify-content:space-between; gap:var(--sp-2);
+  border-top:1px solid var(--hairline-soft);
+}
+.product-card .name{ font-weight:700; color:var(--ink); font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.product-card .price{ font-weight:700; color:var(--navy); font-size:14px; white-space:nowrap; flex-shrink:0; }
+.product-card .card-quote-btn{
+  display:block; width:100%; height:38px; border:none; border-top:1px solid var(--hairline-soft);
+  background:var(--canvas-soft); color:var(--navy); font-size:12px; font-weight:700; cursor:pointer;
+  transition:background var(--dur) var(--ease);
+}
+.product-card .card-quote-btn:hover{ background:var(--navy); color:#fff; }
+.product-card.is-hidden-admin{ opacity:.45; }
 
 /* Simple segment header (hotels / schools / halls) — plain, no motif */
 .segment-hero{ background:var(--ink); color:#fff; padding:var(--sp-7) 0; text-align:center; }
@@ -355,6 +385,24 @@ ul{ margin:0; padding:0; list-style:none; }
 .img-upload-field input[type=file]{ display:block; margin:var(--sp-2) auto 0; }
 .pill{ display:inline-block; padding:4px 10px; font-size:11px; font-family:var(--font-mono); border:1px solid var(--hairline); }
 .pill.new{ background:var(--navy); color:#fff; border-color:var(--navy); }
+.pill.muted{ color:var(--muted); }
+
+/* ---- Color palette manager ---- */
+.palette-row{ display:flex; align-items:center; gap:var(--sp-2); margin-bottom:var(--sp-2); }
+.palette-row input[type=text]{ flex:1; height:40px; padding:0 10px; border:1px solid var(--hairline); font-size:14px; }
+.palette-row input[type=color]{ width:44px; height:40px; border:1px solid var(--hairline); padding:2px; cursor:pointer; background:#fff; }
+.palette-row .swatch-preview{ width:24px; height:24px; border:1px solid var(--hairline); flex-shrink:0; }
+.palette-row button{ border:1px solid var(--danger); color:var(--danger); background:#fff; width:36px; height:40px; cursor:pointer; flex-shrink:0; }
+
+/* ---- Media library ---- */
+.media-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(100px,1fr)); gap:var(--sp-2); }
+.media-item{ position:relative; border:1px solid var(--hairline); background:var(--canvas-strong); }
+.media-item img{ width:100%; aspect-ratio:1/1; object-fit:cover; display:block; }
+.media-item .media-actions{ display:flex; }
+.media-item .media-actions button{ flex:1; border:none; background:#fff; border-top:1px solid var(--hairline); font-size:11px; padding:6px 2px; cursor:pointer; }
+.media-item .media-actions button.danger{ color:var(--danger); }
+.media-picker-btn{ font-size:12px; height:36px; padding:0 12px; border:1px solid var(--navy); color:var(--navy); background:#fff; cursor:pointer; margin-top:8px; }
+.media-modal .modal-box{ max-width:640px; }
 .toast{
   position:fixed; bottom:var(--sp-4); left:50%; transform:translateX(-50%) translateY(20px);
   background:var(--ink); color:#fff; padding:12px 24px; font-size:14px; z-index:200;
