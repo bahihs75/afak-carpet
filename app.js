@@ -23,7 +23,15 @@ export const DEFAULT_SITE = {
     whatsapp: "",
     email: "",
     address: "",
-    socials: { instagram: "", facebook: "", tiktok: "", linkedin: "" }
+    socials: { instagram: "", facebook: "", tiktok: "", linkedin: "" },
+    // Shared color-swatch palette used by the filter on any section that
+    // enables it (category.showColorFilter). Admin can add/remove/edit hex.
+    colorPalette: [
+      { id: "blue", name: "أزرق", hex: "#1F4E8C" },
+      { id: "bordeaux", name: "بوردو", hex: "#6D1B2A" },
+      { id: "gris", name: "رمادي", hex: "#8A8D91" },
+      { id: "green", name: "أخضر", hex: "#2F6B3A" }
+    ]
   },
   hero: {
     slides: [
@@ -39,17 +47,24 @@ export const DEFAULT_SITE = {
     ]
   },
   categories: [
-    { id: "mosques", order: 1, name: "المساجد", image: "", desc: "سجاد المحراب والمصلى بمقاسات دقيقة ومطابقة للمساحة." },
-    { id: "hotels", order: 2, name: "الفنادق", image: "", desc: "سجاد للردهات والغرف والقاعات بلمسة فندقية راقية." },
-    { id: "schools", order: 3, name: "الروضات", image: "", desc: "سجاد آمن ومريح لفضاءات الأطفال." },
-    { id: "halls", order: 4, name: "قاعات المؤتمرات والمساحات الكبرى", image: "", desc: "تغطية شاملة للمساحات الواسعة والقاعات الرسمية." }
+    { id: "mosques", order: 1, name: "المساجد", image: "", desc: "سجاد المحراب والمصلى بمقاسات دقيقة ومطابقة للمساحة.", showColorFilter: true },
+    { id: "hotels", order: 2, name: "الفنادق", image: "", desc: "سجاد للردهات والغرف والقاعات بلمسة فندقية راقية.", showColorFilter: true },
+    { id: "schools", order: 3, name: "الروضات", image: "", desc: "سجاد آمن ومريح لفضاءات الأطفال.", showColorFilter: true },
+    { id: "halls", order: 4, name: "قاعات المؤتمرات والمساحات الكبرى", image: "", desc: "تغطية شاملة للمساحات الواسعة والقاعات الرسمية.", showColorFilter: true }
   ],
-  products: [], // { id, categoryId, name, price, sizes, colors, material, images:[], featured:bool, order }
+  // product: { id, categoryId, name, price, size, color, secondaryColor,
+  //   material, desc, images:[], hoverImage, featured, visible, order }
+  products: [],
   about: {
     title: "من نحن",
     text: "آفاق كاربت شركة جزائرية متخصصة في توريد وتفصيل السجاد للمساجد والفنادق والمؤسسات، نجمع بين جودة الخامة ودقة التنفيذ لخدمة الفضاءات التي تستحق عناية خاصة.",
     image: ""
   },
+  // Every image ever uploaded via the admin panel (logo, hero, category,
+  // product, about) gets tracked here so it can be reused without
+  // re-uploading. Removing an entry only untracks it locally — imgbb has
+  // no API-based delete, only a one-time delete_url shown at upload time.
+  mediaLibrary: [],
   ordersCount: 0
 };
 
