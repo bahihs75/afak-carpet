@@ -43,6 +43,8 @@
     <button class="admin-tab" data-tab="hero">السلايدر الرئيسي</button>
     <button class="admin-tab" data-tab="categories">الأقسام</button>
     <button class="admin-tab" data-tab="products">المنتجات</button>
+    <button class="admin-tab" data-tab="projects">المشاريع</button>
+    <button class="admin-tab" data-tab="trust">الثقة والمصداقية</button>
     <button class="admin-tab" data-tab="media">مكتبة الصور</button>
     <button class="admin-tab" data-tab="about">من نحن</button>
     <button class="admin-tab" data-tab="orders">الطلبات</button>
@@ -96,6 +98,25 @@
         <div class="field"><label>API Key</label><input type="text" id="setImgbbKey"></div>
         <p class="form-note">يمكنك تغييره من هنا في أي وقت دون الحاجة لتعديل الكود. الحصول على مفتاح جديد من api.imgbb.com</p>
       </div>
+      <div class="admin-card">
+        <h3>أدوات التحليل والتتبع (اختياري)</h3>
+        <p class="form-note mt-2">اتركها فارغة إن ما تستخدمهاش — السكربتات ما تتحملش بالموقع إطلاقًا إلا إذا عبّيت الحقل المخصص لها.</p>
+        <div class="admin-grid-2 mt-3">
+          <div class="field"><label>Cloudflare Web Analytics — Token</label><input type="text" id="setCfToken" placeholder="اختياري"></div>
+          <div class="field"><label>Meta Pixel ID (فيسبوك/انستقرام)</label><input type="text" id="setMetaPixel" placeholder="اختياري"></div>
+          <div class="field"><label>TikTok Pixel ID</label><input type="text" id="setTiktokPixel" placeholder="اختياري"></div>
+        </div>
+      </div>
+      <div class="admin-card">
+        <h3>رمز QR لموقعك</h3>
+        <div class="qr-box mt-2">
+          <img id="qrPreview" src="">
+          <div>
+            <p class="form-note">امسحه للتحقق، أو حمّله للاستخدام على المطبوعات والإعلانات.</p>
+            <a id="qrDownload" class="btn btn-outline mt-2" download="afak-carpet-qr.png" target="_blank">تحميل الصورة</a>
+          </div>
+        </div>
+      </div>
       <button class="btn btn-primary" id="saveSettingsBtn">حفظ الإعدادات</button>
     </div>
 
@@ -125,6 +146,7 @@
         <h3 id="productFormTitle">إضافة منتج جديد</h3>
         <div class="admin-grid-2">
           <div class="field"><label>اسم المنتج *</label><input type="text" id="pName"></div>
+          <div class="field"><label>Product name (EN — اختياري)</label><input type="text" id="pNameEn"></div>
           <div class="field">
             <label>القسم *</label>
             <select id="pCategory">
@@ -134,16 +156,22 @@
               <option value="halls">قاعات المؤتمرات والمساحات الكبرى</option>
             </select>
           </div>
+          <div class="field"><label>الرمز المرجعي (SKU) — اختياري</label><input type="text" id="pSku" placeholder="مثال: MSQ-001"></div>
           <div class="field"><label>المقاس</label><input type="text" id="pSize" placeholder="مثال: 3م × 5م"></div>
+          <div class="field"><label>Size (EN — اختياري)</label><input type="text" id="pSizeEn" placeholder="e.g. 3m × 5m"></div>
           <div class="field"><label>اللون الحقيقي (كما هو مكتوب في المنتج)</label><input type="text" id="pColor" placeholder="مثال: Gris Bleu"></div>
           <div class="field">
             <label>اللون العام (للفلتر) *</label>
             <select id="pSecondaryColor"><option value="">— اختر —</option></select>
           </div>
           <div class="field"><label>الخامة</label><input type="text" id="pMaterial" placeholder="مثال: صوف طبيعي"></div>
+          <div class="field"><label>Material (EN — اختياري)</label><input type="text" id="pMaterialEn" placeholder="e.g. Natural wool"></div>
           <div class="field"><label>السعر (دج)</label><input type="number" id="pPrice"></div>
         </div>
-        <div class="field"><label>الوصف</label><textarea id="pDesc"></textarea></div>
+        <div class="admin-grid-2">
+          <div class="field"><label>الوصف</label><textarea id="pDesc"></textarea></div>
+          <div class="field"><label>Description (EN — اختياري)</label><textarea id="pDescEn"></textarea></div>
+        </div>
         <div class="admin-grid-2">
           <div class="field"><label><input type="checkbox" id="pFeatured"> منتج مميز (يظهر في سلايدر المساجد)</label></div>
           <div class="field"><label><input type="checkbox" id="pVisible" checked> ظاهر في الموقع (ألغِ التحديد لإخفائه مؤقتًا)</label></div>
@@ -174,6 +202,40 @@
       </div>
     </div>
 
+    <!-- ---- PROJECTS ---- -->
+    <div class="admin-tab-panel" data-panel="projects" style="display:none">
+      <div class="admin-card">
+        <h3>مشاريعنا (معرض صور)</h3>
+        <p class="form-note mt-2">شبكة صور بسيطة تظهر بالموقع بين "من نحن" و"تواصل معنا" — تختفي تلقائيًا إن كانت فارغة.</p>
+        <div id="projectsList" class="mt-3"></div>
+        <button class="btn btn-outline mt-2" id="addProjectBtn">+ إضافة مشروع</button>
+      </div>
+      <button class="btn btn-primary" id="saveProjectsBtn">حفظ المشاريع</button>
+    </div>
+
+    <!-- ---- TRUST BLOCK ---- -->
+    <div class="admin-tab-panel" data-panel="trust" style="display:none">
+      <div class="admin-card">
+        <h3>الإحصائيات</h3>
+        <label class="mt-2" style="display:block"><input type="checkbox" id="visStats" checked> إظهار هذا القسم بالموقع</label>
+        <div id="statsList" class="mt-3"></div>
+        <button class="btn btn-outline mt-2" id="addStatBtn">+ إضافة إحصائية</button>
+      </div>
+      <div class="admin-card">
+        <h3>آراء العملاء</h3>
+        <label class="mt-2" style="display:block"><input type="checkbox" id="visTestimonials" checked> إظهار هذا القسم بالموقع</label>
+        <div id="testimonialsList" class="mt-3"></div>
+        <button class="btn btn-outline mt-2" id="addTestimonialBtn">+ إضافة رأي عميل</button>
+      </div>
+      <div class="admin-card">
+        <h3>الشهادات والشراكات الرسمية</h3>
+        <label class="mt-2" style="display:block"><input type="checkbox" id="visCertifications" checked> إظهار هذا القسم بالموقع</label>
+        <div id="certificationsList" class="mt-3"></div>
+        <button class="btn btn-outline mt-2" id="addCertificationBtn">+ إضافة شهادة/شراكة</button>
+      </div>
+      <button class="btn btn-primary" id="saveTrustBtn">حفظ قسم الثقة</button>
+    </div>
+
     <!-- ---- MEDIA LIBRARY ---- -->
     <div class="admin-tab-panel" data-panel="media" style="display:none">
       <div class="admin-card">
@@ -191,8 +253,14 @@
     <div class="admin-tab-panel" data-panel="about" style="display:none">
       <div class="admin-card">
         <h3>قسم "من نحن"</h3>
-        <div class="field"><label>العنوان</label><input type="text" id="aboutTitleInput"></div>
-        <div class="field"><label>النص</label><textarea id="aboutTextInput" style="height:140px"></textarea></div>
+        <div class="admin-grid-2">
+          <div class="field"><label>العنوان</label><input type="text" id="aboutTitleInput"></div>
+          <div class="field"><label>Title (EN — اختياري)</label><input type="text" id="aboutTitleInputEn"></div>
+        </div>
+        <div class="admin-grid-2">
+          <div class="field"><label>النص</label><textarea id="aboutTextInput" style="height:140px"></textarea></div>
+          <div class="field"><label>Text (EN — اختياري)</label><textarea id="aboutTextInputEn" style="height:140px"></textarea></div>
+        </div>
         <div class="field">
           <label>صورة القسم</label>
           <div class="img-upload-field">
@@ -385,6 +453,8 @@ async function boot(){
   renderCategoriesTab();
   renderSecondaryColorOptions();
   renderProductsTab();
+  renderProjectsTab();
+  renderTrustTab();
   renderAboutTab();
   listenOrders();
 }
@@ -402,6 +472,12 @@ function renderSettings(){
   document.getElementById("setTiktok").value = s.socials?.tiktok || "";
   document.getElementById("setLinkedin").value = s.socials?.linkedin || "";
   document.getElementById("setImgbbKey").value = s.imgbbKey || "";
+  document.getElementById("setCfToken").value = s.cfAnalyticsToken || "";
+  document.getElementById("setMetaPixel").value = s.metaPixelId || "";
+  document.getElementById("setTiktokPixel").value = s.tiktokPixelId || "";
+  const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=" + encodeURIComponent(location.origin + "/index.html");
+  document.getElementById("qrPreview").src = qrUrl;
+  document.getElementById("qrDownload").href = qrUrl;
   if (s.logoUrl){
     const img = document.getElementById("setLogoPreview");
     img.src = s.logoUrl; img.style.display = "block"; img.dataset.value = s.logoUrl;
@@ -429,6 +505,9 @@ document.getElementById("saveSettingsBtn").addEventListener("click", async () =>
     email: document.getElementById("setEmail").value.trim(),
     address: document.getElementById("setAddress").value.trim(),
     imgbbKey: document.getElementById("setImgbbKey").value.trim(),
+    cfAnalyticsToken: document.getElementById("setCfToken").value.trim(),
+    metaPixelId: document.getElementById("setMetaPixel").value.trim(),
+    tiktokPixelId: document.getElementById("setTiktokPixel").value.trim(),
     socials: {
       instagram: document.getElementById("setInstagram").value.trim(),
       facebook: document.getElementById("setFacebook").value.trim(),
@@ -499,10 +578,28 @@ function renderHeroTab(){
     row.innerHTML = `
       <div class="admin-grid-2">
         <div class="field"><label>العنوان</label><input type="text" class="s-title" value="${esc(slide.title)}"></div>
-        <div class="field"><label>نص العنوان الفرعي (Eyebrow)</label><input type="text" class="s-eyebrow" value="${esc(slide.eyebrow)}"></div>
+        <div class="field"><label>Title (EN — اختياري)</label><input type="text" class="s-title-en" value="${esc(slide.titleEn||'')}"></div>
       </div>
-      <div class="field"><label>الوصف</label><textarea class="s-text">${esc(slide.text)}</textarea></div>
-      <div class="field"><label>نص الزر</label><input type="text" class="s-cta" value="${esc(slide.ctaLabel)}"></div>
+      <div class="admin-grid-2">
+        <div class="field"><label>نص العنوان الفرعي (Eyebrow)</label><input type="text" class="s-eyebrow" value="${esc(slide.eyebrow)}"></div>
+        <div class="field"><label>Eyebrow (EN — اختياري)</label><input type="text" class="s-eyebrow-en" value="${esc(slide.eyebrowEn||'')}"></div>
+      </div>
+      <div class="admin-grid-2">
+        <div class="field"><label>الوصف</label><textarea class="s-text">${esc(slide.text)}</textarea></div>
+        <div class="field"><label>Description (EN — اختياري)</label><textarea class="s-text-en">${esc(slide.textEn||'')}</textarea></div>
+      </div>
+      <div class="admin-grid-2">
+        <div class="field"><label>نص الزر الأساسي (يفتح نموذج الطلب)</label><input type="text" class="s-cta" value="${esc(slide.ctaLabel)}"></div>
+        <div class="field"><label>Primary button (EN — اختياري)</label><input type="text" class="s-cta-en" value="${esc(slide.ctaLabelEn||'')}"></div>
+      </div>
+      <div class="admin-grid-2">
+        <div class="field"><label>نص الزر الثانوي</label><input type="text" class="s-secondary" value="${esc(slide.secondaryLabel||'')}"></div>
+        <div class="field"><label>Secondary button (EN — اختياري)</label><input type="text" class="s-secondary-en" value="${esc(slide.secondaryLabelEn||'')}"></div>
+      </div>
+      <div class="field">
+        <label>رابط الزر الثانوي (قسم داخلي مثل #mosques، أو رابط خارجي كامل)</label>
+        <input type="text" class="s-secondary-link" value="${esc(slide.secondaryLink||'#mosques')}" placeholder="#mosques">
+      </div>
       <div class="field">
         <label>صورة الخلفية</label>
         <div class="img-upload-field">
@@ -539,7 +636,11 @@ function renderHeroTab(){
   });
 }
 document.getElementById("addSlideBtn").addEventListener("click", () => {
-  SITE.hero.slides.push({ id: uid(), image:"", eyebrow:"AFAK CARPET", title:"عنوان جديد", text:"", ctaLabel:"اطلب عرض سعر", ctaTarget:"#quote" });
+  SITE.hero.slides.push({
+    id: uid(), image:"", eyebrow:"AFAK CARPET", eyebrowEn:"", title:"عنوان جديد", titleEn:"",
+    text:"", textEn:"", ctaLabel:"اطلب عرض سعر", ctaLabelEn:"",
+    secondaryLabel:"استكشف المنتجات", secondaryLabelEn:"", secondaryLink:"#mosques"
+  });
   renderHeroTab();
 });
 document.getElementById("saveHeroBtn").addEventListener("click", async () => {
@@ -547,9 +648,16 @@ document.getElementById("saveHeroBtn").addEventListener("click", async () => {
     const slide = SITE.hero.slides.find(s => s.id === row.dataset.id);
     if (!slide) return;
     slide.title = row.querySelector(".s-title").value.trim();
+    slide.titleEn = row.querySelector(".s-title-en").value.trim();
     slide.eyebrow = row.querySelector(".s-eyebrow").value.trim();
+    slide.eyebrowEn = row.querySelector(".s-eyebrow-en").value.trim();
     slide.text = row.querySelector(".s-text").value.trim();
+    slide.textEn = row.querySelector(".s-text-en").value.trim();
     slide.ctaLabel = row.querySelector(".s-cta").value.trim();
+    slide.ctaLabelEn = row.querySelector(".s-cta-en").value.trim();
+    slide.secondaryLabel = row.querySelector(".s-secondary").value.trim();
+    slide.secondaryLabelEn = row.querySelector(".s-secondary-en").value.trim();
+    slide.secondaryLink = row.querySelector(".s-secondary-link").value.trim() || "#mosques";
   });
   await saveSite({ hero: SITE.hero });
   toast("تم حفظ السلايدر");
@@ -567,7 +675,11 @@ function renderCategoriesTab(){
     row.innerHTML = `
       <div class="admin-grid-2">
         <div class="field"><label>الاسم</label><input type="text" class="c-name" value="${esc(cat.name)}"></div>
+        <div class="field"><label>Name (EN — اختياري)</label><input type="text" class="c-name-en" value="${esc(cat.nameEn||'')}"></div>
+      </div>
+      <div class="admin-grid-2">
         <div class="field"><label>الوصف القصير</label><input type="text" class="c-desc" value="${esc(cat.desc||"")}"></div>
+        <div class="field"><label>Description (EN — اختياري)</label><input type="text" class="c-desc-en" value="${esc(cat.descEn||'')}"></div>
       </div>
       <div class="field">
         <label>صورة البطاقة</label>
@@ -607,7 +719,9 @@ document.getElementById("saveCategoriesBtn").addEventListener("click", async () 
     const cat = SITE.categories.find(c => c.id === row.dataset.id);
     if (!cat) return;
     cat.name = row.querySelector(".c-name").value.trim();
+    cat.nameEn = row.querySelector(".c-name-en").value.trim();
     cat.desc = row.querySelector(".c-desc").value.trim();
+    cat.descEn = row.querySelector(".c-desc-en").value.trim();
     cat.showColorFilter = row.querySelector(".c-show-filter").checked;
   });
   await saveSite({ categories: SITE.categories });
@@ -656,7 +770,7 @@ function renderPendingImages(){
 }
 
 function resetProductForm(){
-  ["pName","pSize","pColor","pMaterial","pPrice","pDesc"].forEach(id => document.getElementById(id).value = "");
+  ["pName","pNameEn","pSize","pSizeEn","pColor","pMaterial","pMaterialEn","pSku","pPrice","pDesc","pDescEn"].forEach(id => document.getElementById(id).value = "");
   document.getElementById("pSecondaryColor").value = "";
   document.getElementById("pFeatured").checked = false;
   document.getElementById("pVisible").checked = true;
@@ -676,12 +790,17 @@ document.getElementById("saveProductBtn").addEventListener("click", async () => 
     id: editId || uid(),
     categoryId: document.getElementById("pCategory").value,
     name,
+    nameEn: document.getElementById("pNameEn").value.trim(),
+    sku: document.getElementById("pSku").value.trim(),
     size: document.getElementById("pSize").value.trim(),
+    sizeEn: document.getElementById("pSizeEn").value.trim(),
     color: document.getElementById("pColor").value.trim(),
     secondaryColor: document.getElementById("pSecondaryColor").value,
     material: document.getElementById("pMaterial").value.trim(),
+    materialEn: document.getElementById("pMaterialEn").value.trim(),
     price: document.getElementById("pPrice").value.trim(),
     desc: document.getElementById("pDesc").value.trim(),
+    descEn: document.getElementById("pDescEn").value.trim(),
     featured: document.getElementById("pFeatured").checked,
     visible: document.getElementById("pVisible").checked,
     hoverImage: document.getElementById("pHoverImage").value,
@@ -726,13 +845,18 @@ function renderProductsTab(){
       const p = SITE.products.find(x => x.id === btn.dataset.edit);
       if (!p) return;
       document.getElementById("pName").value = p.name;
+      document.getElementById("pNameEn").value = p.nameEn || "";
       document.getElementById("pCategory").value = p.categoryId;
+      document.getElementById("pSku").value = p.sku || "";
       document.getElementById("pSize").value = p.size || "";
+      document.getElementById("pSizeEn").value = p.sizeEn || "";
       document.getElementById("pColor").value = p.color || "";
       document.getElementById("pSecondaryColor").value = p.secondaryColor || "";
       document.getElementById("pMaterial").value = p.material || "";
+      document.getElementById("pMaterialEn").value = p.materialEn || "";
       document.getElementById("pPrice").value = p.price || "";
       document.getElementById("pDesc").value = p.desc || "";
+      document.getElementById("pDescEn").value = p.descEn || "";
       document.getElementById("pFeatured").checked = !!p.featured;
       document.getElementById("pVisible").checked = p.visible !== false;
       document.getElementById("pEditId").value = p.id;
@@ -757,10 +881,214 @@ function renderProductsTab(){
   });
 }
 
+/* ---------------- PROJECTS TAB ---------------- */
+function renderProjectsTab(){
+  const list = document.getElementById("projectsList");
+  list.innerHTML = "";
+  (SITE.projects || []).forEach((proj) => {
+    const row = document.createElement("div");
+    row.className = "item-row";
+    row.dataset.id = proj.id;
+    row.innerHTML = `
+      <div class="item-row-head"><strong>مشروع</strong><button type="button" class="remove-item">حذف</button></div>
+      <div class="item-thumb-upload">
+        <img class="pj-preview" src="${esc(proj.image||'')}" style="${proj.image ? "" : "display:none"}">
+        <input type="file" class="pj-file" accept="image/*">
+        <button type="button" class="media-picker-btn pj-pick-btn" style="margin-top:0">مكتبة</button>
+      </div>
+      <div class="admin-grid-2 mt-2">
+        <div class="field"><label>الوصف/التعليق</label><input type="text" class="pj-caption" value="${esc(proj.caption||'')}"></div>
+        <div class="field"><label>Caption (EN — اختياري)</label><input type="text" class="pj-caption-en" value="${esc(proj.captionEn||'')}"></div>
+      </div>
+    `;
+    row.querySelector(".remove-item").addEventListener("click", () => row.remove());
+    row.querySelector(".pj-file").addEventListener("change", async (e) => {
+      const file = e.target.files[0]; if (!file) return;
+      toast("جارٍ رفع الصورة...");
+      try{
+        const url = await uploadOne(file);
+        proj.image = url;
+        const prev = row.querySelector(".pj-preview");
+        prev.src = url; prev.style.display = "block";
+        toast("تم الرفع");
+      } catch(err){ toast("فشل الرفع: " + err.message); }
+    });
+    row.querySelector(".pj-pick-btn").addEventListener("click", () => {
+      openMediaPicker((url) => {
+        proj.image = url;
+        const prev = row.querySelector(".pj-preview");
+        prev.src = url; prev.style.display = "block";
+      });
+    });
+    list.appendChild(row);
+  });
+}
+document.getElementById("addProjectBtn").addEventListener("click", () => {
+  if (!SITE.projects) SITE.projects = [];
+  SITE.projects.push({ id: uid(), image: "", caption: "", captionEn: "", order: SITE.projects.length });
+  renderProjectsTab();
+});
+document.getElementById("saveProjectsBtn").addEventListener("click", async () => {
+  const rows = Array.from(document.querySelectorAll("#projectsList > .item-row"));
+  const keptIds = rows.map(r => r.dataset.id);
+  SITE.projects = (SITE.projects || []).filter(p => keptIds.includes(p.id));
+  rows.forEach((row, i) => {
+    const proj = SITE.projects.find(p => p.id === row.dataset.id);
+    if (!proj) return;
+    proj.caption = row.querySelector(".pj-caption").value.trim();
+    proj.captionEn = row.querySelector(".pj-caption-en").value.trim();
+    proj.order = i;
+  });
+  await saveSite({ projects: SITE.projects });
+  toast("تم حفظ المشاريع");
+});
+
+/* ---------------- TRUST TAB (stats / testimonials / certifications) ---------------- */
+function renderTrustTab(){
+  const vis = SITE.settings.sectionsVisible || {};
+  document.getElementById("visStats").checked = vis.stats !== false;
+  document.getElementById("visTestimonials").checked = vis.testimonials !== false;
+  document.getElementById("visCertifications").checked = vis.certifications !== false;
+
+  const statsList = document.getElementById("statsList");
+  statsList.innerHTML = "";
+  (SITE.stats || []).forEach((s) => {
+    const row = document.createElement("div");
+    row.className = "item-row"; row.dataset.id = s.id;
+    row.innerHTML = `
+      <div class="item-row-head"><strong>إحصائية</strong><button type="button" class="remove-item">حذف</button></div>
+      <div class="admin-grid-2">
+        <div class="field"><label>الرقم/النص القصير</label><input type="text" class="st-number" value="${esc(s.number||'')}" placeholder="+50"></div>
+        <div class="field"><label>الوصف</label><input type="text" class="st-label" value="${esc(s.label||'')}" placeholder="مسجد مجهّز"></div>
+        <div class="field"><label>Label (EN — اختياري)</label><input type="text" class="st-label-en" value="${esc(s.labelEn||'')}"></div>
+      </div>`;
+    row.querySelector(".remove-item").addEventListener("click", () => row.remove());
+    statsList.appendChild(row);
+  });
+
+  const testList = document.getElementById("testimonialsList");
+  testList.innerHTML = "";
+  (SITE.testimonials || []).forEach((t) => {
+    const row = document.createElement("div");
+    row.className = "item-row"; row.dataset.id = t.id;
+    row.innerHTML = `
+      <div class="item-row-head"><strong>رأي عميل</strong><button type="button" class="remove-item">حذف</button></div>
+      <div class="field"><label>النص</label><textarea class="ts-quote">${esc(t.quote||'')}</textarea></div>
+      <div class="field"><label>Quote (EN — اختياري)</label><textarea class="ts-quote-en">${esc(t.quoteEn||'')}</textarea></div>
+      <div class="admin-grid-2">
+        <div class="field"><label>الاسم / اسم المؤسسة</label><input type="text" class="ts-name" value="${esc(t.name||'')}"></div>
+        <div class="field"><label>Name (EN — اختياري)</label><input type="text" class="ts-name-en" value="${esc(t.nameEn||'')}"></div>
+        <div class="field"><label>الصفة (اختياري)</label><input type="text" class="ts-role" value="${esc(t.role||'')}" placeholder="مثال: إمام مسجد النور"></div>
+        <div class="field"><label>Role (EN — اختياري)</label><input type="text" class="ts-role-en" value="${esc(t.roleEn||'')}"></div>
+      </div>`;
+    row.querySelector(".remove-item").addEventListener("click", () => row.remove());
+    testList.appendChild(row);
+  });
+
+  const certList = document.getElementById("certificationsList");
+  certList.innerHTML = "";
+  (SITE.certifications || []).forEach((c) => {
+    const row = document.createElement("div");
+    row.className = "item-row"; row.dataset.id = c.id;
+    row.innerHTML = `
+      <div class="item-row-head"><strong>شهادة/شراكة</strong><button type="button" class="remove-item">حذف</button></div>
+      <div class="item-thumb-upload">
+        <img class="ce-preview" src="${esc(c.image||'')}" style="${c.image ? "" : "display:none"}">
+        <input type="file" class="ce-file" accept="image/*">
+        <button type="button" class="media-picker-btn ce-pick-btn" style="margin-top:0">مكتبة</button>
+      </div>
+      <div class="admin-grid-2 mt-2">
+        <div class="field"><label>الاسم</label><input type="text" class="ce-name" value="${esc(c.name||'')}" placeholder="مثال: موزع رسمي TAPIDOR"></div>
+        <div class="field"><label>Name (EN — اختياري)</label><input type="text" class="ce-name-en" value="${esc(c.nameEn||'')}"></div>
+      </div>`;
+    row.querySelector(".remove-item").addEventListener("click", () => row.remove());
+    row.querySelector(".ce-file").addEventListener("change", async (e) => {
+      const file = e.target.files[0]; if (!file) return;
+      toast("جارٍ رفع الصورة...");
+      try{
+        const url = await uploadOne(file);
+        c.image = url;
+        const prev = row.querySelector(".ce-preview");
+        prev.src = url; prev.style.display = "block";
+        toast("تم الرفع");
+      } catch(err){ toast("فشل الرفع: " + err.message); }
+    });
+    row.querySelector(".ce-pick-btn").addEventListener("click", () => {
+      openMediaPicker((url) => {
+        c.image = url;
+        const prev = row.querySelector(".ce-preview");
+        prev.src = url; prev.style.display = "block";
+      });
+    });
+    certList.appendChild(row);
+  });
+}
+document.getElementById("addStatBtn").addEventListener("click", () => {
+  if (!SITE.stats) SITE.stats = [];
+  SITE.stats.push({ id: uid(), number: "", label: "", labelEn: "", order: SITE.stats.length });
+  renderTrustTab();
+});
+document.getElementById("addTestimonialBtn").addEventListener("click", () => {
+  if (!SITE.testimonials) SITE.testimonials = [];
+  SITE.testimonials.push({ id: uid(), name: "", nameEn: "", role: "", roleEn: "", quote: "", quoteEn: "", order: SITE.testimonials.length });
+  renderTrustTab();
+});
+document.getElementById("addCertificationBtn").addEventListener("click", () => {
+  if (!SITE.certifications) SITE.certifications = [];
+  SITE.certifications.push({ id: uid(), image: "", name: "", nameEn: "", order: SITE.certifications.length });
+  renderTrustTab();
+});
+document.getElementById("saveTrustBtn").addEventListener("click", async () => {
+  const statRows = Array.from(document.querySelectorAll("#statsList > .item-row"));
+  SITE.stats = statRows.map((row, i) => ({
+    id: row.dataset.id,
+    number: row.querySelector(".st-number").value.trim(),
+    label: row.querySelector(".st-label").value.trim(),
+    labelEn: row.querySelector(".st-label-en").value.trim(),
+    order: i
+  }));
+
+  const testRows = Array.from(document.querySelectorAll("#testimonialsList > .item-row"));
+  SITE.testimonials = testRows.map((row, i) => ({
+    id: row.dataset.id,
+    quote: row.querySelector(".ts-quote").value.trim(),
+    quoteEn: row.querySelector(".ts-quote-en").value.trim(),
+    name: row.querySelector(".ts-name").value.trim(),
+    nameEn: row.querySelector(".ts-name-en").value.trim(),
+    role: row.querySelector(".ts-role").value.trim(),
+    roleEn: row.querySelector(".ts-role-en").value.trim(),
+    order: i
+  }));
+
+  const certRows = Array.from(document.querySelectorAll("#certificationsList > .item-row"));
+  SITE.certifications = certRows.map((row, i) => {
+    const existing = SITE.certifications.find(c => c.id === row.dataset.id) || {};
+    return {
+      id: row.dataset.id,
+      image: existing.image || "",
+      name: row.querySelector(".ce-name").value.trim(),
+      nameEn: row.querySelector(".ce-name-en").value.trim(),
+      order: i
+    };
+  });
+
+  SITE.settings.sectionsVisible = {
+    stats: document.getElementById("visStats").checked,
+    testimonials: document.getElementById("visTestimonials").checked,
+    certifications: document.getElementById("visCertifications").checked,
+    projects: SITE.settings.sectionsVisible?.projects !== false
+  };
+
+  await saveSite({ stats: SITE.stats, testimonials: SITE.testimonials, certifications: SITE.certifications, settings: SITE.settings });
+  toast("تم حفظ قسم الثقة");
+});
+
 /* ---------------- ABOUT TAB ---------------- */
 function renderAboutTab(){
   document.getElementById("aboutTitleInput").value = SITE.about.title || "";
+  document.getElementById("aboutTitleInputEn").value = SITE.about.titleEn || "";
   document.getElementById("aboutTextInput").value = SITE.about.text || "";
+  document.getElementById("aboutTextInputEn").value = SITE.about.textEn || "";
   if (SITE.about.image){
     const img = document.getElementById("aboutImgPreview");
     img.src = SITE.about.image; img.style.display = "block"; img.dataset.value = SITE.about.image;
@@ -780,7 +1108,9 @@ document.getElementById("aboutImgFile").addEventListener("change", async (e) => 
 document.getElementById("saveAboutBtn").addEventListener("click", async () => {
   const img = document.getElementById("aboutImgPreview");
   SITE.about.title = document.getElementById("aboutTitleInput").value.trim();
+  SITE.about.titleEn = document.getElementById("aboutTitleInputEn").value.trim();
   SITE.about.text = document.getElementById("aboutTextInput").value.trim();
+  SITE.about.textEn = document.getElementById("aboutTextInputEn").value.trim();
   SITE.about.image = img.dataset.value || SITE.about.image || "";
   await saveSite({ about: SITE.about });
   toast("تم الحفظ");
