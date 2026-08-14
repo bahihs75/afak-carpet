@@ -126,11 +126,25 @@ export async function saveSite(partial){
 }
 
 export async function submitOrder(order){
-  await addDoc(ORDERS_COL, {
-    ...order,
-    status: "new",
-    createdAt: serverTimestamp()
-  });
+  const allowedCategories = new Set(["mosques", "hotels", "schools", "halls"]);
+  const clean = (value, max) => String(value ?? "").replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, max);
+  const phone = clean(order.phone, 20).replace(/[^0-9+]/g, "");
+  const payload = {
+    name: clean(order.name, 120), phone,
+    category: clean(order.category, 20), wilayaCode: clean(order.wilayaCode, 10),
+    wilayaName: clean(order.wilayaName, 100), commune: clean(order.commune, 100),
+    message: String(order.message ?? "").replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "").trim().slice(0, 1000),
+    product: order.product && typeof order.product === "object" ? {
+      id: clean(order.product.id, 80), name: clean(order.product.name, 160),
+      categoryId: clean(order.product.categoryId, 20), size: clean(order.product.size, 80),
+      price: Number.isFinite(Number(order.product.price)) ? Number(order.product.price) : null,
+      image: /^https?:\/\//i.test(String(order.product.image || "")) ? String(order.product.image).slice(0, 500) : ""
+    } : null
+  };
+  if (payload.name.length < 2 || phone.replace(/\D/g, "").length < 8 || !allowedCategories.has(payload.category) || !payload.wilayaCode){
+    throw new Error("بيانات الطلب غير صالحة");
+  }
+  await addDoc(ORDERS_COL, { ...payload, status: "new", createdAt: serverTimestamp() });
 }
 
 function deepMerge(base, override){
