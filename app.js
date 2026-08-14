@@ -25,10 +25,10 @@ export const DEFAULT_SITE = {
     address: "",
     socials: { instagram: "", facebook: "", tiktok: "", linkedin: "" },
     colorPalette: [
-      { id: "blue", name: "أزرق", hex: "#1F4E8C" },
-      { id: "bordeaux", name: "بوردو", hex: "#6D1B2A" },
-      { id: "gris", name: "رمادي", hex: "#8A8D91" },
-      { id: "green", name: "أخضر", hex: "#2F6B3A" }
+      { id: "blue", name: "أزرق", nameEn: "Blue", hex: "#1F4E8C" },
+      { id: "bordeaux", name: "بوردو", nameEn: "Bordeaux", hex: "#6D1B2A" },
+      { id: "gris", name: "رمادي", nameEn: "Grey", hex: "#8A8D91" },
+      { id: "green", name: "أخضر", nameEn: "Green", hex: "#2F6B3A" }
     ],
     // Optional analytics/marketing pixels — scripts are only injected on the
     // public site when a field is non-empty, so nothing loads by default.
@@ -37,7 +37,16 @@ export const DEFAULT_SITE = {
     tiktokPixelId: "",
     // Independent visibility switches for the "trust" blocks — a block also
     // auto-hides itself when it has zero items, regardless of this switch.
-    sectionsVisible: { projects: true, testimonials: true, stats: true, certifications: true }
+    sectionsVisible: { projects: true, testimonials: true, stats: true, certifications: true },
+    // Floating "jump to section" menu (mobile) — fully admin-editable list.
+    navMenuItems: [
+      { id: "m1", icon: "🕌", label: "المساجد", labelEn: "Mosques", link: "#mosques", order: 1 },
+      { id: "m2", icon: "🏨", label: "الفنادق", labelEn: "Hotels", link: "#hotels", order: 2 },
+      { id: "m3", icon: "🎒", label: "الروضات", labelEn: "Kindergartens", link: "#schools", order: 3 },
+      { id: "m4", icon: "🏛️", label: "القاعات الكبرى", labelEn: "Halls", link: "#halls", order: 4 },
+      { id: "m5", icon: "ℹ️", label: "من نحن", labelEn: "About", link: "#about", order: 5 },
+      { id: "m6", icon: "✉️", label: "تواصل معنا", labelEn: "Contact", link: "#contact", order: 6 }
+    ]
   },
   hero: {
     slides: [
@@ -62,7 +71,7 @@ export const DEFAULT_SITE = {
     { id: "halls", order: 4, name: "قاعات المؤتمرات والمساحات الكبرى", nameEn: "", image: "", desc: "تغطية شاملة للمساحات الواسعة والقاعات الرسمية.", descEn: "", showColorFilter: true }
   ],
   // product: { id, categoryId, name, nameEn, price, size, sizeEn, color,
-  //   secondaryColor, material, materialEn, sku, desc, descEn, images:[],
+  //   secondaryColors: [], material, materialEn, sku, desc, descEn, images:[],
   //   hoverImage, featured, visible, order }
   products: [],
   about: {
