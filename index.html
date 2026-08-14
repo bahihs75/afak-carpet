@@ -64,8 +64,8 @@
   <!-- ===================== HERO SLIDER (Tesla-style) ===================== -->
   <section class="hero-slider" id="heroSlider">
     <!-- slides injected by JS -->
-    <button class="hero-arrow prev" id="heroPrev" aria-label="السابق">›</button>
-    <button class="hero-arrow next" id="heroNext" aria-label="التالي">‹</button>
+    <button class="hero-arrow prev" id="heroPrev" aria-label="السابق">‹</button>
+    <button class="hero-arrow next" id="heroNext" aria-label="التالي">›</button>
     <div class="hero-dots" id="heroDots"></div>
     <span class="hero-scroll-hint" data-i18n="hero.scrollHint">مرّر للأسفل</span>
   </section>
@@ -92,6 +92,10 @@
       </div>
 
       <div class="color-swatches" id="mosquesSwatches"></div>
+      <div class="col-toggle" id="mosquesColToggle" data-grid="mosqueGrid">
+        <button type="button" data-cols="1" aria-label="عمود واحد"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="4" width="14" height="16" rx="1"/></svg></button>
+        <button type="button" data-cols="2" aria-label="عمودين"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="8" height="16" rx="1"/><rect x="13" y="4" width="8" height="16" rx="1"/></svg></button>
+      </div>
 
       <div class="mosque-slider" id="mosqueSliderWrap" style="display:none">
         <div class="mosque-slider-track" id="mosqueSliderTrack"></div>
@@ -113,6 +117,10 @@
   <section class="section" id="hotels">
     <div class="container">
       <div class="color-swatches" id="hotelsSwatches"></div>
+      <div class="col-toggle" id="hotelsColToggle" data-grid="hotelsGrid">
+        <button type="button" data-cols="1" aria-label="عمود واحد"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="4" width="14" height="16" rx="1"/></svg></button>
+        <button type="button" data-cols="2" aria-label="عمودين"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="8" height="16" rx="1"/><rect x="13" y="4" width="8" height="16" rx="1"/></svg></button>
+      </div>
       <div class="product-grid" id="hotelsGrid"></div>
       <p class="empty-state" id="hotelsEmpty" style="display:none" data-i18n="empty.products">لا توجد منتجات مضافة بعد لهذا القسم.</p>
       <div class="center mt-4"><button class="btn btn-outline" data-open-quote data-i18n="hotels.cta">اطلب عرض سعر لفندقك</button></div>
@@ -130,6 +138,10 @@
   <section class="section section-soft" id="schools">
     <div class="container">
       <div class="color-swatches" id="schoolsSwatches"></div>
+      <div class="col-toggle" id="schoolsColToggle" data-grid="schoolsGrid">
+        <button type="button" data-cols="1" aria-label="عمود واحد"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="4" width="14" height="16" rx="1"/></svg></button>
+        <button type="button" data-cols="2" aria-label="عمودين"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="8" height="16" rx="1"/><rect x="13" y="4" width="8" height="16" rx="1"/></svg></button>
+      </div>
       <div class="product-grid" id="schoolsGrid"></div>
       <p class="empty-state" id="schoolsEmpty" style="display:none" data-i18n="empty.products">لا توجد منتجات مضافة بعد لهذا القسم.</p>
       <div class="center mt-4"><button class="btn btn-outline" data-open-quote data-i18n="schools.cta">اطلب عرض سعر لروضتك</button></div>
@@ -147,6 +159,10 @@
   <section class="section" id="halls">
     <div class="container">
       <div class="color-swatches" id="hallsSwatches"></div>
+      <div class="col-toggle" id="hallsColToggle" data-grid="hallsGrid">
+        <button type="button" data-cols="1" aria-label="عمود واحد"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="4" width="14" height="16" rx="1"/></svg></button>
+        <button type="button" data-cols="2" aria-label="عمودين"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="8" height="16" rx="1"/><rect x="13" y="4" width="8" height="16" rx="1"/></svg></button>
+      </div>
       <div class="product-grid" id="hallsGrid"></div>
       <p class="empty-state" id="hallsEmpty" style="display:none" data-i18n="empty.products">لا توجد منتجات مضافة بعد لهذا القسم.</p>
       <div class="center mt-4"><button class="btn btn-outline" data-open-quote data-i18n="halls.cta">اطلب عرض سعر لقاعتك</button></div>
@@ -273,6 +289,15 @@
   </div>
 </div>
 
+<!-- ===================== FLOATING UTILITY BUTTONS ===================== -->
+<button class="go-up-btn" id="goUpBtn" aria-label="الرجوع للأعلى">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
+</button>
+<button class="section-menu-btn" id="sectionMenuBtn" aria-label="أقسام الموقع">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+</button>
+<nav class="section-menu-popover" id="sectionMenuPopover"></nav>
+
 <!-- ===================== QUOTE MODAL (unified form) ===================== -->
 <div class="modal-overlay" id="quoteModal">
   <div class="modal-box">
@@ -344,6 +369,13 @@ let mosqueList = [];
 let currentProductRef = null; // full product snapshot object, or null
 
 const colorFilterState = { mosques: "", hotels: "", schools: "", halls: "" };
+
+// Backward-compatible reader: supports both the old single `secondaryColor`
+// field and the new multi-select `secondaryColors` array.
+function productColors(p){
+  if (Array.isArray(p.secondaryColors)) return p.secondaryColors;
+  return p.secondaryColor ? [p.secondaryColor] : [];
+}
 
 /* ==================================================================
    i18n — static chrome dictionary (Phase 1) + tf() for optional
@@ -572,7 +604,7 @@ function snapshotOf(p, categoryName){
   return {
     categoryId: p.categoryId, name: tf(p, "name", currentLang), price: p.price || "",
     size: tf(p, "size", currentLang) || p.size || "", color: p.color || "",
-    secondaryColor: p.secondaryColor || "", material: tf(p, "material", currentLang) || p.material || "",
+    secondaryColors: productColors(p), material: tf(p, "material", currentLang) || p.material || "",
     sku: p.sku || "", link,
     image: (p.images && p.images[0]) || "", categoryName: categoryName || ""
   };
@@ -591,10 +623,15 @@ function openDetail(p, categoryName, categoryId){
 
   const specs = document.getElementById("detailSpecs");
   specs.innerHTML = "";
+  const SPEC_LABELS = {
+    ar: { size: "المقاس", color: "اللون", material: "الخامة", price: "السعر", sku: "الرمز المرجعي" },
+    en: { size: "Size", color: "Color", material: "Material", price: "Price", sku: "SKU" }
+  };
+  const L = SPEC_LABELS[currentLang];
   const rows = [
-    ["المقاس", tf(p,"size",currentLang) || p.size], ["اللون", p.color],
-    ["الخامة", tf(p,"material",currentLang) || p.material], ["السعر", money(p.price)],
-    ["الرمز المرجعي", p.sku]
+    [L.size, tf(p,"size",currentLang) || p.size], [L.color, p.color],
+    [L.material, tf(p,"material",currentLang) || p.material], [L.price, money(p.price)],
+    [L.sku, p.sku]
   ];
   rows.forEach(([k,v]) => {
     if (!v) return;
@@ -671,6 +708,78 @@ function restartHeroTimer(count){
 }
 document.getElementById("heroNext").addEventListener("click", () => goToHero(heroIndex + 1));
 document.getElementById("heroPrev").addEventListener("click", () => goToHero(heroIndex - 1));
+
+/* ---------------- Hero slider — touch swipe support ---------------- */
+(function(){
+  const wrap = document.getElementById("heroSlider");
+  let touchStartX = null;
+  wrap.addEventListener("touchstart", (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
+  wrap.addEventListener("touchend", (e) => {
+    if (touchStartX === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 40){
+      // RTL-aware: a right-swipe (dx > 0) reveals the "previous" slide visually
+      if (dx > 0) goToHero(heroIndex - 1); else goToHero(heroIndex + 1);
+    }
+    touchStartX = null;
+  }, { passive: true });
+})();
+
+/* ---------------- Floating go-up button ---------------- */
+const goUpBtn = document.getElementById("goUpBtn");
+window.addEventListener("scroll", () => {
+  goUpBtn.classList.toggle("is-visible", window.scrollY > window.innerHeight * 0.6);
+}, { passive: true });
+goUpBtn.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+
+/* ---------------- Floating section-menu button (mobile) ---------------- */
+const sectionMenuBtn = document.getElementById("sectionMenuBtn");
+const sectionMenuPopover = document.getElementById("sectionMenuPopover");
+function renderSectionMenu(){
+  const items = (SITE?.settings?.navMenuItems || []).slice().sort((a,b)=>(a.order||0)-(b.order||0));
+  sectionMenuPopover.innerHTML = items.map(item => `
+    <a href="${esc(item.link)}">
+      <span class="mi-icon">${esc(item.icon || "•")}</span>
+      <span>${esc(tf(item, "label", currentLang))}</span>
+    </a>`).join("");
+  sectionMenuPopover.querySelectorAll("a").forEach(a => {
+    a.addEventListener("click", () => closeSectionMenu());
+  });
+}
+function closeSectionMenu(){
+  sectionMenuBtn.classList.remove("is-open");
+  sectionMenuPopover.classList.remove("is-open");
+}
+sectionMenuBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  const open = sectionMenuPopover.classList.toggle("is-open");
+  sectionMenuBtn.classList.toggle("is-open", open);
+});
+document.addEventListener("click", (e) => {
+  if (!sectionMenuPopover.contains(e.target) && !sectionMenuBtn.contains(e.target)) closeSectionMenu();
+});
+window.addEventListener("scroll", () => {
+  sectionMenuBtn.classList.toggle("is-visible", window.scrollY > window.innerHeight * 0.6);
+}, { passive: true });
+
+/* ---------------- Mobile 1/2 column grid toggle ---------------- */
+let gridCols = localStorage.getItem("afak_grid_cols") || "2";
+function applyGridCols(){
+  document.querySelectorAll(".product-grid").forEach(g => {
+    g.classList.toggle("cols-1", gridCols === "1");
+    g.classList.toggle("cols-2", gridCols === "2");
+  });
+  document.querySelectorAll(".col-toggle button").forEach(btn => {
+    btn.classList.toggle("is-active", btn.dataset.cols === gridCols);
+  });
+}
+document.querySelectorAll(".col-toggle button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    gridCols = btn.dataset.cols;
+    localStorage.setItem("afak_grid_cols", gridCols);
+    applyGridCols();
+  });
+});
 
 /* ---------------- Render: categories ---------------- */
 function renderCategories(cats){
@@ -753,7 +862,7 @@ function renderMosques(products, categories){
 
   function applyFilter(){
     const c = colorFilterState.mosques;
-    return c ? all.filter(p => p.secondaryColor === c) : all;
+    return c ? all.filter(p => productColors(p).includes(c)) : all;
   }
 
   function renderSlider(list){
@@ -805,7 +914,7 @@ function renderPlainGrid(products, categoryId, gridId, emptyId, swatchId, countI
 
   function refresh(){
     const c = colorFilterState[categoryId];
-    const list = c ? all.filter(p => p.secondaryColor === c) : all;
+    const list = c ? all.filter(p => productColors(p).includes(c)) : all;
     const grid = document.getElementById(gridId);
     const empty = document.getElementById(emptyId);
     if (!list.length){ grid.innerHTML = ""; empty.style.display = "block"; return; }
@@ -872,29 +981,42 @@ function renderTrustBlock(site){
   } else certsSection.style.display = "none";
 }
 
+/* ---------------- Icon sets (monoline SVG, matches the navy/minimal identity) ---------------- */
+const CONTACT_ICONS = {
+  phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>',
+  whatsapp: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.7-.9-2-1-.3-.1-.5-.1-.6.1-.2.3-.7 1-.9 1.2-.2.2-.3.2-.6.1-.3-.1-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.2-.4.1-.2 0-.3 0-.5s-.6-1.5-.9-2c-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.3.3-1 1-1 2.4s1 2.8 1.2 3c.1.2 2 3.1 4.9 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.7-.7 1.9-1.3.2-.7.2-1.2.2-1.3-.1-.2-.3-.3-.6-.4z"/><path d="M12 2C6.5 2 2 6.5 2 12c0 1.9.5 3.7 1.5 5.3L2 22l4.8-1.4C8.3 21.5 10.1 22 12 22c5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18.2c-1.7 0-3.3-.5-4.7-1.3l-.3-.2-3 .9.9-2.9-.2-.3C3.9 15 3.4 13.5 3.4 12 3.4 7.3 7.3 3.4 12 3.4S20.6 7.3 20.6 12 16.7 20.2 12 20.2z"/></svg>',
+  mail: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>',
+  pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>'
+};
+const SOCIAL_ICONS = {
+  instagram: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>',
+  facebook: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>',
+  tiktok: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.6 5.82s.51.5 0 0A4.278 4.278 0 0 1 15.54 3h-3.09v12.4a2.59 2.59 0 1 1-2.59-2.59c.26 0 .519.039.767.116V9.845a5.85 5.85 0 0 0-.767-.055A5.851 5.851 0 0 0 4.28 15.16 5.851 5.851 0 0 0 9.63 20.9c3.23 0 5.85-2.617 5.85-5.85V9.19a7.65 7.65 0 0 0 4.47 1.43V7.53c-1.02 0-1.958-.34-2.71-.91a4.5 4.5 0 0 1-.64-.8z"/></svg>',
+  linkedin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>'
+};
+
 /* ---------------- Render: contact / footer ---------------- */
 function renderContact(site){
   const s = site.settings;
   const contactList = document.getElementById("contactList");
   const footerContact = document.getElementById("footerContact");
   const rows = [
-    ["الهاتف", s.phone, s.phone ? `tel:${s.phone}` : null],
-    ["واتساب", s.whatsapp, s.whatsapp ? waLink(s.whatsapp) : null],
-    ["البريد الإلكتروني", s.email, s.email ? `mailto:${s.email}` : null],
-    ["العنوان", s.address, null]
+    ["الهاتف", s.phone, s.phone ? `tel:${s.phone}` : null, CONTACT_ICONS.phone],
+    ["واتساب", s.whatsapp, s.whatsapp ? waLink(s.whatsapp) : null, CONTACT_ICONS.whatsapp],
+    ["البريد الإلكتروني", s.email, s.email ? `mailto:${s.email}` : null, CONTACT_ICONS.mail],
+    ["العنوان", s.address, null, CONTACT_ICONS.pin]
   ].filter(r => r[1]);
-  contactList.innerHTML = rows.map(([k,v,href]) => `
-    <li><span class="k">${esc(k)}</span>${href ? `<a href="${esc(href)}">${esc(v)}</a>` : `<span>${esc(v)}</span>`}</li>
+  contactList.innerHTML = rows.map(([k,v,href,icon]) => `
+    <li><span class="k" style="display:flex; align-items:center; gap:8px"><span style="width:16px; height:16px; display:inline-flex">${icon}</span>${esc(k)}</span>${href ? `<a href="${esc(href)}">${esc(v)}</a>` : `<span>${esc(v)}</span>`}</li>
   `).join("") || '<li class="empty-state">أضف بيانات التواصل من لوحة التحكم.</li>';
   footerContact.innerHTML = rows.map(([k,v,href]) => `
     <li>${href ? `<a href="${esc(href)}">${esc(v)}</a>` : esc(v)}</li>
   `).join("");
 
   const socialRow = document.getElementById("socialRow");
-  const socialIcons = { instagram:"IG", facebook:"FB", tiktok:"TT", linkedin:"IN" };
   socialRow.innerHTML = Object.entries(s.socials || {})
     .filter(([,url]) => url)
-    .map(([key,url]) => `<a href="${esc(url)}" target="_blank" rel="noopener" aria-label="${esc(key)}">${socialIcons[key]||"•"}</a>`)
+    .map(([key,url]) => `<a href="${esc(url)}" target="_blank" rel="noopener" aria-label="${esc(key)}">${SOCIAL_ICONS[key]||"•"}</a>`)
     .join("");
 
   const waBtn = document.getElementById("contactWhatsappBtn");
@@ -952,6 +1074,8 @@ function renderAll(){
   renderProjects(SITE);
   renderTrustBlock(SITE);
   renderContact(SITE);
+  renderSectionMenu();
+  applyGridCols();
 }
 
 document.getElementById("year").textContent = new Date().getFullYear();
