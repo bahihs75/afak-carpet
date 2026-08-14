@@ -283,8 +283,9 @@
     <div class="admin-tab-panel" data-panel="orders" style="display:none">
       <div class="admin-card">
         <h3>طلبات عروض الأسعار</h3>
+        <p class="form-note mt-2">يمكن تغيير الحالة مباشرة من القائمة: قيد الانتظار، قيد المعالجة، تم التواصل، مكتمل، أو ملغى.</p>
         <table class="admin-table">
-          <thead><tr><th>الاسم</th><th>الهاتف</th><th>المجال</th><th>الولاية / البلدية</th><th>المنتج المرتبط</th><th>ملاحظات</th><th>التاريخ</th></tr></thead>
+          <thead><tr><th>الاسم</th><th>الهاتف</th><th>المجال</th><th>الولاية / البلدية</th><th>المنتج المرتبط</th><th>الحالة</th><th>ملاحظات</th><th>التاريخ</th></tr></thead>
           <tbody id="ordersTableBody"></tbody>
         </table>
         <p class="empty-state" id="ordersEmpty" style="display:none">لا توجد طلبات بعد.</p>
@@ -314,7 +315,7 @@ import {
   signInWithEmailAndPassword, onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import {
-  collection, query, orderBy, onSnapshot
+  collection, query, orderBy, onSnapshot, doc, updateDoc
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import {
   getSiteOnce, saveSite, uploadToImgbb, esc, uid, money
@@ -364,6 +365,75 @@ function toast(msg){
   t.textContent = msg;
   t.classList.add("is-open");
   setTimeout(() => t.classList.remove("is-open"), 2400);
+}
+function safeAdminLink(value, fallback = "#top"){
+  const raw = String(value || "").trim();
+  if (/^#[A-Za-z][A-Za-z0-9_-]*$/.test(raw)) return raw;
+  try{
+    const url = new URL(raw, location.origin);
+    if (["http:", "https:"].includes(url.protocol)) return url.href;
+  } catch {}
+  return fallback;
+}
+function makeCompactRows(list, summaryFn){
+  Array.from(list.children).forEach(row => {
+    let head = row.querySelector(":scope > .compact-row-head");
+    let editor = row.querySelector(":scope > .compact-editor");
+    if (!head){
+      const existingHead = row.querySelector(":scope > .item-row-head");
+      const children = Array.from(row.children);
+      head = existingHead || document.createElement("div");
+      head.classList.add("compact-row-head");
+      head.setAttribute("role", "button");
+      head.setAttribute("aria-expanded", "false");
+      if (existingHead){
+        const strong = head.querySelector("strong");
+        const remove = head.querySelector(".remove-item");
+        const label = document.createElement("span"); label.className = "compact-row-label";
+        if (strong) label.appendChild(strong);
+        head.innerHTML = "";
+        head.appendChild(label);
+        if (remove) head.appendChild(remove);
+      } else {
+        const label = document.createElement("span"); label.className = "compact-row-label";
+        head.appendChild(label);
+      }
+      const summary = document.createElement("span"); summary.className = "compact-row-summary";
+      head.querySelector(".compact-row-label").appendChild(summary);
+      const toggle = document.createElement("button");
+      toggle.type = "button"; toggle.className = "compact-row-toggle"; toggle.tabIndex = -1;
+      toggle.setAttribute("aria-label", "فتح التعديل");
+      head.appendChild(toggle);
+      editor = document.createElement("div"); editor.className = "compact-editor";
+      children.forEach(child => { if (child !== head) editor.appendChild(child); });
+      row.append(head, editor);
+    }
+    let summary = head.querySelector(".compact-row-summary");
+    if (!summary){
+      summary = document.createElement("span"); summary.className = "compact-row-summary";
+      let label = head.querySelector(".compact-row-label");
+      if (!label){ label = document.createElement("span"); label.className = "compact-row-label"; head.prepend(label); }
+      label.appendChild(summary);
+    }
+    if (!head.querySelector(".compact-row-toggle")){
+      const toggle = document.createElement("button"); toggle.type = "button"; toggle.className = "compact-row-toggle";
+      toggle.tabIndex = -1; toggle.setAttribute("aria-label", "فتح التعديل"); head.appendChild(toggle);
+    }
+    const updateSummary = () => { summary.textContent = summaryFn(row); };
+    updateSummary();
+    if (row.dataset.compactBound === "1") return;
+    const toggle = () => {
+      const expanded = row.classList.toggle("is-expanded");
+      head.setAttribute("aria-expanded", String(expanded));
+    };
+    head.addEventListener("click", event => { if (!event.target.closest(".remove-item")) toggle(); });
+    head.addEventListener("keydown", event => { if (event.key === "Enter" || event.key === " "){ event.preventDefault(); toggle(); } });
+    head.tabIndex = 0;
+    row.querySelectorAll("input, textarea, select").forEach(field => {
+      field.addEventListener("input", updateSummary); field.addEventListener("change", updateSummary);
+    });
+    row.dataset.compactBound = "1";
+  });
 }
 
 /* ---------------- imgbb upload + media library tracking ---------------- */
@@ -599,28 +669,55 @@ function renderNavMenuTab(){
     row.innerHTML = `
       <div class="item-row-head"><strong>عنصر قائمة</strong><button type="button" class="remove-item">حذف</button></div>
       <div class="admin-grid-2">
-        <div class="field"><label>الأيقونة (إيموجي)</label><input type="text" class="nm-icon" value="${esc(item.icon||'')}" style="font-size:18px"></div>
+        <div class="field"><label>الأيقونة البديلة (إيموجي)</label><input type="text" class="nm-icon" value="${esc(item.icon||'')}" style="font-size:18px" maxlength="8"></div>
         <div class="field"><label>الرابط (# لقسم داخلي أو رابط كامل)</label><input type="text" class="nm-link" value="${esc(item.link||'')}" placeholder="#mosques"></div>
         <div class="field"><label>النص</label><input type="text" class="nm-label" value="${esc(item.label||'')}"></div>
         <div class="field"><label>Label (EN — اختياري)</label><input type="text" class="nm-label-en" value="${esc(item.labelEn||'')}"></div>
       </div>
+      <div class="field">
+        <label>رفع أيقونة SVG صغيرة</label>
+        <div class="icon-upload-inline"><img class="nm-icon-preview" src="${esc(item.iconUrl||'')}" style="${item.iconUrl ? "" : "display:none"}" alt=""><input type="file" class="nm-icon-file" accept=".svg,image/svg+xml"><button type="button" class="media-picker-btn nm-icon-pick-btn" style="margin-top:0">مكتبة</button><button type="button" class="btn btn-outline nm-icon-clear" style="margin-top:0">إزالة</button></div>
+        <input type="hidden" class="nm-icon-url" value="${esc(item.iconUrl||'')}">
+        <p class="form-note">عند عدم وجود SVG سيظهر الإيموجي. الحجم المقترح أقل من 20KB.</p>
+      </div>
     `;
     row.querySelector(".remove-item").addEventListener("click", () => row.remove());
+    row.querySelector(".nm-icon-file").addEventListener("change", async (e) => {
+      const file = e.target.files[0]; if (!file) return;
+      if (file.type !== "image/svg+xml" && !file.name.toLowerCase().endsWith(".svg")){ toast("اختر ملف SVG فقط"); return; }
+      toast("جارٍ رفع الأيقونة...");
+      try{
+        const url = await uploadOne(file);
+        row.querySelector(".nm-icon-url").value = url;
+        const preview = row.querySelector(".nm-icon-preview"); preview.src = url; preview.style.display = "block";
+        toast("تم رفع الأيقونة");
+      } catch(err){ toast("فشل الرفع: " + err.message); }
+    });
+    row.querySelector(".nm-icon-pick-btn").addEventListener("click", () => openMediaPicker(url => {
+      row.querySelector(".nm-icon-url").value = url;
+      const preview = row.querySelector(".nm-icon-preview"); preview.src = url; preview.style.display = "block";
+    }));
+    row.querySelector(".nm-icon-clear").addEventListener("click", () => {
+      row.querySelector(".nm-icon-url").value = "";
+      row.querySelector(".nm-icon-preview").style.display = "none";
+    });
     list.appendChild(row);
   });
+  makeCompactRows(list, row => row.querySelector(".nm-label")?.value || "عنصر قائمة");
 }
 document.getElementById("addNavMenuItemBtn").addEventListener("click", () => {
   if (!SITE.settings.navMenuItems) SITE.settings.navMenuItems = [];
-  SITE.settings.navMenuItems.push({ id: uid(), icon: "•", label: "", labelEn: "", link: "#", order: SITE.settings.navMenuItems.length });
+  SITE.settings.navMenuItems.push({ id: uid(), icon: "•", iconUrl: "", label: "", labelEn: "", link: "#", order: SITE.settings.navMenuItems.length });
   renderNavMenuTab();
 });
 function collectNavMenuFromDOM(){
   return Array.from(document.querySelectorAll("#navMenuList > .item-row")).map((row, i) => ({
     id: row.dataset.id,
-    icon: row.querySelector(".nm-icon").value.trim() || "•",
-    link: row.querySelector(".nm-link").value.trim() || "#",
-    label: row.querySelector(".nm-label").value.trim(),
-    labelEn: row.querySelector(".nm-label-en").value.trim(),
+    icon: row.querySelector(".nm-icon").value.trim().slice(0, 8) || "•",
+    iconUrl: row.querySelector(".nm-icon-url")?.value.trim().slice(0, 500) || "",
+    link: safeAdminLink(row.querySelector(".nm-link").value, "#top"),
+    label: row.querySelector(".nm-label").value.trim().slice(0, 120),
+    labelEn: row.querySelector(".nm-label-en").value.trim().slice(0, 120),
     order: i
   })).filter(it => it.label);
 }
@@ -693,6 +790,7 @@ function renderHeroTab(){
     });
     list.appendChild(row);
   });
+  makeCompactRows(list, row => row.querySelector(".s-title")?.value || "شريحة");
 }
 document.getElementById("addSlideBtn").addEventListener("click", () => {
   SITE.hero.slides.push({
@@ -716,7 +814,7 @@ document.getElementById("saveHeroBtn").addEventListener("click", async () => {
     slide.ctaLabelEn = row.querySelector(".s-cta-en").value.trim();
     slide.secondaryLabel = row.querySelector(".s-secondary").value.trim();
     slide.secondaryLabelEn = row.querySelector(".s-secondary-en").value.trim();
-    slide.secondaryLink = row.querySelector(".s-secondary-link").value.trim() || "#mosques";
+    slide.secondaryLink = safeAdminLink(row.querySelector(".s-secondary-link").value, "#mosques");
   });
   await saveSite({ hero: SITE.hero });
   toast("تم حفظ السلايدر");
@@ -772,6 +870,7 @@ function renderCategoriesTab(){
     });
     list.appendChild(row);
   });
+  makeCompactRows(list, row => row.querySelector(".c-name")?.value || "قسم");
 }
 document.getElementById("saveCategoriesBtn").addEventListener("click", async () => {
   document.querySelectorAll("#categoriesList > div").forEach(row => {
@@ -981,6 +1080,7 @@ function renderProjectsTab(){
     });
     list.appendChild(row);
   });
+  makeCompactRows(list, row => row.querySelector(".pj-caption")?.value || "مشروع");
 }
 document.getElementById("addProjectBtn").addEventListener("click", () => {
   if (!SITE.projects) SITE.projects = [];
@@ -1081,6 +1181,9 @@ function renderTrustTab(){
     });
     certList.appendChild(row);
   });
+  makeCompactRows(statsList, row => `${row.querySelector(".st-number")?.value || ""} ${row.querySelector(".st-label")?.value || "إحصائية"}`.trim());
+  makeCompactRows(testList, row => row.querySelector(".ts-name")?.value || "رأي عميل");
+  makeCompactRows(certList, row => row.querySelector(".ce-name")?.value || "شهادة/شراكة");
 }
 document.getElementById("addStatBtn").addEventListener("click", () => {
   if (!SITE.stats) SITE.stats = [];
@@ -1176,6 +1279,34 @@ document.getElementById("saveAboutBtn").addEventListener("click", async () => {
 });
 
 /* ---------------- ORDERS TAB (live) ---------------- */
+const ORDER_STATUSES = [
+  { value: "pending", label: "قيد الانتظار" },
+  { value: "processing", label: "قيد المعالجة" },
+  { value: "contacted", label: "تم التواصل" },
+  { value: "completed", label: "مكتمل" },
+  { value: "cancelled", label: "ملغى" }
+];
+function normalizedOrderStatus(value){
+  return value === "new" || !ORDER_STATUSES.some(s => s.value === value) ? "pending" : value;
+}
+function orderStatusSelect(id, current){
+  const selected = normalizedOrderStatus(current);
+  return `<select class="order-status-select" data-order-id="${esc(id)}" data-previous="${selected}" aria-label="حالة الطلب">${ORDER_STATUSES.map(s => `<option value="${s.value}" ${s.value === selected ? "selected" : ""}>${s.label}</option>`).join("")}</select>`;
+}
+async function changeOrderStatus(select){
+  const previous = select.dataset.previous || "pending";
+  const next = select.value;
+  if (!ORDER_STATUSES.some(s => s.value === next)) { select.value = previous; return; }
+  select.disabled = true;
+  try{
+    await updateDoc(doc(db, "orders", select.dataset.orderId), { status: next });
+    select.dataset.previous = next;
+    toast("تم تحديث حالة الطلب");
+  } catch(err){
+    select.value = previous;
+    toast("تعذر تحديث الحالة: " + err.message);
+  } finally { select.disabled = false; }
+}
 function listenOrders(){
   const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
   onSnapshot(q, (snap) => {
@@ -1191,23 +1322,23 @@ function listenOrders(){
       const prodCell = prod
         ? `<div style="display:flex; align-items:center; gap:6px">
              ${prod.image ? `<img src="${esc(prod.image)}" style="width:32px;height:32px;object-fit:cover;border:1px solid var(--hairline)">` : ""}
-             <div>
-               <div style="font-weight:700">${esc(prod.name||"")}</div>
-               <div style="font-size:11px; color:var(--muted)">${esc(money(prod.price))} ${prod.size?"· "+esc(prod.size):""}</div>
-             </div>
+             <div><div style="font-weight:700">${esc(prod.name||"")}</div><div style="font-size:11px; color:var(--muted)">${esc(money(prod.price))} ${prod.size?"· "+esc(prod.size):""}</div></div>
            </div>`
         : '<span class="pill muted">بدون منتج محدد</span>';
+      const safePhone = String(o.phone || "").replace(/[^0-9+]/g, "");
       return `<tr>
         <td>${esc(o.name)}</td>
-        <td><a href="tel:${esc(o.phone)}">${esc(o.phone)}</a></td>
+        <td><a href="tel:${esc(safePhone)}">${esc(o.phone)}</a></td>
         <td>${esc(catNames[o.category] || o.category || "—")}</td>
         <td>${esc(o.wilayaName || "")} ${o.commune ? "/ " + esc(o.commune) : ""}</td>
         <td>${prodCell}</td>
+        <td>${orderStatusSelect(d.id, o.status)}</td>
         <td>${esc(o.message || "—")}</td>
         <td style="font-family:var(--font-mono); font-size:12px">${date}</td>
       </tr>`;
     }).join("");
-  });
+    body.querySelectorAll(".order-status-select").forEach(select => select.addEventListener("change", () => changeOrderStatus(select)));
+  }, err => toast("تعذر تحميل الطلبات: " + err.message));
 }
 </script>
 </body>
