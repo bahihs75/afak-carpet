@@ -268,7 +268,6 @@
   </div>
   <div class="container footer-bottom">
     <span>© <span id="year"></span> AFAK CARPET. <span data-i18n="footer.rights">جميع الحقوق محفوظة.</span></span>
-    <a href="admin.html" style="opacity:.5" data-i18n="footer.admin">لوحة التحكم</a>
   </div>
 </footer>
 
@@ -511,12 +510,34 @@ qWilaya.addEventListener("change", () => {
 
 /* ---------------- WhatsApp helpers ---------------- */
 function waLink(phoneRaw, message){
-  const digits = (phoneRaw || "").replace(/\D/g, "");
+  const digits = (phoneRaw || "").replace(/\D/g, "").slice(0, 20);
   if (!digits) return "";
   const url = new URL(`https://wa.me/${digits}`);
-  if (message) url.search = "?text=" + encodeURIComponent(message);
+  if (message) url.search = "?text=" + encodeURIComponent(String(message).slice(0, 1800));
   return url.toString();
 }
+function cleanText(value, max = 500){
+  return String(value ?? "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, max);
+}
+function cleanMultiline(value, max = 1000){
+  return String(value ?? "").replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, " ").trim().slice(0, max);
+}
+function safePageUrl(value, fallback = "#top"){
+  const raw = String(value ?? "").trim();
+  if (/^#[A-Za-z][A-Za-z0-9_-]*$/.test(raw)) return raw;
+  try{
+    const url = new URL(raw, location.origin);
+    if (["http:", "https:"].includes(url.protocol)) return url.href;
+  } catch {}
+  return fallback;
+}
+function safeImageUrl(value){
+  try{
+    const url = new URL(String(value ?? "").trim(), location.origin);
+    return ["http:", "https:"].includes(url.protocol) ? url.href : "";
+  } catch { return ""; }
+}
+function normalizePhone(value){ return String(value ?? "").replace(/[^0-9+]/g, "").slice(0, 20); }
 function lastSubmittedOrder(){ return window.__afakLastOrder || null; }
 
 /* ---------------- Quote modal ---------------- */
@@ -553,16 +574,27 @@ quoteForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const submitBtn = quoteForm.querySelector("button[type=submit]");
   submitBtn.disabled = true;
-  const payload = {
-    name: document.getElementById("qName").value.trim(),
-    phone: document.getElementById("qPhone").value.trim(),
-    category: document.getElementById("qCategory").value,
-    wilayaCode: qWilaya.value,
-    wilayaName: qWilaya.options[qWilaya.selectedIndex]?.text || "",
-    commune: qCommune.value,
-    message: document.getElementById("qMessage").value.trim(),
-    product: currentProductRef || null
-  };
+  const allowedCategories = new Set(["mosques", "hotels", "schools", "halls"]);
+  const name = cleanText(document.getElementById("qName").value, 120);
+  const phone = normalizePhone(document.getElementById("qPhone").value);
+  const category = cleanText(document.getElementById("qCategory").value, 20);
+  const wilayaCode = cleanText(qWilaya.value, 10);
+  const wilayaName = cleanText(qWilaya.options[qWilaya.selectedIndex]?.text || "", 100);
+  const commune = cleanText(qCommune.value, 100);
+  const message = cleanMultiline(document.getElementById("qMessage").value, 1000);
+  const rawProduct = currentProductRef;
+  const product = rawProduct ? {
+    id: cleanText(rawProduct.id, 80), name: cleanText(rawProduct.name, 160),
+    categoryId: cleanText(rawProduct.categoryId, 20), size: cleanText(rawProduct.size, 80),
+    price: Number.isFinite(Number(rawProduct.price)) ? Number(rawProduct.price) : null,
+    image: safeImageUrl(rawProduct.image)
+  } : null;
+  if (name.length < 2 || phone.replace(/\D/g, "").length < 8 || !allowedCategories.has(category) || !wilayaCode){
+    submitBtn.disabled = false;
+    alert("تحقق من الاسم ورقم الهاتف والمجال والولاية.");
+    return;
+  }
+  const payload = { name, phone, category, wilayaCode, wilayaName, commune, message, product };
   try{
     await submitOrder(payload);
     window.__afakLastOrder = payload;
@@ -672,8 +704,8 @@ function renderHero(slides){
     const el = document.createElement("div");
     el.className = "hero-slide" + (i === 0 ? " is-active" : "");
     const secondaryLabel = tf(s, "secondaryLabel", currentLang) || I18N[currentLang]["hero.explore"];
-    const secondaryLink = s.secondaryLink || "#mosques";
-    const isExternal = /^https?:\/\//.test(secondaryLink);
+    const secondaryLink = safePageUrl(s.secondaryLink, "#mosques");
+    const isExternal = /^https?:\/\//i.test(secondaryLink);
     el.innerHTML = `
       <img src="${esc(s.image)}" alt="">
       <div class="hero-slide-content">
@@ -737,14 +769,14 @@ const sectionMenuBtn = document.getElementById("sectionMenuBtn");
 const sectionMenuPopover = document.getElementById("sectionMenuPopover");
 function renderSectionMenu(){
   const items = (SITE?.settings?.navMenuItems || []).slice().sort((a,b)=>(a.order||0)-(b.order||0));
-  sectionMenuPopover.innerHTML = items.map(item => `
-    <a href="${esc(item.link)}">
-      <span class="mi-icon">${esc(item.icon || "•")}</span>
-      <span>${esc(tf(item, "label", currentLang))}</span>
-    </a>`).join("");
-  sectionMenuPopover.querySelectorAll("a").forEach(a => {
-    a.addEventListener("click", () => closeSectionMenu());
-  });
+  sectionMenuPopover.innerHTML = items.map(item => {
+    const href = safePageUrl(item.link, "#top");
+    const icon = item.iconUrl
+      ? `<img class="mi-icon-image" src="${esc(safeImageUrl(item.iconUrl))}" alt="" aria-hidden="true">`
+      : `<span class="mi-icon">${esc(item.icon || "•")}</span>`;
+    return `<a href="${esc(href)}">${icon}<span>${esc(tf(item, "label", currentLang))}</span></a>`;
+  }).join("");
+  sectionMenuPopover.querySelectorAll("a").forEach(a => a.addEventListener("click", closeSectionMenu));
 }
 function closeSectionMenu(){
   sectionMenuBtn.classList.remove("is-open");
@@ -1000,11 +1032,15 @@ function renderContact(site){
   const s = site.settings;
   const contactList = document.getElementById("contactList");
   const footerContact = document.getElementById("footerContact");
+  const phone = normalizePhone(s.phone);
+  const whatsapp = normalizePhone(s.whatsapp);
+  const email = cleanText(s.email, 160);
+  const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const rows = [
-    ["الهاتف", s.phone, s.phone ? `tel:${s.phone}` : null, CONTACT_ICONS.phone],
-    ["واتساب", s.whatsapp, s.whatsapp ? waLink(s.whatsapp) : null, CONTACT_ICONS.whatsapp],
-    ["البريد الإلكتروني", s.email, s.email ? `mailto:${s.email}` : null, CONTACT_ICONS.mail],
-    ["العنوان", s.address, null, CONTACT_ICONS.pin]
+    ["الهاتف", s.phone, phone ? `tel:${phone}` : null, CONTACT_ICONS.phone],
+    ["واتساب", s.whatsapp, whatsapp ? waLink(whatsapp) : null, CONTACT_ICONS.whatsapp],
+    ["البريد الإلكتروني", email, validEmail ? `mailto:${email}` : null, CONTACT_ICONS.mail],
+    ["العنوان", cleanText(s.address, 240), null, CONTACT_ICONS.pin]
   ].filter(r => r[1]);
   contactList.innerHTML = rows.map(([k,v,href,icon]) => `
     <li><span class="k" style="display:flex; align-items:center; gap:8px"><span style="width:16px; height:16px; display:inline-flex">${icon}</span>${esc(k)}</span>${href ? `<a href="${esc(href)}">${esc(v)}</a>` : `<span>${esc(v)}</span>`}</li>
@@ -1013,14 +1049,16 @@ function renderContact(site){
     <li>${href ? `<a href="${esc(href)}">${esc(v)}</a>` : esc(v)}</li>
   `).join("");
 
+  const socialLabels = { instagram: currentLang === "en" ? "Instagram" : "إنستغرام", facebook: currentLang === "en" ? "Facebook" : "فيسبوك", tiktok: "TikTok", linkedin: currentLang === "en" ? "LinkedIn" : "لينكدإن" };
   const socialRow = document.getElementById("socialRow");
   socialRow.innerHTML = Object.entries(s.socials || {})
+    .map(([key,url]) => [key, safePageUrl(url, "")])
     .filter(([,url]) => url)
-    .map(([key,url]) => `<a href="${esc(url)}" target="_blank" rel="noopener" aria-label="${esc(key)}">${SOCIAL_ICONS[key]||"•"}</a>`)
+    .map(([key,url]) => `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer"><span class="social-icon">${SOCIAL_ICONS[key]||"•"}</span><span>${esc(socialLabels[key] || key)}</span></a>`)
     .join("");
 
   const waBtn = document.getElementById("contactWhatsappBtn");
-  if (s.whatsapp){ waBtn.href = waLink(s.whatsapp); waBtn.style.display = "inline-flex"; }
+  if (whatsapp){ waBtn.href = waLink(whatsapp); waBtn.style.display = "inline-flex"; }
   else waBtn.style.display = "none";
 
   document.getElementById("brandName").textContent = s.siteName;
