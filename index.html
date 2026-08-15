@@ -222,7 +222,6 @@
         <span class="label-eyebrow" data-i18n="nav.contact">تواصل معنا</span>
         <h2 class="mt-2" data-i18n="contact.title">نسعد بخدمتكم</h2>
         <ul class="contact-info mt-4" id="contactList"></ul>
-        <div class="social-row" id="socialRow"></div>
       </div>
       <div>
         <div class="contact-actions">
@@ -314,11 +313,11 @@
     <form id="quoteForm">
       <div class="field">
         <label for="qName" data-i18n="quote.name">الاسم الكامل *</label>
-        <input type="text" id="qName" required>
+        <input type="text" id="qName" required maxlength="100">
       </div>
       <div class="field">
         <label for="qPhone" data-i18n="quote.phone">رقم الهاتف *</label>
-        <input type="tel" id="qPhone" required placeholder="05xxxxxxxx">
+        <input type="tel" id="qPhone" required maxlength="20" pattern="[0-9+\s]{8,20}" placeholder="05xxxxxxxx">
       </div>
       <div class="field">
         <label for="qCategory" data-i18n="quote.category">المجال المطلوب *</label>
@@ -342,7 +341,7 @@
       </div>
       <div class="field">
         <label for="qMessage" data-i18n="quote.message">تفاصيل إضافية (المساحة، الكمية...)</label>
-        <textarea id="qMessage" data-i18n-placeholder="quote.messagePlaceholder" placeholder="مثال: قاعة صلاة 200م²"></textarea>
+        <textarea id="qMessage" maxlength="1000" data-i18n-placeholder="quote.messagePlaceholder" placeholder="مثال: قاعة صلاة 200م²"></textarea>
       </div>
       <button type="submit" class="btn btn-primary btn-block" data-i18n="quote.submit">إرسال الطلب</button>
       <p class="form-note" data-i18n="quote.note">سنتواصل معكم في أقرب وقت لتأكيد التفاصيل والسعر.</p>
@@ -510,34 +509,12 @@ qWilaya.addEventListener("change", () => {
 
 /* ---------------- WhatsApp helpers ---------------- */
 function waLink(phoneRaw, message){
-  const digits = (phoneRaw || "").replace(/\D/g, "").slice(0, 20);
+  const digits = (phoneRaw || "").replace(/\D/g, "");
   if (!digits) return "";
   const url = new URL(`https://wa.me/${digits}`);
-  if (message) url.search = "?text=" + encodeURIComponent(String(message).slice(0, 1800));
+  if (message) url.search = "?text=" + encodeURIComponent(message);
   return url.toString();
 }
-function cleanText(value, max = 500){
-  return String(value ?? "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, max);
-}
-function cleanMultiline(value, max = 1000){
-  return String(value ?? "").replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, " ").trim().slice(0, max);
-}
-function safePageUrl(value, fallback = "#top"){
-  const raw = String(value ?? "").trim();
-  if (/^#[A-Za-z][A-Za-z0-9_-]*$/.test(raw)) return raw;
-  try{
-    const url = new URL(raw, location.origin);
-    if (["http:", "https:"].includes(url.protocol)) return url.href;
-  } catch {}
-  return fallback;
-}
-function safeImageUrl(value){
-  try{
-    const url = new URL(String(value ?? "").trim(), location.origin);
-    return ["http:", "https:"].includes(url.protocol) ? url.href : "";
-  } catch { return ""; }
-}
-function normalizePhone(value){ return String(value ?? "").replace(/[^0-9+]/g, "").slice(0, 20); }
 function lastSubmittedOrder(){ return window.__afakLastOrder || null; }
 
 /* ---------------- Quote modal ---------------- */
@@ -574,27 +551,16 @@ quoteForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const submitBtn = quoteForm.querySelector("button[type=submit]");
   submitBtn.disabled = true;
-  const allowedCategories = new Set(["mosques", "hotels", "schools", "halls"]);
-  const name = cleanText(document.getElementById("qName").value, 120);
-  const phone = normalizePhone(document.getElementById("qPhone").value);
-  const category = cleanText(document.getElementById("qCategory").value, 20);
-  const wilayaCode = cleanText(qWilaya.value, 10);
-  const wilayaName = cleanText(qWilaya.options[qWilaya.selectedIndex]?.text || "", 100);
-  const commune = cleanText(qCommune.value, 100);
-  const message = cleanMultiline(document.getElementById("qMessage").value, 1000);
-  const rawProduct = currentProductRef;
-  const product = rawProduct ? {
-    id: cleanText(rawProduct.id, 80), name: cleanText(rawProduct.name, 160),
-    categoryId: cleanText(rawProduct.categoryId, 20), size: cleanText(rawProduct.size, 80),
-    price: Number.isFinite(Number(rawProduct.price)) ? Number(rawProduct.price) : null,
-    image: safeImageUrl(rawProduct.image)
-  } : null;
-  if (name.length < 2 || phone.replace(/\D/g, "").length < 8 || !allowedCategories.has(category) || !wilayaCode){
-    submitBtn.disabled = false;
-    alert("تحقق من الاسم ورقم الهاتف والمجال والولاية.");
-    return;
-  }
-  const payload = { name, phone, category, wilayaCode, wilayaName, commune, message, product };
+  const payload = {
+    name: document.getElementById("qName").value.trim(),
+    phone: document.getElementById("qPhone").value.trim(),
+    category: document.getElementById("qCategory").value,
+    wilayaCode: qWilaya.value,
+    wilayaName: qWilaya.options[qWilaya.selectedIndex]?.text || "",
+    commune: qCommune.value,
+    message: document.getElementById("qMessage").value.trim(),
+    product: currentProductRef || null
+  };
   try{
     await submitOrder(payload);
     window.__afakLastOrder = payload;
@@ -704,8 +670,8 @@ function renderHero(slides){
     const el = document.createElement("div");
     el.className = "hero-slide" + (i === 0 ? " is-active" : "");
     const secondaryLabel = tf(s, "secondaryLabel", currentLang) || I18N[currentLang]["hero.explore"];
-    const secondaryLink = safePageUrl(s.secondaryLink, "#mosques");
-    const isExternal = /^https?:\/\//i.test(secondaryLink);
+    const secondaryLink = s.secondaryLink || "#mosques";
+    const isExternal = /^https?:\/\//.test(secondaryLink);
     el.innerHTML = `
       <img src="${esc(s.image)}" alt="">
       <div class="hero-slide-content">
@@ -769,14 +735,14 @@ const sectionMenuBtn = document.getElementById("sectionMenuBtn");
 const sectionMenuPopover = document.getElementById("sectionMenuPopover");
 function renderSectionMenu(){
   const items = (SITE?.settings?.navMenuItems || []).slice().sort((a,b)=>(a.order||0)-(b.order||0));
-  sectionMenuPopover.innerHTML = items.map(item => {
-    const href = safePageUrl(item.link, "#top");
-    const icon = item.iconUrl
-      ? `<img class="mi-icon-image" src="${esc(safeImageUrl(item.iconUrl))}" alt="" aria-hidden="true">`
-      : `<span class="mi-icon">${esc(item.icon || "•")}</span>`;
-    return `<a href="${esc(href)}">${icon}<span>${esc(tf(item, "label", currentLang))}</span></a>`;
-  }).join("");
-  sectionMenuPopover.querySelectorAll("a").forEach(a => a.addEventListener("click", closeSectionMenu));
+  sectionMenuPopover.innerHTML = items.map(item => `
+    <a href="${esc(item.link)}">
+      <span class="mi-icon">${item.iconUrl ? `<img src="${esc(item.iconUrl)}" alt="" style="width:18px;height:18px;object-fit:contain">` : esc(item.icon || "•")}</span>
+      <span>${esc(tf(item, "label", currentLang))}</span>
+    </a>`).join("");
+  sectionMenuPopover.querySelectorAll("a").forEach(a => {
+    a.addEventListener("click", () => closeSectionMenu());
+  });
 }
 function closeSectionMenu(){
   sectionMenuBtn.classList.remove("is-open");
@@ -1032,33 +998,34 @@ function renderContact(site){
   const s = site.settings;
   const contactList = document.getElementById("contactList");
   const footerContact = document.getElementById("footerContact");
-  const phone = normalizePhone(s.phone);
-  const whatsapp = normalizePhone(s.whatsapp);
-  const email = cleanText(s.email, 160);
-  const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const rows = [
-    ["الهاتف", s.phone, phone ? `tel:${phone}` : null, CONTACT_ICONS.phone],
-    ["واتساب", s.whatsapp, whatsapp ? waLink(whatsapp) : null, CONTACT_ICONS.whatsapp],
-    ["البريد الإلكتروني", email, validEmail ? `mailto:${email}` : null, CONTACT_ICONS.mail],
-    ["العنوان", cleanText(s.address, 240), null, CONTACT_ICONS.pin]
+    ["الهاتف", s.phone, s.phone ? `tel:${s.phone}` : null, CONTACT_ICONS.phone],
+    ["واتساب", s.whatsapp, s.whatsapp ? waLink(s.whatsapp) : null, CONTACT_ICONS.whatsapp],
+    ["البريد الإلكتروني", s.email, s.email ? `mailto:${s.email}` : null, CONTACT_ICONS.mail],
+    ["العنوان", s.address, null, CONTACT_ICONS.pin]
   ].filter(r => r[1]);
-  contactList.innerHTML = rows.map(([k,v,href,icon]) => `
-    <li><span class="k" style="display:flex; align-items:center; gap:8px"><span style="width:16px; height:16px; display:inline-flex">${icon}</span>${esc(k)}</span>${href ? `<a href="${esc(href)}">${esc(v)}</a>` : `<span>${esc(v)}</span>`}</li>
+
+  const socialNames = {
+    instagram: ["انستقرام", "Instagram"], facebook: ["فيسبوك", "Facebook"],
+    tiktok: ["تيك توك", "TikTok"], linkedin: ["لينكدإن", "LinkedIn"]
+  };
+  const socialRows = Object.entries(s.socials || {})
+    .filter(([,url]) => url)
+    .map(([key,url]) => [
+      currentLang === "en" ? (socialNames[key]?.[1]||key) : (socialNames[key]?.[0]||key),
+      url, url, SOCIAL_ICONS[key] || ""
+    ]);
+  const allRows = [...rows, ...socialRows];
+
+  contactList.innerHTML = allRows.map(([k,v,href,icon]) => `
+    <li><span class="k" style="display:flex; align-items:center; gap:8px"><span style="width:16px; height:16px; display:inline-flex">${icon}</span>${esc(k)}</span>${href ? `<a href="${esc(href)}" ${href.startsWith('http')?'target="_blank" rel="noopener"':''}>${esc(v)}</a>` : `<span>${esc(v)}</span>`}</li>
   `).join("") || '<li class="empty-state">أضف بيانات التواصل من لوحة التحكم.</li>';
   footerContact.innerHTML = rows.map(([k,v,href]) => `
     <li>${href ? `<a href="${esc(href)}">${esc(v)}</a>` : esc(v)}</li>
   `).join("");
 
-  const socialLabels = { instagram: currentLang === "en" ? "Instagram" : "إنستغرام", facebook: currentLang === "en" ? "Facebook" : "فيسبوك", tiktok: "TikTok", linkedin: currentLang === "en" ? "LinkedIn" : "لينكدإن" };
-  const socialRow = document.getElementById("socialRow");
-  socialRow.innerHTML = Object.entries(s.socials || {})
-    .map(([key,url]) => [key, safePageUrl(url, "")])
-    .filter(([,url]) => url)
-    .map(([key,url]) => `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer"><span class="social-icon">${SOCIAL_ICONS[key]||"•"}</span><span>${esc(socialLabels[key] || key)}</span></a>`)
-    .join("");
-
   const waBtn = document.getElementById("contactWhatsappBtn");
-  if (whatsapp){ waBtn.href = waLink(whatsapp); waBtn.style.display = "inline-flex"; }
+  if (s.whatsapp){ waBtn.href = waLink(s.whatsapp); waBtn.style.display = "inline-flex"; }
   else waBtn.style.display = "none";
 
   document.getElementById("brandName").textContent = s.siteName;
