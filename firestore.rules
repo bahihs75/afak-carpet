@@ -1,38 +1,117 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function profileRole() {
+      return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+        : '';
+    }
+    function tokenRole() {
+      return signedIn() && request.auth.token.role is string ? request.auth.token.role : '';
+    }
+    function role() { return tokenRole() != '' ? tokenRole() : profileRole(); }
+    function isAdmin() { return signedIn() && role() == 'admin'; }
+    function canEditContent() { return signedIn() && role() in ['admin', 'editor']; }
+    function canEditSettings() { return signedIn() && role() in ['admin', 'marketing']; }
+    function contentKeys() {
+      return ['hero', 'categories', 'products', 'projects', 'stats', 'testimonials', 'certifications', 'about', 'mediaLibrary'];
+    }
+    function canManageOrders() { return signedIn() && role() in ['admin', 'editor', 'marketing']; }
+    function validRole() { return request.resource.data.role in ['admin', 'editor', 'marketing']; }
+    function validStatus() {
+      return request.resource.data.status in [
+        'new', 'pending', 'processing', 'contacted', 'completed', 'cancelled'
+      ];
+    }
+    function validProduct(product) {
+      return product == null || (
+        product is map &&
+        product.keys().hasOnly([
+          'id', 'name', 'categoryId', 'categoryName', 'size', 'color',
+          'material', 'sku', 'secondaryColors', 'price', 'image', 'link'
+        ]) &&
+        product.id is string && product.id.size() <= 80 &&
+        product.name is string && product.name.size() <= 160 &&
+        product.categoryId is string && product.categoryId.size() <= 20 &&
+        product.categoryName is string && product.categoryName.size() <= 120 &&
+        product.size is string && product.size.size() <= 80 &&
+        product.color is string && product.color.size() <= 120 &&
+        product.material is string && product.material.size() <= 120 &&
+        product.sku is string && product.sku.size() <= 80 &&
+        product.secondaryColors is list && product.secondaryColors.size() <= 12 &&
+        (product.price == null || product.price is number) &&
+        product.image is string && product.image.size() <= 500 &&
+        product.link is string && product.link.size() <= 500
+      );
+    }
+    function validAuditCreate() {
+      return signedIn() &&
+        request.resource.data.keys().hasOnly([
+          'actorId', 'actorEmail', 'role', 'action', 'entity', 'entityId',
+          'summary', 'changedFields', 'createdAt'
+        ]) &&
+        request.resource.data.actorId == request.auth.uid &&
+        request.resource.data.actorEmail is string && request.resource.data.actorEmail.size() <= 160 &&
+        request.resource.data.role in ['admin', 'editor', 'marketing'] &&
+        request.resource.data.action is string && request.resource.data.action.size() <= 80 &&
+        request.resource.data.entity is string && request.resource.data.entity.size() <= 80 &&
+        request.resource.data.entityId is string && request.resource.data.entityId.size() <= 120 &&
+        request.resource.data.summary is string && request.resource.data.summary.size() <= 500 &&
+        request.resource.data.changedFields is list && request.resource.data.changedFields.size() <= 30 &&
+        request.resource.data.createdAt == request.time;
+    }
 
-    // Site content (hero, categories, products, settings, about):
-    // anyone can read (public website), only a signed-in admin can write.
     match /content/{docId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow create: if isAdmin();
+      allow update: if isAdmin() ||
+        (role() == 'editor' && request.resource.data.diff(resource.data).affectedKeys().hasOnly(contentKeys())) ||
+        (role() == 'marketing' && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['settings']));
+      allow delete: if isAdmin();
     }
 
-    // Orders (quote requests): anyone can create one (the public quote
-    // form), nobody can read/update/delete except a signed-in admin —
-    // this protects customer phone numbers from being scraped publicly.
-    //
-    // The `create` rule below is deliberately strict: it re-validates every
-    // field's type and length server-side so a malicious or malformed
-    // request (a scripted bot spamming huge payloads, unexpected extra
-    // fields, etc.) is rejected before it ever reaches the database. This
-    // is the NoSQL equivalent of parameterized queries / input validation —
-    // there is no SQL database here so classic "SQL injection" doesn't
-    // apply, but unvalidated writes are the real-world equivalent risk for
-    // a database like this one, and this closes that door.
+    match /users/{userId} {
+      allow read: if isAdmin();
+      allow create, update: if isAdmin() && validRole();
+      allow delete: if isAdmin() && userId != request.auth.uid;
+    }
+
+    match /auditLogs/{logId} {
+      allow create: if validAuditCreate();
+      allow read: if isAdmin();
+      allow update, delete: if false;
+    }
+
     match /orders/{orderId} {
-      allow create: if isValidOrder(request.resource.data);
-      allow read, update, delete: if request.auth != null;
-    }
+      allow create: if
+        request.resource.data.keys().hasOnly([
+          'name', 'phone', 'category', 'wilayaCode', 'wilayaName', 'commune',
+          'message', 'product', 'status', 'createdAt'
+        ]) &&
+        request.resource.data.name is string &&
+        request.resource.data.name.size() >= 2 && request.resource.data.name.size() <= 120 &&
+        request.resource.data.phone is string &&
+        request.resource.data.phone.size() >= 8 && request.resource.data.phone.size() <= 20 &&
+        request.resource.data.category in ['mosques', 'hotels', 'schools', 'halls'] &&
+        request.resource.data.wilayaCode is string && request.resource.data.wilayaCode.size() > 0 && request.resource.data.wilayaCode.size() <= 10 &&
+        request.resource.data.wilayaName is string && request.resource.data.wilayaName.size() <= 100 &&
+        request.resource.data.commune is string && request.resource.data.commune.size() <= 100 &&
+        request.resource.data.message is string && request.resource.data.message.size() <= 1000 &&
+        request.resource.data.status == 'new' &&
+        request.resource.data.createdAt == request.time &&
+        (!request.resource.data.keys().hasAny(['product']) || validProduct(request.resource.data.product));
 
-    function isValidOrder(o){
-      return o.keys().hasOnly(['name','phone','category','wilayaCode','wilayaName','commune','message','product','status','createdAt'])
-        && o.name is string && o.name.size() > 0 && o.name.size() < 100
-        && o.phone is string && o.phone.size() > 0 && o.phone.size() < 30
-        && o.category is string && o.category.size() < 50
-        && (!('message' in o) || (o.message is string && o.message.size() < 1000))
-        && o.status == 'new';
+      allow read: if canManageOrders();
+      allow delete: if isAdmin();
+      allow update: if canManageOrders() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']) &&
+        validStatus();
     }
   }
 }
+
+// This site uses Cloud Firestore rather than SQL. The rules above validate
+// document shapes and roles; client-side escaping still protects HTML output.
+// Deploy with: firebase deploy --only firestore:rules
+
