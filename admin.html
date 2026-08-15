@@ -1610,7 +1610,12 @@ function listenOrders(){
     ORDER_RECORDS = snap.docs.map(d => ({ id: d.id, data: d.data() }));
     renderOrdersView();
     renderAnalytics();
-  }, err => toast("تعذر تحميل الطلبات: " + err.message));
+  }, err => {
+    const message = err?.code === "permission-denied"
+      ? "تعذر تحميل الطلبات: صلاحيات Firestore غير منشورة أو لا تطابق دور الحساب. انشر firestore.rules لمشروع afak-carpet ثم أعد تحميل اللوحة."
+      : "تعذر تحميل الطلبات: " + err.message;
+    toast(message);
+  });
 }
 </script>
 </body>
