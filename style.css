@@ -140,12 +140,12 @@ html:lang(en) .label-eyebrow{ letter-spacing:.08em; }
   display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-2);
   height:48px; padding:0 28px; border:1px solid transparent; border-radius:0;
   font-size:14px; font-weight:600; letter-spacing:.01em; cursor:pointer; white-space:nowrap;
-  transition:transform var(--dur-fast) var(--ease), background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+  transition:transform var(--dur-fast) var(--ease), background var(--dur) var(--ease), border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
 }
 .btn:active{ transform:scale(.97); }
 .btn-primary{ background:var(--navy); color:var(--on-navy); }
-.btn-primary:hover{ background:var(--navy-hover); }
-.btn-primary:active{ background:var(--navy-active); }
+.btn-primary:hover{ background:var(--navy-hover); border-color:var(--navy-hover); box-shadow:0 6px 16px rgba(20,23,31,.16); transform:translateY(-2px); }
+.btn-primary:active{ background:var(--navy-active); box-shadow:none; transform:translateY(0) scale(.97); }
 .btn-outline{ background:transparent; color:var(--ink); border-color:var(--ink); }
 .btn-outline-light{ background:transparent; color:#fff; border-color:rgba(255,255,255,.7); }
 .btn-outline-light:hover{ background:rgba(255,255,255,.12); }
@@ -326,8 +326,8 @@ html:lang(en) .hero-scroll-hint{ letter-spacing:.08em; }
 .mosque-slide-card .info .price{ font-family:inherit; font-size:14px; font-weight:700; color:var(--navy); white-space:nowrap; flex-shrink:0; }
 
 /* ---- Product grid (mosques full list, and plain grid for other 3 segments) ---- */
-.product-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--sp-4); margin-top:var(--sp-6); }
-@media (max-width:900px){ .product-grid{ grid-template-columns:repeat(2,1fr); } }
+.product-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,360px)); justify-content:center; gap:var(--sp-4); margin-top:var(--sp-6); }
+@media (max-width:900px){ .product-grid{ grid-template-columns:repeat(auto-fit,minmax(260px,360px)); } }
 @media (max-width:560px){ .product-grid{ grid-template-columns:1fr; } }
 .product-card{ border:1px solid var(--hairline); background:#fff; cursor:pointer; transition:box-shadow var(--dur) var(--ease), transform var(--dur-fast) var(--ease); -webkit-tap-highlight-color:transparent; }
 .product-card:hover{ box-shadow:0 4px 16px rgba(20,23,31,.08); }
