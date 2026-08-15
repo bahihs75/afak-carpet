@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<a href="#top" class="skip-link">تخطي إلى المحتوى الرئيسي</a>
 
 <div class="site-loader" id="siteLoader">
   <div class="site-loader-mark">AFAK CARPET</div>
@@ -806,7 +807,7 @@ function renderHero(slides){
     const secondaryLink = safePageUrl(s.secondaryLink, "#mosques");
     const isExternal = /^https?:\/\//i.test(secondaryLink);
     el.innerHTML = `
-      <img src="${esc(safeImageUrl(s.image))}" fetchpriority="high" decoding="async" alt="">
+      <img src="${esc(safeImageUrl(s.image))}" loading="eager" fetchpriority="high" decoding="async" alt="">
       <div class="hero-slide-content">
         <span class="label-eyebrow">${esc(tf(s,"eyebrow",currentLang))}</span>
         <h1>${esc(tf(s,"title",currentLang))}</h1>
