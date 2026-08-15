@@ -1,14 +1,18 @@
 # AFAK CARPET
 
 <p align="center">
-<strong>A premium digital showroom for carpets made for mosques, hotels, schools, and large spaces.</strong>
-</p> <p align="center">
+  <strong>A premium digital showroom for carpets made for mosques, hotels, schools, and large spaces.</strong>
+</p>
+
+<p align="center">
   <a href="https://afak-carpet.pages.dev">Live Website</a>
   ·
   <a href="#getting-started">Run Locally</a>
   ·
   <a href="#administration">Administration</a>
-</p> <p align="center">
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/interface-Arabic%20%2F%20English-1f4e8c?style=flat-square" alt="Arabic and English interface">
   <img src="https://img.shields.io/badge/layout-RTL%20%2B%20LTR-6d1b2a?style=flat-square" alt="RTL and LTR layout">
   <img src="https://img.shields.io/badge/backend-Firebase-ffb300?style=flat-square" alt="Firebase backend">
@@ -27,12 +31,12 @@ The experience is available in Arabic and English, supports right-to-left and le
 
 ## Live experience
 
-Visit the deployed website at [**afak-carpet.pages.dev**](https://afak-carpet.pages.dev).
+Visit the deployed website at **[afak-carpet.pages.dev](https://afak-carpet.pages.dev)**.
 
 Visitors can explore the following journey:
 
 | Experience | What it does |
-| --- | --- |
+|---|---|
 | Hero presentation | Introduces the brand through an editable image slider, bilingual copy, and focused calls-to-action. |
 | Sector discovery | Directs visitors to mosque, hotel, school, and large-space carpet collections. |
 | Product catalog | Shows product imagery, specifications, colors, materials, references, and quote actions. |
@@ -55,7 +59,7 @@ The protected admin panel gives the business team a practical way to maintain th
 The panel supports:
 
 | Admin area | Capabilities |
-| --- | --- |
+|---|---|
 | Site settings | Brand name, logo, contact details, social links, colors, visibility switches, and floating navigation. |
 | Hero slides | Bilingual headings, supporting text, primary and secondary actions, destination links, and images. |
 | Categories | Sector names, descriptions, images, ordering, and color-filter visibility. |
@@ -72,7 +76,7 @@ Repeatable content is organized as compact, click-to-edit rows. This keeps the p
 AFAK CARPET is intentionally lightweight. It does not require a bundler, a server-rendered framework, or a SQL database for the current experience.
 
 | Layer | Implementation |
-| --- | --- |
+|---|---|
 | Public interface | Semantic HTML, responsive CSS, and browser-native ES modules. |
 | Styling | `style.css`, with shared public and admin design tokens and responsive layouts. |
 | Client logic | `index.html`, `admin.html`, and the shared `app.js` data layer. |
@@ -108,7 +112,7 @@ The public website reads the shared site document and subscribes to updates. The
 ## Project structure
 
 | File | Purpose |
-| --- | --- |
+|---|---|
 | `index.html` | Public visitor-facing website, rendering logic, bilingual content, catalog, contact, and quote experience. |
 | `admin.html` | Authenticated content management panel. |
 | `app.js` | Shared Firebase data layer, defaults, site subscriptions, quote validation, image compression, and upload helpers. |
@@ -136,13 +140,13 @@ npx serve -l 4173
 
 Open the public experience at:
 
-```
+```text
 http://localhost:4173/index.html
 ```
 
 Open the admin panel at:
 
-```
+```text
 http://localhost:4173/admin.html
 ```
 
@@ -161,7 +165,7 @@ The browser client reads its project configuration from `firebase-config.js`. To
 The current data layer expects the following Firestore collections and documents:
 
 | Location | Purpose |
-| --- | --- |
+|---|---|
 | `content/site` | The complete managed website content document. |
 | `orders/{orderId}` | Public quote requests and their admin-managed status. |
 
@@ -179,7 +183,7 @@ The quote form is designed to collect enough information for a meaningful first 
 
 A request may optionally include a product snapshot. After creation, the order begins with the `new` storage value and can be moved from the admin panel through the Arabic-labelled workflow of pending, processing, contacted, completed, or cancelled.
 
-WhatsApp links are generated only from normalized phone values. User-controlled text is escaped before being inserted into rendered markup, and public URLs are restricted to safe page anchors or HTTP(S ) destinations.
+WhatsApp links are generated only from normalized phone values. User-controlled text is escaped before being inserted into rendered markup, and public URLs are restricted to safe page anchors or HTTP(S) destinations.
 
 ## Security posture
 
@@ -188,18 +192,12 @@ The project uses Firestore rather than SQL, so SQL injection is not the relevant
 The current implementation addresses those concerns through several layers:
 
 1. The public site escapes user-managed text before rendering it into HTML.
-
-1. Quote fields are normalized and bounded before Firestore writes.
-
-1. Public order creation accepts a restricted schema and fixed initial status.
-
-1. Authenticated order updates are limited to the `status` field.
-
-1. Customer orders are not publicly readable through the Firestore rules.
-
-1. External links use HTTP(S) validation, and new windows include `noopener` protection.
-
-1. SVG icons are uploaded and selected through the admin flow rather than inserted as arbitrary inline markup.
+2. Quote fields are normalized and bounded before Firestore writes.
+3. Public order creation accepts a restricted schema and fixed initial status.
+4. Authenticated order updates are limited to the `status` field.
+5. Customer orders are not publicly readable through the Firestore rules.
+6. External links use HTTP(S) validation, and new windows include `noopener` protection.
+7. SVG icons are uploaded and selected through the admin flow rather than inserted as arbitrary inline markup.
 
 No client-side security model is complete by itself. Treat Firebase rules as the final authority, use a least-privilege admin account, avoid placing private credentials in frontend files, and review third-party upload settings before production use.
 
@@ -208,18 +206,12 @@ No client-side security model is complete by itself. Treat Firebase rules as the
 A typical content workflow is:
 
 1. Sign in at `admin.html`.
-
-1. Update brand settings, contact channels, and colors.
-
-1. Add or edit hero slides and business categories.
-
-1. Upload product images and complete bilingual product details.
-
-1. Configure the floating section menu, including custom SVG icons when useful.
-
-1. Review the public website on desktop and mobile widths.
-
-1. Submit a test quote and confirm its status workflow in the admin panel.
+2. Update brand settings, contact channels, and colors.
+3. Add or edit hero slides and business categories.
+4. Upload product images and complete bilingual product details.
+5. Configure the floating section menu, including custom SVG icons when useful.
+6. Review the public website on desktop and mobile widths.
+7. Submit a test quote and confirm its status workflow in the admin panel.
 
 The content model is intentionally centralized so the marketing team can change the showroom’s narrative without restructuring the page.
 
@@ -234,7 +226,7 @@ Because the frontend is static, it can be deployed to Cloudflare Pages, Firebase
 A production checklist should include:
 
 | Check | Expected result |
-| --- | --- |
+|---|---|
 | Public URL | The site loads over HTTPS without module or CORS errors. |
 | Firebase config | The browser points to the intended Firebase project. |
 | Authentication | Only the intended admin accounts can open the management experience. |
@@ -255,16 +247,16 @@ No open-source license has been declared yet. Add a license file before inviting
 
 ## References
 
-[1]: [https://firebase.google.com/docs/firestore](https://firebase.google.com/docs/firestore) Firebase Firestore documentation — data modeling and database usage.
+[1]: https://firebase.google.com/docs/firestore Firebase Firestore documentation — data modeling and database usage.
 
-[2]: [https://firebase.google.com/docs/firestore/security/get-started](https://firebase.google.com/docs/firestore/security/get-started) Firestore Security Rules documentation — access control and validation patterns.
+[2]: https://firebase.google.com/docs/firestore/security/get-started Firestore Security Rules documentation — access control and validation patterns.
 
-[3]: [https://firebase.google.com/docs/auth](https://firebase.google.com/docs/auth) Firebase Authentication documentation — web authentication concepts and providers.
+[3]: https://firebase.google.com/docs/auth Firebase Authentication documentation — web authentication concepts and providers.
 
-[4]: [https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules) MDN Web Docs — JavaScript modules in the browser.
+[4]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules MDN Web Docs — JavaScript modules in the browser.
 
-[5]: [https://api.imgbb.com/](https://api.imgbb.com/) ImgBB API — image-upload integration reference.
+[5]: https://api.imgbb.com/ ImgBB API — image-upload integration reference.
 
-[6]: [https://github.com/othmanus/algeria-cities](https://github.com/othmanus/algeria-cities) `othmanus/algeria-cities` — Arabic and multilingual Algeria administrative dataset described as based on the Algerian Interior Ministry source.
+[6]: https://github.com/othmanus/algeria-cities `othmanus/algeria-cities` — Arabic and multilingual Algeria administrative dataset described as based on the Algerian Interior Ministry source.
 
-[7]: [https://fr.wikipedia.org/wiki/Liste_des_wilayas_d%27Alg%C3%A9rie](https://fr.wikipedia.org/wiki/Liste_des_wilayas_d%27Alg%C3%A9rie) Liste des wilayas d’Algérie — 58-wilaya administrative overview and commune counts.
+[7]: https://fr.wikipedia.org/wiki/Liste_des_wilayas_d%27Alg%C3%A9rie Liste des wilayas d’Algérie — 58-wilaya administrative overview and commune counts.
