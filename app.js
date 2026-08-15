@@ -3,7 +3,7 @@
 // the AFAK DECO architecture: cheap reads, one listener, no backend server.
 import { db } from "./firebase-init.js";
 import {
-  doc, getDoc, setDoc, onSnapshot, collection, addDoc, updateDoc, serverTimestamp
+  doc, getDoc, setDoc, onSnapshot, collection, addDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import { DEFAULT_IMGBB_KEY } from "./firebase-config.js";
 
@@ -35,6 +35,11 @@ export const DEFAULT_SITE = {
     cfAnalyticsToken: "",
     metaPixelId: "",
     tiktokPixelId: "",
+    consentVersion: "2026-08-15",
+    privacyPolicyUrl: "",
+    seoTitle: "AFAK CARPET — سجاد المساجد والفنادق والمؤسسات",
+    seoDescription: "آفاق كاربت: توريد وتفصيل السجاد للمساجد والفنادق والروضات وقاعات المؤتمرات في الجزائر.",
+    ogImage: "",
     // Independent visibility switches for the "trust" blocks — a block also
     // auto-hides itself when it has zero items, regardless of this switch.
     sectionsVisible: { projects: true, testimonials: true, stats: true, certifications: true },
@@ -72,7 +77,7 @@ export const DEFAULT_SITE = {
   ],
   // product: { id, categoryId, name, nameEn, price, size, sizeEn, color,
   //   secondaryColors: [], material, materialEn, sku, desc, descEn, images:[],
-  //   hoverImage, featured, visible, order }
+  //   hoverImage, featured, visible, status, publishAt, unpublishAt, offer, order }
   products: [],
   about: {
     title: "من نحن", titleEn: "",
@@ -125,26 +130,82 @@ export async function saveSite(partial){
   return next;
 }
 
-export async function submitOrder(order){
-  await addDoc(ORDERS_COL, {
-    ...order,
-    status: "new",
+const VALID_ADMIN_ROLES = new Set(["admin", "editor", "marketing"]);
+export const PRODUCT_STATUSES = ["draft", "published", "archived"];
+
+export async function getAdminRole(user){
+  if (!user) return null;
+  try {
+    const profile = await getDoc(doc(db, "users", user.uid));
+    const profileRole = profile.exists() ? profile.data()?.role : "";
+    if (VALID_ADMIN_ROLES.has(profileRole)) return profileRole;
+    const token = await user.getIdTokenResult();
+    const claimRole = token.claims?.role;
+    return VALID_ADMIN_ROLES.has(claimRole) ? claimRole : null;
+  } catch (error) {
+    console.warn("Admin role lookup failed", error);
+    return null;
+  }
+}
+
+export function isProductPublic(product, now = Date.now()){
+  if (!product || product.visible === false) return false;
+  const status = product.status || "published";
+  if (status !== "published") return false;
+  const publishAt = product.publishAt ? Date.parse(product.publishAt) : NaN;
+  const unpublishAt = product.unpublishAt ? Date.parse(product.unpublishAt) : NaN;
+  if (Number.isFinite(publishAt) && publishAt > now) return false;
+  if (Number.isFinite(unpublishAt) && unpublishAt <= now) return false;
+  return true;
+}
+
+export function activeProductOffer(product, now = Date.now()){
+  const offer = product?.offer;
+  if (!offer || offer.enabled === false) return null;
+  const start = offer.startsAt ? Date.parse(offer.startsAt) : NaN;
+  const end = offer.endsAt ? Date.parse(offer.endsAt) : NaN;
+  if (Number.isFinite(start) && start > now) return null;
+  if (Number.isFinite(end) && end <= now) return null;
+  return offer;
+}
+
+export async function recordAuditLog({ user, role, action, entity = "site", entityId = "", summary = "", changedFields = [] }){
+  if (!user || !VALID_ADMIN_ROLES.has(role)) return;
+  const clean = (value, max) => String(value ?? "").replace(/[\\u0000-\\u001f\\u007f]/g, " ").trim().slice(0, max);
+  await addDoc(collection(db, "auditLogs"), {
+    actorId: clean(user.uid, 128), actorEmail: clean(user.email, 160), role,
+    action: clean(action, 80), entity: clean(entity, 80), entityId: clean(entityId, 120),
+    summary: clean(summary, 500), changedFields: Array.from(new Set((changedFields || []).map(v => clean(v, 80)).filter(Boolean))).slice(0, 30),
     createdAt: serverTimestamp()
   });
 }
 
-// Order lifecycle — shown as a dropdown in the admin Orders tab.
-export const ORDER_STATUSES = [
-  { id: "new",        label: "جديد",           labelEn: "New" },
-  { id: "pending",    label: "قيد الانتظار",    labelEn: "Pending" },
-  { id: "inProgress", label: "قيد المعالجة",    labelEn: "In progress" },
-  { id: "contacted",  label: "تم التواصل",      labelEn: "Contacted" },
-  { id: "done",       label: "مكتمل",           labelEn: "Completed" },
-  { id: "cancelled",  label: "ملغى",            labelEn: "Cancelled" }
-];
-
-export async function updateOrderStatus(orderId, status){
-  await updateDoc(doc(db, "orders", orderId), { status });
+export async function submitOrder(order){
+  const allowedCategories = new Set(["mosques", "hotels", "schools", "halls"]);
+  const clean = (value, max) => String(value ?? "").replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, max);
+  const phone = clean(order.phone, 20).replace(/[^0-9+]/g, "");
+  const payload = {
+    name: clean(order.name, 120), phone,
+    category: clean(order.category, 20), wilayaCode: clean(order.wilayaCode, 10),
+    wilayaName: clean(order.wilayaName, 100), commune: clean(order.commune, 100),
+    message: String(order.message ?? "").replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "").trim().slice(0, 1000),
+    product: order.product && typeof order.product === "object" ? {
+      id: clean(order.product.id, 80), name: clean(order.product.name, 160),
+      categoryId: clean(order.product.categoryId, 20), categoryName: clean(order.product.categoryName, 120),
+      size: clean(order.product.size, 80), color: clean(order.product.color, 120),
+      material: clean(order.product.material, 120), sku: clean(order.product.sku, 80),
+      secondaryColors: Array.isArray(order.product.secondaryColors)
+        ? order.product.secondaryColors.map(value => clean(value, 60)).filter(Boolean).slice(0, 12)
+        : [],
+      price: Number.isFinite(Number(order.product.price)) ? Number(order.product.price) : null,
+      image: /^https?:\/\//i.test(String(order.product.image || "")) ? String(order.product.image).slice(0, 500) : "",
+      link: /^https?:\/\//i.test(String(order.product.link || "")) ? String(order.product.link).slice(0, 500) : ""
+    } : null
+  };
+  if (payload.name.length < 2 || phone.replace(/\D/g, "").length < 8 || !allowedCategories.has(payload.category) || !payload.wilayaCode){
+    throw new Error("بيانات الطلب غير صالحة");
+  }
+  await addDoc(ORDERS_COL, { ...payload, status: "new", createdAt: serverTimestamp() });
 }
 
 function deepMerge(base, override){
@@ -189,9 +250,30 @@ export async function compressImage(file, maxDimension = 1600, quality = 0.82){
 }
 
 /* ------------------------------------------------------------------ */
-/* imgbb upload — used only from the admin panel                      */
+/* Upload validation + imgbb upload — used only from the admin panel   */
 /* ------------------------------------------------------------------ */
+export async function validateSvgFile(file, maxBytes = 30 * 1024){
+  if (!file || (!file.type && !String(file.name || "").toLowerCase().endsWith(".svg"))){
+    throw new Error("الملف غير صالح");
+  }
+  const isSvg = file.type === "image/svg+xml" || String(file.name || "").toLowerCase().endsWith(".svg");
+  if (!isSvg) return true;
+  if (file.size > maxBytes) throw new Error("ملف SVG كبير جدًا؛ الحد الأقصى 30KB");
+  const source = await file.text();
+  if (!/<svg[\s>]/i.test(source)) throw new Error("ملف SVG غير صالح");
+  if (/<script|on[a-z]+\s*=|javascript:|data:text\/html|<foreignObject|<iframe/i.test(source)){
+    throw new Error("تم رفض SVG لأنه يحتوي على محتوى غير آمن");
+  }
+  if (/<(use|image|a|link)\b[^>]+(?:href|xlink:href)\s*=\s*[\"']https?:/i.test(source)){
+    throw new Error("تم رفض SVG بسبب رابط خارجي");
+  }
+  return true;
+}
+
 export async function uploadToImgbb(file, apiKey){
+  if (!file || !String(file.type || "").startsWith("image/")) throw new Error("اختر ملف صورة صالحًا");
+  if (file.size > 12 * 1024 * 1024) throw new Error("حجم الصورة يتجاوز 12MB");
+  await validateSvgFile(file);
   const key = apiKey || DEFAULT_IMGBB_KEY;
   const compressed = await compressImage(file);
   const formData = new FormData();
