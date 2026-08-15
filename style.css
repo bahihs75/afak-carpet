@@ -52,6 +52,26 @@
 
 *,*::before,*::after{ box-sizing:border-box; }
 html{ scroll-behavior:smooth; }
+.skip-link {
+  position: absolute;
+  top: -40px;
+  right: 16px;
+  background: var(--navy);
+  color: #fff;
+  padding: 8px 16px;
+  z-index: 999999;
+  border-radius: 0 0 6px 6px;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: top 0.2s ease;
+}
+.skip-link:focus {
+  top: 0;
+}
+h1, h2, h3 {
+  text-wrap: balance;
+}
 
 /* ==========================================================================
    BRAND LOADER — full-screen splash shown until the first Firestore payload
