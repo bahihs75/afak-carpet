@@ -8,6 +8,14 @@ import {
 import { DEFAULT_IMGBB_KEY } from "./firebase-config.js";
 
 const SITE_DOC = doc(db, "content", "site");
+// ARCHITECTURE NOTE: Everything (hero, categories, products, projects, testimonials,
+// stats, certifications, settings) lives in this ONE Firestore document. That's
+// intentional — it means the whole site loads with a single read and updates live
+// everywhere at once, which is ideal at this scale. Firestore caps a single
+// document at 1MB. If the product catalog grows to approach that (several hundred
+// products with multiple images each), split `products` into its own top-level
+// collection (`products/{id}`) and switch app.js to `collection()`/`query()` reads.
+// Nothing else needs to change.
 const ORDERS_COL = collection(db, "orders");
 
 /* ------------------------------------------------------------------ */
