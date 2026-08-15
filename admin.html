@@ -419,27 +419,49 @@ function updateRoleUI(){
 }
 
 /* ---------------- Auth ---------------- */
+const loginScreen = document.getElementById("loginScreen");
+const adminShell = document.getElementById("adminShell");
+const loginError = document.getElementById("loginError");
+
+// Keep a usable state while Firebase resolves the session. Most importantly,
+// never hide both the login and admin shell when a signed-in account has no
+// role document; that state previously produced the blank/purple screen.
+loginScreen.style.display = "flex";
+adminShell.style.display = "none";
+
 onAuthStateChanged(auth, async (user) => {
   CURRENT_USER = user;
-  document.getElementById("loginScreen").style.display = user ? "none" : "flex";
-  document.getElementById("adminShell").style.display = user ? "block" : "none";
   if (auditUnsubscribe) { auditUnsubscribe(); auditUnsubscribe = null; }
   if (teamUnsubscribe) { teamUnsubscribe(); teamUnsubscribe = null; }
-  if (user){
-    CURRENT_ROLE = await getAdminRole(user);
-    updateRoleUI();
-    if (!CURRENT_ROLE){
-      const errEl = document.getElementById("loginError");
-      errEl.textContent = "هذا الحساب مسجّل الدخول لكنه لا يملك دورًا في لوحة التحكم.";
-      errEl.style.display = "block";
-      document.getElementById("adminShell").style.display = "none";
-      return;
-    }
-    boot();
-  } else {
+
+  if (!user){
     CURRENT_ROLE = null;
+    adminShell.style.display = "none";
+    loginScreen.style.display = "flex";
+    if (loginError) loginError.style.display = "none";
     updateRoleUI();
+    return;
   }
+
+  CURRENT_ROLE = await getAdminRole(user);
+  updateRoleUI();
+  if (!CURRENT_ROLE){
+    // A valid Firebase session is not automatically an admin session.
+    // Keep the login surface visible so the user can switch accounts or see
+    // the actionable error instead of landing on an empty page.
+    adminShell.style.display = "none";
+    loginScreen.style.display = "flex";
+    if (loginError){
+      loginError.textContent = "هذا الحساب مسجّل الدخول لكنه لا يملك دورًا في لوحة التحكم. استخدم حسابًا بصلاحية Admin أو Editor أو Marketing.";
+      loginError.style.display = "block";
+    }
+    return;
+  }
+
+  if (loginError) loginError.style.display = "none";
+  loginScreen.style.display = "none";
+  adminShell.style.display = "block";
+  boot();
 });
 
 document.getElementById("loginForm").addEventListener("submit", async (e) => {
