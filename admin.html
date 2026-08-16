@@ -221,7 +221,11 @@
       </div>
 
       <div class="admin-card">
-        <h3>كل المنتجات</h3>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap">
+          <h3>كل المنتجات</h3>
+          <button type="button" class="btn btn-outline" id="saveProductOrderBtn">حفظ ترتيب المنتجات</button>
+        </div>
+        <p class="form-note mt-2">اسحب المقبض ⋮⋮ أو استخدم الأسهم من لوحة المفاتيح، ثم احفظ الترتيب.</p>
         <table class="admin-table">
           <thead><tr><th>الصورة</th><th>الاسم</th><th>القسم</th><th>السعر</th><th>الحالة</th><th>إجراءات</th></tr></thead>
           <tbody id="productsTableBody"></tbody>
@@ -313,7 +317,7 @@
           <button type="button" class="btn btn-outline" id="exportOrdersBtn">تصدير CSV</button>
         </div>
         <table class="admin-table">
-          <thead><tr><th>الاسم</th><th>الهاتف</th><th>المجال</th><th>الولاية / البلدية</th><th>المنتج المرتبط</th><th>الحالة</th><th>ملاحظات</th><th>التاريخ</th></tr></thead>
+          <thead><tr><th>الاسم</th><th>الهاتف</th><th>المجال</th><th>الولاية / البلدية</th><th>المنتج المرتبط</th><th>المصدر / الحملة</th><th>الحالة</th><th>ملاحظات</th><th>التاريخ</th></tr></thead>
           <tbody id="ordersTableBody"></tbody>
         </table>
         <p class="empty-state" id="ordersEmpty" style="display:none">لا توجد طلبات بعد.</p>
@@ -330,6 +334,7 @@
       <div class="admin-grid-2">
         <div class="admin-card"><h3>توزيع حالات الطلبات</h3><div id="ordersStatusChart" class="bar-chart"></div></div>
         <div class="admin-card"><h3>المنتجات حسب القسم</h3><div id="productsCategoryChart" class="bar-chart"></div></div>
+        <div class="admin-card"><h3>مصادر الطلبات</h3><p class="form-note">حسب UTM المحفوظ مع الطلبات الجديدة.</p><div id="ordersSourceChart" class="bar-chart"></div></div>
       </div>
     </div>
 
@@ -535,40 +540,63 @@ async function detectHeroTextColor(imageUrl){
     image.crossOrigin = "anonymous";
     image.onload = () => {
       try{
-        const width = 96;
+        const width = 128;
         const height = Math.max(1, Math.round((image.naturalHeight / image.naturalWidth) * width));
         const canvas = document.createElement("canvas");
         canvas.width = width; canvas.height = height;
         const context = canvas.getContext("2d", { willReadFrequently: true });
         context.drawImage(image, 0, 0, width, height);
         const pixels = context.getImageData(0, 0, width, height).data;
-        const left = Math.floor(width * .18), right = Math.ceil(width * .82);
-        const top = Math.floor(height * .52), bottom = Math.ceil(height * .92);
-        let luminanceSum = 0, samples = 0;
-        for (let y = top; y < bottom; y++){
+        // The text sits in the lower central region of the current Hero layout.
+        const left = Math.floor(width * .16), right = Math.ceil(width * .84);
+        const top = Math.floor(height * .48), bottom = Math.ceil(height * .94);
+        const backgroundLuminances = [];
+        for (let y = top; y < bottom; y += 2){
           const vertical = y / Math.max(1, height - 1);
           const overlayAlpha = .15 + (.55 - .15) * vertical;
-          for (let x = left; x < right; x++){
+          for (let x = left; x < right; x += 2){
             const offset = (y * width + x) * 4;
             const r = pixels[offset] * (1 - overlayAlpha) + 20 * overlayAlpha;
             const g = pixels[offset + 1] * (1 - overlayAlpha) + 23 * overlayAlpha;
             const b = pixels[offset + 2] * (1 - overlayAlpha) + 31 * overlayAlpha;
-            luminanceSum += relativeLuminance(r, g, b);
-            samples++;
+            backgroundLuminances.push(relativeLuminance(r, g, b));
           }
         }
-        const backgroundLuminance = samples ? luminanceSum / samples : .12;
-        const whiteContrast = contrastRatio(1, backgroundLuminance);
-        const navyContrast = contrastRatio(hexLuminance("#17233f"), backgroundLuminance);
-        const color = whiteContrast >= navyContrast ? "#ffffff" : "#17233f";
-        resolve({ color, backgroundLuminance, contrast: Math.max(whiteContrast, navyContrast) });
+        if (!backgroundLuminances.length) throw new Error("لم توجد مساحة كافية لتحليل خلفية النص");
+        const candidates = [
+          { color: "#ffffff", label: "أبيض" },
+          { color: "#17233f", label: "كحلي الهوية" },
+          { color: "#14171f", label: "فحمي" },
+          { color: "#f5f5f3", label: "عاجي" },
+          { color: "#e8c98a", label: "ذهبي رملي" },
+          { color: "#6d1b2a", label: "بوردو" },
+          { color: "#2f6b3a", label: "أخضر" }
+        ];
+        const candidateStats = candidates.map(candidate => {
+          const values = backgroundLuminances.map(luminance => contrastRatio(hexLuminance(candidate.color), luminance)).sort((a, b) => a - b);
+          const percentile = ratio => values[Math.min(values.length - 1, Math.floor(values.length * ratio))];
+          const average = values.reduce((sum, value) => sum + value, 0) / values.length;
+          return {
+            ...candidate,
+            contrast: percentile(.10),
+            average,
+            lowContrastSamples: values.filter(value => value < 4.5).length,
+            passesAA: percentile(.10) >= 4.5
+          };
+        }).sort((a, b) => b.contrast - a.contrast || b.average - a.average);
+        const best = candidateStats[0];
+        const backgroundLuminance = backgroundLuminances.reduce((sum, value) => sum + value, 0) / backgroundLuminances.length;
+        resolve({ color: best.color, backgroundLuminance, contrast: best.contrast, candidates: candidateStats });
       } catch (error){ reject(error); }
     };
     image.onerror = () => reject(new Error("تعذر قراءة الصورة؛ قد يمنع خادم الصور التحليل عبر المتصفح"));
     image.src = imageUrl;
   });
 }
-function makeCompactRows(list, summaryFn){
+function makeCompactRows(list, summaryFn, options = {}){
+  let activeDragRow = null;
+  const reorderEnabled = options.reorder === true;
+  const announceReorder = () => toast("تم تغيير الترتيب — اضغط حفظ لتثبيته");
   Array.from(list.children).forEach(row => {
     let head = row.querySelector(":scope > .compact-row-head");
     let editor = row.querySelector(":scope > .compact-editor");
@@ -612,6 +640,45 @@ function makeCompactRows(list, summaryFn){
       const toggle = document.createElement("button"); toggle.type = "button"; toggle.className = "compact-row-toggle";
       toggle.tabIndex = -1; toggle.setAttribute("aria-label", "فتح التعديل"); head.appendChild(toggle);
     }
+    if (reorderEnabled && !head.querySelector(".compact-row-drag")){
+      const handle = document.createElement("button");
+      handle.type = "button"; handle.className = "compact-row-drag"; handle.draggable = true;
+      handle.setAttribute("aria-label", "اسحب لإعادة ترتيب الشريحة، أو استخدم سهم أعلى وأسفل");
+      handle.title = "اسحب لإعادة الترتيب"; handle.textContent = "⋮⋮";
+      head.prepend(handle);
+      handle.addEventListener("dragstart", event => {
+        activeDragRow = row;
+        row.classList.add("is-dragging");
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", row.dataset.id || "slide");
+      });
+      handle.addEventListener("dragend", () => {
+        row.classList.remove("is-dragging");
+        list.querySelectorAll(".is-drag-over").forEach(item => item.classList.remove("is-drag-over"));
+        activeDragRow = null;
+      });
+      handle.addEventListener("keydown", event => {
+        if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
+        event.preventDefault();
+        const sibling = event.key === "ArrowUp" ? row.previousElementSibling : row.nextElementSibling;
+        if (!sibling) return;
+        if (event.key === "ArrowUp") list.insertBefore(row, sibling);
+        else list.insertBefore(sibling, row);
+        handle.focus(); announceReorder();
+      });
+      row.addEventListener("dragover", event => {
+        if (!activeDragRow || activeDragRow === row) return;
+        event.preventDefault();
+        row.classList.add("is-drag-over");
+        const rect = row.getBoundingClientRect();
+        const insertBefore = event.clientY < rect.top + rect.height / 2;
+        list.insertBefore(activeDragRow, insertBefore ? row : row.nextElementSibling);
+      });
+      row.addEventListener("dragleave", event => {
+        if (!row.contains(event.relatedTarget)) row.classList.remove("is-drag-over");
+      });
+      row.addEventListener("drop", event => { event.preventDefault(); row.classList.remove("is-drag-over"); announceReorder(); });
+    }
     const updateSummary = () => { summary.textContent = summaryFn(row); };
     updateSummary();
     if (row.dataset.compactBound === "1") return;
@@ -619,7 +686,7 @@ function makeCompactRows(list, summaryFn){
       const expanded = row.classList.toggle("is-expanded");
       head.setAttribute("aria-expanded", String(expanded));
     };
-    head.addEventListener("click", event => { if (!event.target.closest(".remove-item")) toggle(); });
+    head.addEventListener("click", event => { if (!event.target.closest(".remove-item, .compact-row-drag")) toggle(); });
     head.addEventListener("keydown", event => { if (event.key === "Enter" || event.key === " "){ event.preventDefault(); toggle(); } });
     head.tabIndex = 0;
     row.querySelectorAll("input, textarea, select").forEach(field => {
@@ -735,8 +802,14 @@ function renderAnalytics(){
   const statuses = Object.entries(statusLabels).map(([key,label]) => [label, orders.filter(o => (o.status || "new") === key).length]).filter(([,value]) => value > 0);
   const categories = {};
   products.forEach(p => { const key = (SITE.categories || []).find(c => c.id === p.categoryId)?.name || p.categoryId || "غير مصنف"; categories[key] = (categories[key] || 0) + 1; });
+  const sources = {};
+  orders.forEach(o => {
+    const source = [o.attribution?.utmSource, o.attribution?.utmMedium].filter(Boolean).join(" / ") || "مباشر / غير محدد";
+    sources[source] = (sources[source] || 0) + 1;
+  });
   if (document.getElementById("ordersStatusChart")) renderBars(document.getElementById("ordersStatusChart"), statuses);
   if (document.getElementById("productsCategoryChart")) renderBars(document.getElementById("productsCategoryChart"), Object.entries(categories));
+  if (document.getElementById("ordersSourceChart")) renderBars(document.getElementById("ordersSourceChart"), Object.entries(sources).sort((a,b) => b[1] - a[1]));
 }
 function renderActivity(rows){
   const body = document.getElementById("activityTableBody");
@@ -1072,7 +1145,21 @@ function renderHeroTab(){
         slide.autoTextColor = result.color;
         if (modeSelect.value === "auto") colorInput.value = result.color;
         updateColorPreview();
-        colorResult.innerHTML = `الاقتراح التلقائي الحالي: <strong>${esc(result.color)}</strong> — تباين تقريبي ${result.contrast.toFixed(1)}:1`;
+        const suggestions = (result.candidates || []).slice(0, 7).map(candidate => `
+          <button type="button" class="hero-color-suggestion" data-color="${esc(candidate.color)}" title="${esc(candidate.label)} — ${candidate.contrast.toFixed(1)}:1">
+            <span class="hero-color-suggestion-dot" style="background:${esc(candidate.color)}"></span>
+            <span>${esc(candidate.label)}</span>
+            <small>${esc(candidate.color)} · ${candidate.contrast.toFixed(1)}:1${candidate.passesAA ? " ✓" : ""}</small>
+          </button>`).join("");
+        colorResult.innerHTML = `<span>أفضل اقتراح: <strong>${esc(result.color)}</strong> — أقل تباين ${result.contrast.toFixed(1)}:1</span><div class="hero-color-suggestions">${suggestions}</div>`;
+        colorResult.querySelectorAll(".hero-color-suggestion").forEach(button => button.addEventListener("click", () => {
+          const chosen = normalizeHexColor(button.dataset.color, result.color);
+          colorInput.value = chosen;
+          slide.textColor = chosen;
+          modeSelect.value = "manual";
+          updateColorPreview();
+          colorResult.querySelectorAll(".hero-color-suggestion").forEach(item => item.classList.toggle("is-selected", item === button));
+        }));
       } catch(error){
         colorResult.textContent = error.message;
         toast(error.message);
@@ -1117,7 +1204,7 @@ function renderHeroTab(){
     list.appendChild(row);
     if (slide.image && !slide.autoTextColor) window.setTimeout(analyzeHeroColor, 0);
   });
-  makeCompactRows(list, row => row.querySelector(".s-title")?.value || "شريحة");
+  makeCompactRows(list, row => row.querySelector(".s-title")?.value || "شريحة", { reorder: true });
 }
 document.getElementById("addSlideBtn").addEventListener("click", () => {
   SITE.hero.slides.push({
@@ -1129,6 +1216,7 @@ document.getElementById("addSlideBtn").addEventListener("click", () => {
   renderHeroTab();
 });
 document.getElementById("saveHeroBtn").addEventListener("click", async () => {
+  const orderedSlides = [];
   document.querySelectorAll("#heroSlidesList > div").forEach(row => {
     const slide = SITE.hero.slides.find(s => s.id === row.dataset.id);
     if (!slide) return;
@@ -1146,7 +1234,10 @@ document.getElementById("saveHeroBtn").addEventListener("click", async () => {
     slide.textColorMode = row.querySelector(".s-text-color-mode").value === "manual" ? "manual" : "auto";
     slide.textColor = normalizeHexColor(row.querySelector(".s-text-color").value, "#ffffff");
     slide.autoTextColor = normalizeHexColor(slide.autoTextColor, "#ffffff");
+    slide.order = orderedSlides.length;
+    orderedSlides.push(slide);
   });
+  SITE.hero.slides = orderedSlides;
   await saveSite({ hero: SITE.hero });
   toast("تم حفظ السلايدر");
 });
@@ -1307,7 +1398,8 @@ document.getElementById("saveProductBtn").addEventListener("click", async () => 
     unpublishAt: document.getElementById("pUnpublishAt").value ? new Date(document.getElementById("pUnpublishAt").value).toISOString() : "",
     offer: { enabled: document.getElementById("pOfferEnabled").checked, label: document.getElementById("pOfferLabel").value.trim().slice(0,80), price: document.getElementById("pOfferPrice").value.trim(), startsAt: document.getElementById("pOfferStartsAt").value ? new Date(document.getElementById("pOfferStartsAt").value).toISOString() : "", endsAt: document.getElementById("pOfferEndsAt").value ? new Date(document.getElementById("pOfferEndsAt").value).toISOString() : "" },
     hoverImage: document.getElementById("pHoverImage").value,
-    images: pendingImages.length ? pendingImages : (editId ? (SITE.products.find(p=>p.id===editId)?.images||[]) : [])
+    images: pendingImages.length ? pendingImages : (editId ? (SITE.products.find(p=>p.id===editId)?.images||[]) : []),
+    order: editId ? (SITE.products.find(p => p.id === editId)?.order ?? SITE.products.findIndex(p => p.id === editId)) : SITE.products.length
   };
   if (editId){
     SITE.products = SITE.products.map(p => p.id === editId ? productData : p);
@@ -1329,9 +1421,14 @@ function renderProductsTab(){
     body.innerHTML = `<tr><td colspan="6" class="empty-state">لا توجد منتجات بعد.</td></tr>`;
     return;
   }
-  body.innerHTML = SITE.products.map(p => `
-    <tr>
-      <td><img src="${esc((p.images&&p.images[0])||'')}" style="width:44px; height:44px; object-fit:cover; border:1px solid var(--hairline)"></td>
+  const orderedProducts = [...SITE.products].sort((a, b) => {
+    const aOrder = Number.isFinite(Number(a.order)) ? Number(a.order) : SITE.products.indexOf(a);
+    const bOrder = Number.isFinite(Number(b.order)) ? Number(b.order) : SITE.products.indexOf(b);
+    return aOrder - bOrder;
+  });
+  body.innerHTML = orderedProducts.map(p => `
+    <tr data-id="${esc(p.id)}">
+      <td><button type="button" class="table-drag-handle" draggable="true" aria-label="اسحب لإعادة ترتيب ${esc(p.name)}" title="اسحب لإعادة الترتيب">⋮⋮</button><img src="${esc((p.images&&p.images[0])||'')}" style="width:44px; height:44px; object-fit:cover; border:1px solid var(--hairline)"></td>
       <td>${esc(p.name)}</td>
       <td>${esc(catNames[p.categoryId]||p.categoryId)}</td>
       <td>${esc(money(p.price))}</td>
@@ -1384,6 +1481,59 @@ function renderProductsTab(){
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
   });
+  let draggedProductRow = null;
+  const syncProductOrderFromDom = () => {
+    const ids = [...body.querySelectorAll("tr[data-id]")].map(row => row.dataset.id);
+    const ordered = ids.map(id => SITE.products.find(product => product.id === id)).filter(Boolean);
+    ordered.forEach((product, index) => { product.order = index; });
+    SITE.products = ordered;
+  };
+  body.querySelectorAll("tr[data-id]").forEach(row => {
+    const handle = row.querySelector(".table-drag-handle");
+    handle?.addEventListener("dragstart", event => {
+      draggedProductRow = row;
+      row.classList.add("is-dragging");
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", row.dataset.id);
+    });
+    handle?.addEventListener("dragend", () => {
+      row.classList.remove("is-dragging");
+      body.querySelectorAll("tr[data-id]").forEach(item => item.classList.remove("is-drag-over"));
+      draggedProductRow = null;
+    });
+    row.addEventListener("dragover", event => {
+      if (!draggedProductRow || draggedProductRow === row) return;
+      event.preventDefault();
+      row.classList.add("is-drag-over");
+      const before = event.clientY < row.getBoundingClientRect().top + row.offsetHeight / 2;
+      body.insertBefore(draggedProductRow, before ? row : row.nextSibling);
+    });
+    row.addEventListener("dragleave", () => row.classList.remove("is-drag-over"));
+    row.addEventListener("drop", event => {
+      event.preventDefault();
+      row.classList.remove("is-drag-over");
+      syncProductOrderFromDom();
+      toast("تم تغيير الترتيب — اضغط حفظ ترتيب المنتجات");
+    });
+    handle?.addEventListener("keydown", event => {
+      if (!["ArrowUp", "ArrowDown"].includes(event.key)) return;
+      event.preventDefault();
+      const sibling = event.key === "ArrowUp" ? row.previousElementSibling : row.nextElementSibling;
+      if (!sibling) return;
+      body.insertBefore(row, event.key === "ArrowUp" ? sibling : sibling.nextElementSibling);
+      syncProductOrderFromDom();
+      handle.focus();
+      toast("تم تغيير الترتيب — اضغط حفظ ترتيب المنتجات");
+    });
+  });
+  const saveProductOrderBtn = document.getElementById("saveProductOrderBtn");
+  if (saveProductOrderBtn) saveProductOrderBtn.onclick = async () => {
+    if (!canManage("products")){ toast("لا تملك صلاحية تعديل المنتجات"); return; }
+    syncProductOrderFromDom();
+    await saveSite({ products: SITE.products });
+    recordAuditLog({ user: CURRENT_USER, role: CURRENT_ROLE, action: "reorder", entity: "product", entityId: "list", summary: "إعادة ترتيب المنتجات", changedFields: ["order"] }).catch(console.warn);
+    toast("تم حفظ ترتيب المنتجات");
+  };
   body.querySelectorAll("[data-del]").forEach(btn => {
     btn.addEventListener("click", async () => {
       if (!canManage("products")){ toast("لا تملك صلاحية حذف المنتجات"); return; }
@@ -1671,7 +1821,7 @@ function getFilteredOrderRecords(){
   const status = document.getElementById("ordersStatusFilter")?.value || "";
   return ORDER_RECORDS.filter(({ data: o }) => {
     const normalized = normalizedOrderStatus(o.status);
-    const text = [o.name, o.phone, o.wilayaName, o.commune, o.message, o.product?.name, o.product?.sku, o.product?.material].filter(Boolean).join(" ").toLowerCase();
+    const text = [o.name, o.phone, o.wilayaName, o.commune, o.message, o.product?.name, o.product?.sku, o.product?.material, o.attribution?.utmSource, o.attribution?.utmMedium, o.attribution?.utmCampaign].filter(Boolean).join(" ").toLowerCase();
     const statusMatch = !status || normalized === status || (status === "pending" && o.status === "new");
     return statusMatch && (!search || text.includes(search));
   });
@@ -1694,12 +1844,17 @@ function renderOrdersView(){
          </div>`
       : '<span class="pill muted">بدون منتج محدد</span>';
     const safePhone = String(o.phone || "").replace(/[^0-9+]/g, "");
+    const attribution = o.attribution || {};
+    const sourceLabel = [attribution.utmSource, attribution.utmMedium].filter(Boolean).join(" / ") || "مباشر";
+    const campaignLabel = attribution.utmCampaign || "—";
+    const sourceCell = `<div style="font-size:12px"><strong>${esc(sourceLabel)}</strong><small style="display:block;color:var(--muted)">${esc(campaignLabel)}</small></div>`;
     return `<tr>
       <td>${esc(o.name)}</td>
       <td><a href="tel:${esc(safePhone)}">${esc(o.phone)}</a></td>
       <td>${esc(catNames[o.category] || o.category || "—")}</td>
       <td>${esc(o.wilayaName || "")} ${o.commune ? "/ " + esc(o.commune) : ""}</td>
       <td>${prodCell}</td>
+      <td>${sourceCell}</td>
       <td>${orderStatusSelect(id, o.status)}</td>
       <td>${esc(o.message || "—")}</td>
       <td style="font-family:var(--font-mono); font-size:12px">${date}</td>
@@ -1710,11 +1865,11 @@ function renderOrdersView(){
 function csvCell(value){ return `"${String(value ?? "").replace(/"/g, '""').replace(/[\r\n]+/g, " ")}"`; }
 function exportOrdersCsv(){
   const records = getFilteredOrderRecords();
-  const headers = ["Name", "Phone", "Category", "Wilaya", "Commune", "Product", "SKU", "Size", "Color", "Material", "Status", "Message", "Created At"];
+  const headers = ["Name", "Phone", "Category", "Wilaya", "Commune", "Product", "SKU", "Size", "Color", "Material", "UTM Source", "UTM Medium", "UTM Campaign", "Status", "Message", "Created At"];
   const rows = records.map(({ data: o }) => [
     o.name, o.phone, o.category, o.wilayaName, o.commune, o.product?.name, o.product?.sku, o.product?.size,
-    o.product?.color, o.product?.material, normalizedOrderStatus(o.status), o.message,
-    o.createdAt?.toDate ? o.createdAt.toDate().toISOString() : ""
+    o.product?.color, o.product?.material, o.attribution?.utmSource, o.attribution?.utmMedium, o.attribution?.utmCampaign,
+    normalizedOrderStatus(o.status), o.message, o.createdAt?.toDate ? o.createdAt.toDate().toISOString() : ""
   ]);
   const csv = "\\ufeff" + [headers, ...rows].map(row => row.map(csvCell).join(",")).join("\\r\\n");
   const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
