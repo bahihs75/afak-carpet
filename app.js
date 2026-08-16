@@ -208,7 +208,17 @@ export async function submitOrder(order){
       price: Number.isFinite(Number(order.product.price)) ? Number(order.product.price) : null,
       image: /^https?:\/\//i.test(String(order.product.image || "")) ? String(order.product.image).slice(0, 500) : "",
       link: /^https?:\/\//i.test(String(order.product.link || "")) ? String(order.product.link).slice(0, 500) : ""
-    } : null
+    } : null,
+    attribution: order.attribution && typeof order.attribution === "object" ? {
+      landingPath: clean(order.attribution.landingPath, 240), referrer: clean(order.attribution.referrer, 300),
+      utmSource: clean(order.attribution.utmSource, 100), utmMedium: clean(order.attribution.utmMedium, 100),
+      utmCampaign: clean(order.attribution.utmCampaign, 160), utmTerm: clean(order.attribution.utmTerm, 160),
+      utmContent: clean(order.attribution.utmContent, 160), fbclid: clean(order.attribution.fbclid, 180),
+      ttclid: clean(order.attribution.ttclid, 180)
+    } : {
+      landingPath: clean(location.pathname, 240), referrer: clean(document.referrer, 300),
+      utmSource: "", utmMedium: "", utmCampaign: "", utmTerm: "", utmContent: "", fbclid: "", ttclid: ""
+    }
   };
   if (payload.name.length < 2 || phone.replace(/\D/g, "").length < 8 || !allowedCategories.has(payload.category) || !payload.wilayaCode){
     throw new Error("بيانات الطلب غير صالحة");
