@@ -346,6 +346,11 @@
         <label for="qMessage" data-i18n="quote.message">تفاصيل إضافية (المساحة، الكمية...)</label>
         <textarea id="qMessage" data-i18n-placeholder="quote.messagePlaceholder" placeholder="مثال: قاعة صلاة 200م²"></textarea>
       </div>
+      <div class="honeypot-field" aria-hidden="true">
+        <label for="qWebsite">اترك هذا الحقل فارغًا</label>
+        <input type="text" id="qWebsite" tabindex="-1" autocomplete="off">
+      </div>
+      <p class="form-error" id="quoteError" role="alert" hidden></p>
       <button type="submit" class="btn btn-primary btn-block" data-i18n="quote.submit">إرسال الطلب</button>
       <p class="form-note" data-i18n="quote.note">سنتواصل معكم في أقرب وقت لتأكيد التفاصيل والسعر.</p>
     </form>
@@ -381,6 +386,48 @@ let SITE = null;
 let mosqueList = [];
 let currentProductRef = null; // full product snapshot object, or null
 
+const ATTRIBUTION_STORAGE_KEY = "afak_first_touch_attribution_v1";
+const ATTRIBUTION_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "fbclid", "ttclid"];
+function cleanAttributionValue(value, max = 180){
+  return String(value || "").replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, max);
+}
+function captureAttribution(){
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(ATTRIBUTION_STORAGE_KEY) || "{}"); } catch {}
+  const query = new URLSearchParams(location.search);
+  const hasCampaignParams = ATTRIBUTION_KEYS.some(key => query.get(key));
+  if (!saved.landingPath || hasCampaignParams){
+    saved = {
+      landingPath: saved.landingPath || cleanAttributionValue(`${location.pathname}${location.search}`, 240),
+      referrer: saved.referrer || cleanAttributionValue(document.referrer, 300),
+      utmSource: cleanAttributionValue(query.get("utm_source") || saved.utmSource, 100),
+      utmMedium: cleanAttributionValue(query.get("utm_medium") || saved.utmMedium, 100),
+      utmCampaign: cleanAttributionValue(query.get("utm_campaign") || saved.utmCampaign, 160),
+      utmTerm: cleanAttributionValue(query.get("utm_term") || saved.utmTerm, 160),
+      utmContent: cleanAttributionValue(query.get("utm_content") || saved.utmContent, 160),
+      fbclid: cleanAttributionValue(query.get("fbclid") || saved.fbclid, 180),
+      ttclid: cleanAttributionValue(query.get("ttclid") || saved.ttclid, 180)
+    };
+    try { localStorage.setItem(ATTRIBUTION_STORAGE_KEY, JSON.stringify(saved)); } catch {}
+  }
+  return {
+    landingPath: cleanAttributionValue(saved.landingPath || `${location.pathname}${location.search}`, 240),
+    referrer: cleanAttributionValue(saved.referrer || document.referrer, 300),
+    utmSource: cleanAttributionValue(saved.utmSource, 100), utmMedium: cleanAttributionValue(saved.utmMedium, 100),
+    utmCampaign: cleanAttributionValue(saved.utmCampaign, 160), utmTerm: cleanAttributionValue(saved.utmTerm, 160),
+    utmContent: cleanAttributionValue(saved.utmContent, 160), fbclid: cleanAttributionValue(saved.fbclid, 180),
+    ttclid: cleanAttributionValue(saved.ttclid, 180)
+  };
+}
+const firstTouchAttribution = captureAttribution();
+function clearQuoteError(){
+  const error = document.getElementById("quoteError");
+  if (error){ error.hidden = true; error.textContent = ""; }
+}
+function showQuoteError(message){
+  const error = document.getElementById("quoteError");
+  if (error){ error.textContent = message; error.hidden = false; }
+}
 // One active color per section: selecting a new swatch immediately clears the old one.
 const colorFilterState = { mosques: null, hotels: null, schools: null, halls: null };
 
@@ -586,6 +633,7 @@ const quoteSuccess = document.getElementById("quoteSuccess");
 const quoteProductRefBox = document.getElementById("quoteProductRefBox");
 
 function openQuote(productSnapshot){
+  clearQuoteError();
   currentProductRef = productSnapshot || null;
   if (currentProductRef){
     document.getElementById("qCategory").value = currentProductRef.categoryId || "";
@@ -599,7 +647,7 @@ function openQuote(productSnapshot){
   quoteForm.style.display = "block";
   quoteSuccess.style.display = "none";
   setQuoteModalOpen(true);
-}
+  window.requestAnimationFrame(}
 let lastQuoteFocus = null;
 function setQuoteModalOpen(open){
   const isOpen = Boolean(open);
@@ -623,6 +671,8 @@ quoteForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const submitBtn = quoteForm.querySelector("button[type=submit]");
   submitBtn.disabled = true;
+  clearQuoteError();
+  if (document.getElementById("qWebsite")?.value.trim()) { submitBtn.disabled = false; return; }
   const allowedCategories = new Set(["mosques", "hotels", "schools", "halls"]);
   const name = cleanText(document.getElementById("qName").value, 120);
   const phone = normalizePhone(document.getElementById("qPhone").value);
@@ -644,13 +694,16 @@ quoteForm.addEventListener("submit", async (e) => {
   } : null;
   if (name.length < 2 || phone.replace(/\D/g, "").length < 8 || !allowedCategories.has(category) || !wilayaCode){
     submitBtn.disabled = false;
-    alert("تحقق من الاسم ورقم الهاتف والمجال والولاية.");
+    showQuoteError("تحقق من الاسم ورقم الهاتف والمجال والولاية.");
     return;
   }
-  const payload = { name, phone, category, wilayaCode, wilayaName, commune, message, product };
+  const payload = {
+    name, phone, category, wilayaCode, wilayaName, commune, message, product,
+    attribution: firstTouchAttribution
+  };
   try{
     await submitOrder(payload);
-    window.__afakLastOrder = payload;
+    window.__afakLastOrder = { ...payload };
     quoteForm.style.display = "none";
     quoteSuccess.style.display = "block";
     trackMarketingEvent("Lead", { content_name: product?.name || "Quote request", category });
@@ -672,7 +725,7 @@ quoteForm.addEventListener("submit", async (e) => {
 
     quoteForm.reset();
   } catch(err){
-    alert("حدث خطأ أثناء إرسال الطلب، حاول مجددًا: " + err.message);
+    showQuoteError("حدث خطأ أثناء إرسال الطلب، حاول مجددًا: " + (err?.message || "حاول لاحقًا"));
   } finally {
     submitBtn.disabled = false;
   }
