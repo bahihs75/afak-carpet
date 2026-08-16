@@ -390,6 +390,15 @@ function productColors(p){
   if (Array.isArray(p.secondaryColors)) return p.secondaryColors;
   return p.secondaryColor ? [p.secondaryColor] : [];
 }
+function safeHexColor(value, fallback = "#ffffff"){
+  const raw = String(value || "").trim();
+  return /^#[0-9a-f]{6}$/i.test(raw) ? raw.toLowerCase() : fallback;
+}
+function hexToRgba(hex, alpha){
+  const value = safeHexColor(hex).slice(1);
+  const r = parseInt(value.slice(0,2), 16), g = parseInt(value.slice(2,4), 16), b = parseInt(value.slice(4,6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
 
 /* ==================================================================
    i18n — static chrome dictionary (Phase 1) + tf() for optional
@@ -674,8 +683,16 @@ const detailOverlay = document.getElementById("detailOverlay");
 let lastDetailFocus = null;
 function setDetailOpen(open){
   const isOpen = Boolean(open);
-  if (isOpen) lastDetailFocus = document.activeElement;
-  detailOverlay.classList.toggle("is-open", isOpen);
+  if (isOpen) {
+    lastDetailFocus = document.activeElement;
+    // Reset a previous swipe and restart from the fully closed state.
+    detailOverlay.classList.remove("is-dragging", "is-open");
+    detailOverlay.style.removeProperty("transform");
+    void detailOverlay.offsetWidth;
+    detailOverlay.classList.add("is-open");
+  } else {
+    detailOverlay.classList.remove("is-open");
+  }
   detailOverlay.setAttribute("aria-hidden", String(!isOpen));
   document.body.classList.toggle("detail-open", isOpen);
   if (isOpen) requestAnimationFrame(() => document.getElementById("detailClose")?.focus());
@@ -705,8 +722,11 @@ document.getElementById("detailClose").addEventListener("click", () => {
       detailOverlay.style.removeProperty("transform");
     }
   };
+  const canSwipeDetail = event => event.pointerType === "touch" || event.pointerType === "pen";
   detailOverlay.addEventListener("pointerdown", (e) => {
-    if (e.pointerType === "mouse" && e.button !== 0) return;
+    // Desktop clicks must never translate the full-screen detail panel.
+    // Horizontal dismissal remains available for touch and pen input.
+    if (!canSwipeDetail(e)) return;
     if (e.target.closest("button,a,input,select,textarea")) return;
     pointerId = e.pointerId; startX = lastX = e.clientX; startY = e.clientY; startTime = performance.now(); dragging = false;
     detailOverlay.setPointerCapture?.(pointerId);
@@ -804,6 +824,9 @@ function renderHero(slides){
   slides.forEach((s, i) => {
     const el = document.createElement("div");
     el.className = "hero-slide" + (i === 0 ? " is-active" : "");
+    const textColor = s.textColorMode === "manual" ? safeHexColor(s.textColor) : safeHexColor(s.autoTextColor);
+    el.style.setProperty("--hero-text-color", textColor);
+    el.style.setProperty("--hero-text-muted-color", hexToRgba(textColor, .86));
     const secondaryLabel = tf(s, "secondaryLabel", currentLang) || I18N[currentLang]["hero.explore"];
     const secondaryLink = safePageUrl(s.secondaryLink, "#mosques");
     const isExternal = /^https?:\/\//i.test(secondaryLink);
@@ -1365,4 +1388,4 @@ window.addEventListener("hashchange", tryOpenFromHash);
 applyTranslations();
 </script>
 </body>
-</html></html>
+</html>
