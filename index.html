@@ -381,10 +381,11 @@ let SITE = null;
 let mosqueList = [];
 let currentProductRef = null; // full product snapshot object, or null
 
-const colorFilterState = { mosques: [], hotels: [], schools: [], halls: [] };
+// One active color per section: selecting a new swatch immediately clears the old one.
+const colorFilterState = { mosques: null, hotels: null, schools: null, halls: null };
 
 // Backward-compatible reader: supports both the old single `secondaryColor`
-// field and the new multi-select `secondaryColors` array.
+// field and the newer `secondaryColors` array.
 function productColors(p){
   if (Array.isArray(p.secondaryColors)) return p.secondaryColors;
   return p.secondaryColor ? [p.secondaryColor] : [];
@@ -987,15 +988,15 @@ function renderSwatches(containerId, sectionKey, show, onChange){
   }
   wrap.style.display = "flex";
   wrap.innerHTML = SITE.settings.colorPalette.map(c => `
-    <button type="button" class="color-swatch${colorFilterState[sectionKey].includes(c.id) ? ' is-active':''}"
-      style="--sw-color:${esc(c.hex)}" data-color="${esc(c.id)}" aria-pressed="${colorFilterState[sectionKey].includes(c.id)}" title="${esc(tf(c,'name',currentLang))}">
+    <button type="button" class="color-swatch${colorFilterState[sectionKey] === c.id ? ' is-active':''}"
+      style="--sw-color:${esc(c.hex)}" data-color="${esc(c.id)}" aria-pressed="${colorFilterState[sectionKey] === c.id}" title="${esc(tf(c,'name',currentLang))}">
       <span class="sr-only">${esc(tf(c,'name',currentLang))}</span>
     </button>`).join("");
   wrap.querySelectorAll(".color-swatch").forEach(btn => {
     btn.addEventListener("click", () => {
       const id = btn.dataset.color;
       const selected = colorFilterState[sectionKey];
-      colorFilterState[sectionKey] = selected.includes(id) ? selected.filter(value => value !== id) : [...selected, id];
+      colorFilterState[sectionKey] = selected === id ? null : id;
       renderSwatches(containerId, sectionKey, show, onChange);
       onChange();
     });
@@ -1043,7 +1044,7 @@ function renderMosques(products, categories){
 
   function applyFilter(){
     const selected = colorFilterState.mosques;
-    return selected.length ? all.filter(p => productColors(p).some(color => selected.includes(color))) : all;
+    return selected ? all.filter(p => productColors(p).includes(selected)) : all;
   }
 
   function renderSlider(list){
@@ -1095,7 +1096,7 @@ function renderPlainGrid(products, categoryId, gridId, emptyId, swatchId, countI
 
   function refresh(){
     const selected = colorFilterState[categoryId];
-    const list = selected.length ? all.filter(p => productColors(p).some(color => selected.includes(color))) : all;
+    const list = selected ? all.filter(p => productColors(p).includes(selected)) : all;
     const grid = document.getElementById(gridId);
     const empty = document.getElementById(emptyId);
     if (!list.length){ grid.innerHTML = ""; empty.style.display = "block"; return; }
@@ -1240,16 +1241,24 @@ function applySeoMeta(settings){
 /* ---------------- Consent-aware analytics / marketing pixels ---------------- */
 const CONSENT_KEY = "afak_privacy_consent_v1";
 let pixelsInjected = false;
+// A rejection is remembered only for the current page load. Only an explicit
+// grant is persisted, so a visitor who does not accept is asked again next visit.
+let consentSessionDecision = null;
 function getMarketingConsent(){
-  try { return localStorage.getItem(CONSENT_KEY) || "unknown"; } catch { return "unknown"; }
+  try { return localStorage.getItem(CONSENT_KEY) === "granted" ? "granted" : "unknown"; } catch { return "unknown"; }
 }
 function syncConsentBanner(){
   const banner = document.getElementById("consentBanner");
-  if (banner) banner.hidden = getMarketingConsent() !== "unknown";
+  if (banner) banner.hidden = getMarketingConsent() === "granted" || consentSessionDecision === "denied";
 }
 function setMarketingConsent(value){
-  const normalized = value === "granted" ? "granted" : "denied";
-  try { localStorage.setItem(CONSENT_KEY, normalized); } catch {}
+  const granted = value === "granted";
+  const normalized = granted ? "granted" : "denied";
+  consentSessionDecision = normalized;
+  try {
+    if (granted) localStorage.setItem(CONSENT_KEY, "granted");
+    else localStorage.removeItem(CONSENT_KEY);
+  } catch {}
   window.__afakConsentStatus = normalized;
   try {
     if (typeof window.fbq === "function") window.fbq("consent", normalized === "granted" ? "grant" : "revoke");
@@ -1274,6 +1283,7 @@ function setupConsentControls(){
       if (window.ttq && typeof window.ttq.disableCookie === "function") window.ttq.disableCookie();
       localStorage.removeItem(CONSENT_KEY);
     } catch (error) { console.warn("Privacy withdrawal could not be synchronized", error); }
+    consentSessionDecision = null;
     window.__afakConsentStatus = "unknown";
     syncConsentBanner();
     requestAnimationFrame(() => accept?.focus());
@@ -1355,4 +1365,4 @@ window.addEventListener("hashchange", tryOpenFromHash);
 applyTranslations();
 </script>
 </body>
-</html>
+</html></html>
