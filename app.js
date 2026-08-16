@@ -112,17 +112,31 @@ export function subscribeSite(cb){
 }
 
 export function initSiteListener(){
+  const publish = (site) => {
+    cache = site;
+    listeners.forEach(cb => {
+      try { cb(cache); } catch (error) { console.error("Site render error:", error); }
+    });
+  };
+  const publishFallback = (error) => {
+    console.error("Site listener error:", error);
+    // Never block the public page when Firestore is unavailable or rules are stale.
+    // The next successful snapshot will replace this fallback with live content.
+    if (!cache) publish(structuredClone(DEFAULT_SITE));
+  };
   onSnapshot(SITE_DOC, async (snap) => {
-    if (!snap.exists()){
-      await setDoc(SITE_DOC, DEFAULT_SITE);
-      cache = structuredClone(DEFAULT_SITE);
-    } else {
-      cache = deepMerge(structuredClone(DEFAULT_SITE), snap.data());
+    try {
+      if (!snap.exists()){
+        try { await setDoc(SITE_DOC, DEFAULT_SITE); }
+        catch (writeError) { console.warn("Default site could not be created:", writeError); }
+        publish(structuredClone(DEFAULT_SITE));
+      } else {
+        publish(deepMerge(structuredClone(DEFAULT_SITE), snap.data()));
+      }
+    } catch (error) {
+      publishFallback(error);
     }
-    listeners.forEach(cb => cb(cache));
-  }, (err) => {
-    console.error("Site listener error:", err);
-  });
+  }, publishFallback);
 }
 
 export async function getSiteOnce(){
