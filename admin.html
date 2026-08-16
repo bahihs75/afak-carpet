@@ -509,6 +509,65 @@ function safeAdminLink(value, fallback = "#top"){
   } catch {}
   return fallback;
 }
+function normalizeHexColor(value, fallback = "#ffffff"){
+  const raw = String(value || "").trim();
+  return /^#[0-9a-f]{6}$/i.test(raw) ? raw.toLowerCase() : fallback;
+}
+function relativeLuminance(r, g, b){
+  const channel = value => {
+    const normalized = value / 255;
+    return normalized <= .03928 ? normalized / 12.92 : Math.pow((normalized + .055) / 1.055, 2.4);
+  };
+  return .2126 * channel(r) + .7152 * channel(g) + .0722 * channel(b);
+}
+function hexLuminance(hex){
+  const value = normalizeHexColor(hex).slice(1);
+  return relativeLuminance(parseInt(value.slice(0,2),16), parseInt(value.slice(2,4),16), parseInt(value.slice(4,6),16));
+}
+function contrastRatio(a, b){
+  const lighter = Math.max(a, b), darker = Math.min(a, b);
+  return (lighter + .05) / (darker + .05);
+}
+async function detectHeroTextColor(imageUrl){
+  if (!imageUrl) throw new Error("لا توجد صورة لتحليلها");
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.crossOrigin = "anonymous";
+    image.onload = () => {
+      try{
+        const width = 96;
+        const height = Math.max(1, Math.round((image.naturalHeight / image.naturalWidth) * width));
+        const canvas = document.createElement("canvas");
+        canvas.width = width; canvas.height = height;
+        const context = canvas.getContext("2d", { willReadFrequently: true });
+        context.drawImage(image, 0, 0, width, height);
+        const pixels = context.getImageData(0, 0, width, height).data;
+        const left = Math.floor(width * .18), right = Math.ceil(width * .82);
+        const top = Math.floor(height * .52), bottom = Math.ceil(height * .92);
+        let luminanceSum = 0, samples = 0;
+        for (let y = top; y < bottom; y++){
+          const vertical = y / Math.max(1, height - 1);
+          const overlayAlpha = .15 + (.55 - .15) * vertical;
+          for (let x = left; x < right; x++){
+            const offset = (y * width + x) * 4;
+            const r = pixels[offset] * (1 - overlayAlpha) + 20 * overlayAlpha;
+            const g = pixels[offset + 1] * (1 - overlayAlpha) + 23 * overlayAlpha;
+            const b = pixels[offset + 2] * (1 - overlayAlpha) + 31 * overlayAlpha;
+            luminanceSum += relativeLuminance(r, g, b);
+            samples++;
+          }
+        }
+        const backgroundLuminance = samples ? luminanceSum / samples : .12;
+        const whiteContrast = contrastRatio(1, backgroundLuminance);
+        const navyContrast = contrastRatio(hexLuminance("#17233f"), backgroundLuminance);
+        const color = whiteContrast >= navyContrast ? "#ffffff" : "#17233f";
+        resolve({ color, backgroundLuminance, contrast: Math.max(whiteContrast, navyContrast) });
+      } catch (error){ reject(error); }
+    };
+    image.onerror = () => reject(new Error("تعذر قراءة الصورة؛ قد يمنع خادم الصور التحليل عبر المتصفح"));
+    image.src = imageUrl;
+  });
+}
 function makeCompactRows(list, summaryFn){
   Array.from(list.children).forEach(row => {
     let head = row.querySelector(":scope > .compact-row-head");
@@ -934,6 +993,8 @@ function renderHeroTab(){
   list.innerHTML = "";
   SITE.hero.slides.forEach((slide) => {
     const row = document.createElement("div");
+    const suggestedTextColor = normalizeHexColor(slide.autoTextColor, "#ffffff");
+    const initialTextColor = normalizeHexColor(slide.textColorMode === "manual" ? slide.textColor : suggestedTextColor, "#ffffff");
     row.className = "admin-card";
     row.style.background = "var(--canvas-soft)";
     row.dataset.id = slide.id;
@@ -970,8 +1031,73 @@ function renderHeroTab(){
           <button type="button" class="media-picker-btn s-pick-btn">اختر من المكتبة</button>
         </div>
       </div>
+      <div class="hero-color-tools">
+        <div class="admin-grid-2">
+          <div class="field">
+            <label>لون نص الشريحة</label>
+            <select class="s-text-color-mode">
+              <option value="auto" ${slide.textColorMode !== "manual" ? "selected" : ""}>تلقائي — تحليل تباين الخلفية</option>
+              <option value="manual" ${slide.textColorMode === "manual" ? "selected" : ""}>يدوي — أختار اللون بنفسي</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>اللون اليدوي</label>
+            <div class="hero-color-control">
+              <input type="color" class="s-text-color" value="${esc(initialTextColor)}" aria-label="اختر لون نص الشريحة">
+              <span class="hero-color-swatch" style="background:${esc(initialTextColor)}"></span>
+              <button type="button" class="btn btn-outline s-analyze-color">حلّل الخلفية</button>
+            </div>
+          </div>
+        </div>
+        <p class="hero-color-result s-color-result" aria-live="polite">الاقتراح التلقائي الحالي: <strong>${esc(suggestedTextColor)}</strong></p>
+      </div>
       <button class="btn btn-outline remove-slide" style="border-color:var(--danger); color:var(--danger)">حذف الشريحة</button>
     `;
+    const modeSelect = row.querySelector(".s-text-color-mode");
+    const colorInput = row.querySelector(".s-text-color");
+    const colorSwatch = row.querySelector(".hero-color-swatch");
+    const colorResult = row.querySelector(".s-color-result");
+    const analyzeButton = row.querySelector(".s-analyze-color");
+    const updateColorPreview = () => {
+      const color = normalizeHexColor(colorInput.value);
+      colorInput.value = color;
+      colorSwatch.style.background = color;
+    };
+    const analyzeHeroColor = async () => {
+      if (!slide.image){ toast("أضف صورة الخلفية أولًا"); return; }
+      analyzeButton.disabled = true;
+      analyzeButton.textContent = "جارٍ التحليل...";
+      try{
+        const result = await detectHeroTextColor(slide.image);
+        slide.autoTextColor = result.color;
+        if (modeSelect.value === "auto") colorInput.value = result.color;
+        updateColorPreview();
+        colorResult.innerHTML = `الاقتراح التلقائي الحالي: <strong>${esc(result.color)}</strong> — تباين تقريبي ${result.contrast.toFixed(1)}:1`;
+      } catch(error){
+        colorResult.textContent = error.message;
+        toast(error.message);
+      } finally {
+        analyzeButton.disabled = false;
+        analyzeButton.textContent = "حلّل الخلفية";
+      }
+    };
+    colorInput.addEventListener("input", () => {
+      slide.textColor = normalizeHexColor(colorInput.value);
+      updateColorPreview();
+    });
+    modeSelect.addEventListener("change", () => {
+      if (modeSelect.value === "auto") colorInput.value = normalizeHexColor(slide.autoTextColor, "#ffffff");
+      updateColorPreview();
+    });
+    analyzeButton.addEventListener("click", analyzeHeroColor);
+    row.querySelector(".s-pick-btn").addEventListener("click", () => {
+      openMediaPicker(async (url) => {
+        slide.image = url;
+        const prev = row.querySelector(".s-preview");
+        prev.src = url; prev.style.display = "block";
+        await analyzeHeroColor();
+      });
+    });
     row.querySelector(".s-file").addEventListener("change", async (e) => {
       const file = e.target.files[0]; if (!file) return;
       toast("جارٍ رفع الصورة...");
@@ -981,20 +1107,15 @@ function renderHeroTab(){
         const prev = row.querySelector(".s-preview");
         prev.src = url; prev.style.display = "block";
         toast("تم رفع الصورة");
+        await analyzeHeroColor();
       } catch(err){ toast("فشل الرفع: " + err.message); }
-    });
-    row.querySelector(".s-pick-btn").addEventListener("click", () => {
-      openMediaPicker((url) => {
-        slide.image = url;
-        const prev = row.querySelector(".s-preview");
-        prev.src = url; prev.style.display = "block";
-      });
     });
     row.querySelector(".remove-slide").addEventListener("click", () => {
       SITE.hero.slides = SITE.hero.slides.filter(s => s.id !== slide.id);
       renderHeroTab();
     });
     list.appendChild(row);
+    if (slide.image && !slide.autoTextColor) window.setTimeout(analyzeHeroColor, 0);
   });
   makeCompactRows(list, row => row.querySelector(".s-title")?.value || "شريحة");
 }
@@ -1002,7 +1123,8 @@ document.getElementById("addSlideBtn").addEventListener("click", () => {
   SITE.hero.slides.push({
     id: uid(), image:"", eyebrow:"AFAK CARPET", eyebrowEn:"", title:"عنوان جديد", titleEn:"",
     text:"", textEn:"", ctaLabel:"اطلب عرض سعر", ctaLabelEn:"",
-    secondaryLabel:"استكشف المنتجات", secondaryLabelEn:"", secondaryLink:"#mosques"
+    secondaryLabel:"استكشف المنتجات", secondaryLabelEn:"", secondaryLink:"#mosques",
+    textColorMode:"auto", textColor:"#ffffff", autoTextColor:"#ffffff"
   });
   renderHeroTab();
 });
@@ -1021,6 +1143,9 @@ document.getElementById("saveHeroBtn").addEventListener("click", async () => {
     slide.secondaryLabel = row.querySelector(".s-secondary").value.trim();
     slide.secondaryLabelEn = row.querySelector(".s-secondary-en").value.trim();
     slide.secondaryLink = safeAdminLink(row.querySelector(".s-secondary-link").value, "#mosques");
+    slide.textColorMode = row.querySelector(".s-text-color-mode").value === "manual" ? "manual" : "auto";
+    slide.textColor = normalizeHexColor(row.querySelector(".s-text-color").value, "#ffffff");
+    slide.autoTextColor = normalizeHexColor(slide.autoTextColor, "#ffffff");
   });
   await saveSite({ hero: SITE.hero });
   toast("تم حفظ السلايدر");
