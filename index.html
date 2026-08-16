@@ -647,7 +647,7 @@ function openQuote(productSnapshot){
   quoteForm.style.display = "block";
   quoteSuccess.style.display = "none";
   setQuoteModalOpen(true);
-  window.requestAnimationFrame(}
+}
 let lastQuoteFocus = null;
 function setQuoteModalOpen(open){
   const isOpen = Boolean(open);
@@ -1422,20 +1422,31 @@ function renderAll(){
 
 document.getElementById("year").textContent = new Date().getFullYear();
 setupConsentControls();
-initSiteListener();
 let firstLoad = true;
+let loaderFailSafe = window.setTimeout(() => {
+  const loader = document.getElementById("siteLoader");
+  if (!loader || loader.classList.contains("is-hidden")) return;
+  console.warn("Site loading timed out; continuing with the available page content.");
+  loader.classList.add("is-hidden");
+  window.setTimeout(() => loader.remove(), 500);
+}, 8000);
+function finishInitialLoad(){
+  if (!firstLoad) return;
+  firstLoad = false;
+  window.clearTimeout(loaderFailSafe);
+  tryOpenFromHash();
+  const loader = document.getElementById("siteLoader");
+  if (!loader) return;
+  loader.classList.add("is-hidden");
+  window.setTimeout(() => loader.remove(), 500);
+}
+initSiteListener();
 subscribeSite((site) => {
   SITE = site;
   renderAll();
   applyTranslations();
   injectPixels(site.settings || {});
-  if (firstLoad){
-    firstLoad = false;
-    tryOpenFromHash();
-    const loader = document.getElementById("siteLoader");
-    loader.classList.add("is-hidden");
-    setTimeout(() => loader.remove(), 500);
-  }
+  finishInitialLoad();
 });
 window.addEventListener("hashchange", tryOpenFromHash);
 applyTranslations();
