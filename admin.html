@@ -30,31 +30,44 @@
 
 <!-- ===================== ADMIN SHELL ===================== -->
 <div class="admin-shell" id="adminShell" style="display:none">
-  <div class="admin-topbar">
-      <span style="font-weight:700">لوحة تحكم AFAK CARPET</span>
-      <span id="adminRoleBadge" class="role-badge" aria-live="polite"></span>
-    <div style="display:flex; align-items:center; gap:16px">
-      <a href="index.html" target="_blank" style="font-size:13px; opacity:.8">عرض الموقع ↗</a>
-      <button class="btn btn-outline-light" id="logoutBtn" style="height:36px; padding:0 16px">خروج</button>
-    </div>
+  <div class="admin-mobile-header">
+    <span style="font-weight:700">لوحة تحكم AFAK CARPET</span>
+    <button class="admin-mobile-toggle" id="adminMobileToggle" aria-expanded="false" aria-controls="adminSidebar" aria-label="فتح القائمة">☰</button>
   </div>
 
-  <div class="admin-tabs" id="adminTabs">
-    <button class="admin-tab is-active" data-tab="settings" data-role-allow="admin,marketing">الإعدادات العامة</button>
-    <button class="admin-tab" data-tab="hero" data-role-allow="admin,editor">السلايدر الرئيسي</button>
-    <button class="admin-tab" data-tab="categories" data-role-allow="admin,editor">الأقسام</button>
-    <button class="admin-tab" data-tab="products" data-role-allow="admin,editor">المنتجات</button>
-    <button class="admin-tab" data-tab="projects" data-role-allow="admin,editor">المشاريع</button>
-    <button class="admin-tab" data-tab="trust" data-role-allow="admin,editor">الثقة والمصداقية</button>
-    <button class="admin-tab" data-tab="media" data-role-allow="admin,editor,marketing">مكتبة الصور</button>
-    <button class="admin-tab" data-tab="about" data-role-allow="admin,editor">من نحن</button>
-    <button class="admin-tab" data-tab="orders" data-role-allow="admin,editor,marketing">الطلبات</button>
-    <button class="admin-tab" data-tab="analytics" data-role-allow="admin,marketing">الإحصائيات</button>
-    <button class="admin-tab" data-tab="activity" data-role-allow="admin">سجل النشاط</button>
-    <button class="admin-tab" data-tab="team" data-role-allow="admin">الفريق والصلاحيات</button>
-  </div>
+  <div class="admin-layout">
+    <div class="admin-sidebar-scrim" id="adminSidebarScrim" aria-hidden="true"></div>
+    <aside class="admin-sidebar" id="adminSidebar">
+      <div class="admin-sidebar-head">
+        <div class="admin-sidebar-title">لوحة التحكم</div>
+        <div class="admin-sidebar-user">
+          <span id="adminRoleBadge" class="role-badge" aria-live="polite"></span>
+          <a href="index.html" target="_blank" style="color:#fff; font-size:12px; opacity:.8; text-decoration:underline">عرض الموقع ↗</a>
+        </div>
+      </div>
 
-  <div class="admin-panel">
+      <div class="admin-tabs" id="adminTabs">
+        <button class="admin-tab is-active" data-tab="settings" data-role-allow="admin,marketing">الإعدادات العامة</button>
+        <button class="admin-tab" data-tab="hero" data-role-allow="admin,editor">السلايدر الرئيسي</button>
+        <button class="admin-tab" data-tab="categories" data-role-allow="admin,editor">الأقسام</button>
+        <button class="admin-tab" data-tab="products" data-role-allow="admin,editor">المنتجات</button>
+        <button class="admin-tab" data-tab="projects" data-role-allow="admin,editor">المشاريع</button>
+        <button class="admin-tab" data-tab="trust" data-role-allow="admin,editor">الثقة والمصداقية</button>
+        <button class="admin-tab" data-tab="media" data-role-allow="admin,editor,marketing">مكتبة الصور</button>
+        <button class="admin-tab" data-tab="about" data-role-allow="admin,editor">من نحن</button>
+        <button class="admin-tab" data-tab="orders" data-role-allow="admin,editor,marketing">الطلبات</button>
+        <button class="admin-tab" data-tab="analytics" data-role-allow="admin,marketing">الإحصائيات</button>
+        <button class="admin-tab" data-tab="activity" data-role-allow="admin">سجل النشاط</button>
+        <button class="admin-tab" data-tab="team" data-role-allow="admin">الفريق والصلاحيات</button>
+      </div>
+
+      <div class="admin-sidebar-foot">
+        <button class="btn btn-outline-light" id="logoutBtn" style="width:100%; height:38px">خروج</button>
+      </div>
+    </aside>
+
+    <main class="admin-main-content">
+      <div class="admin-panel">
 
     <!-- ---- SETTINGS ---- -->
     <div class="admin-tab-panel" data-panel="settings">
@@ -378,6 +391,8 @@
       </div>
     </div>
 
+      </div>
+    </main>
   </div>
 </div>
 
@@ -500,6 +515,27 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
 });
 document.getElementById("logoutBtn").addEventListener("click", () => signOut(auth));
 
+/* ---------------- Responsive admin sidebar ---------------- */
+const adminSidebar = document.getElementById("adminSidebar");
+const adminSidebarScrim = document.getElementById("adminSidebarScrim");
+const adminMobileToggle = document.getElementById("adminMobileToggle");
+function setAdminSidebarOpen(open){
+  if (!adminSidebar) return;
+  const isMobile = window.matchMedia("(max-width: 900px)").matches;
+  const shouldOpen = isMobile && open;
+  adminSidebar.classList.toggle("is-open", shouldOpen);
+  adminSidebarScrim?.classList.toggle("is-visible", shouldOpen);
+  adminMobileToggle?.setAttribute("aria-expanded", String(shouldOpen));
+  adminMobileToggle?.setAttribute("aria-label", shouldOpen ? "إغلاق القائمة" : "فتح القائمة");
+}
+adminMobileToggle?.addEventListener("click", () => {
+  setAdminSidebarOpen(!adminSidebar?.classList.contains("is-open"));
+});
+adminSidebarScrim?.addEventListener("click", () => setAdminSidebarOpen(false));
+window.addEventListener("resize", () => {
+  if (!window.matchMedia("(max-width: 900px)").matches) setAdminSidebarOpen(false);
+});
+
 /* ---------------- Tabs ---------------- */
 document.querySelectorAll(".admin-tab").forEach(tab => {
   tab.addEventListener("click", () => {
@@ -510,6 +546,7 @@ document.querySelectorAll(".admin-tab").forEach(tab => {
       p.style.display = p.dataset.panel === target ? "block" : "none";
     });
     if (target === "media") renderMediaLibraryTab();
+    setAdminSidebarOpen(false);
   });
 });
 
@@ -1135,6 +1172,9 @@ function renderHeroTab(){
       <div class="field mt-2">
         <label><input type="checkbox" class="s-reflection" ${slide.reflection ? "checked" : ""}> تفعيل التظليل العلوي (Reflection) لتحسين وضوح الشعار والقائمة</label>
       </div>
+      <div class="field mt-2">
+        <label><input type="checkbox" class="s-text-backdrop" ${slide.textBackdrop ? "checked" : ""}> إضافة خلفية ضبابية خلف النص (Text Backdrop) لزيادة القراءة والوضوح</label>
+      </div>
       <div class="hero-color-tools">
         <div class="admin-grid-2">
           <div class="field">
@@ -1242,6 +1282,7 @@ document.getElementById("addSlideBtn").addEventListener("click", () => {
     id: uid(), image:"", eyebrow:"AFAK CARPET", eyebrowEn:"", title:"عنوان جديد", titleEn:"",
     text:"", textEn:"", ctaLabel:"اطلب عرض سعر", ctaLabelEn:"",
     secondaryLabel:"استكشف المنتجات", secondaryLabelEn:"", secondaryLink:"#mosques",
+    reflection: false, textBackdrop: false,
     textColorMode:"auto", textColor:"#ffffff", autoTextColor:"#ffffff"
   });
   renderHeroTab();
@@ -1264,6 +1305,8 @@ document.getElementById("saveHeroBtn").addEventListener("click", async () => {
     slide.secondaryLink = safeAdminLink(row.querySelector(".s-secondary-link").value, "#mosques");
     const reflectionEl = row.querySelector(".s-reflection");
     slide.reflection = reflectionEl ? reflectionEl.checked : false;
+    const textBackdropEl = row.querySelector(".s-text-backdrop");
+    slide.textBackdrop = textBackdropEl ? textBackdropEl.checked : false;
     slide.textColorMode = row.querySelector(".s-text-color-mode").value === "manual" ? "manual" : "auto";
     slide.textColor = normalizeHexColor(row.querySelector(".s-text-color").value, "#ffffff");
     slide.autoTextColor = normalizeHexColor(slide.autoTextColor, "#ffffff");

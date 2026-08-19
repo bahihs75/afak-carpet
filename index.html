@@ -876,7 +876,7 @@ function renderHero(slides){
   if (!slides.length) return;
   slides.forEach((s, i) => {
     const el = document.createElement("div");
-    el.className = "hero-slide" + (i === 0 ? " is-active" : "") + (s.reflection ? " has-reflection" : "");
+    el.className = "hero-slide" + (i === 0 ? " is-active" : "") + (s.reflection ? " has-reflection" : "") + (s.textBackdrop ? " has-text-backdrop" : "");
     const textColor = s.textColorMode === "manual" ? safeHexColor(s.textColor) : safeHexColor(s.autoTextColor);
     el.style.setProperty("--hero-text-color", textColor);
     el.style.setProperty("--hero-text-muted-color", hexToRgba(textColor, .86));
