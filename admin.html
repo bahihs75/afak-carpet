@@ -109,6 +109,15 @@
         <p class="form-note">يمكنك تغييره من هنا في أي وقت دون الحاجة لتعديل الكود. الحصول على مفتاح جديد من api.imgbb.com</p>
       </div>
       <div class="admin-card">
+        <h3>إعدادات السلايدر التلقائي للمنتجات</h3>
+        <p class="form-note mt-2">يتحكم هذا القسم في الحركة التلقائية لصور المنتجات في الصفحة الرئيسية.</p>
+        <div class="admin-grid-2 mt-3">
+          <div class="field"><label><input type="checkbox" id="setSliderPc"> تفعيل السلايدر على الحاسوب (PC)</label></div>
+          <div class="field"><label><input type="checkbox" id="setSliderMobile"> تفعيل السلايدر على الهاتف (Mobile)</label></div>
+          <div class="field"><label>مدة العرض (بالثانية)</label><input type="number" id="setSliderInterval" step="0.5" min="2"></div>
+        </div>
+      </div>
+      <div class="admin-card">
         <h3>أدوات التحليل والتتبع (اختياري)</h3>
         <p class="form-note mt-2">اتركها فارغة إن ما تستخدمهاش — السكربتات ما تتحملش بالموقع إطلاقًا إلا إذا عبّيت الحقل المخصص لها.</p>
         <div class="admin-grid-2 mt-3">
@@ -123,6 +132,10 @@
         <div class="field mt-3"><label>عنوان الصفحة</label><input type="text" id="setSeoTitle" maxlength="120" placeholder="AFAK CARPET — سجاد المساجد والفنادق والمؤسسات"></div>
         <div class="field"><label>وصف الصفحة</label><textarea id="setSeoDescription" maxlength="300" placeholder="وصف مختصر وواضح لخدمات AFAK CARPET"></textarea></div>
         <div class="field"><label>صورة المشاركة (OG Image)</label><input type="url" id="setOgImage" maxlength="500" placeholder="https://..."></div>
+      </div>
+      <div class="admin-card">
+        <h3>ظهور الأقسام العامة</h3>
+        <div class="field mt-2"><label><input type="checkbox" id="setVisHero"> إظهار قسم الهيرو (Hero Slider)</label></div>
       </div>
       <div class="admin-card">
         <h3>رمز QR لموقعك</h3>
@@ -237,6 +250,7 @@
     <div class="admin-tab-panel" data-panel="projects" style="display:none">
       <div class="admin-card">
         <h3>مشاريعنا (معرض صور)</h3>
+        <div class="field mb-3"><label><input type="checkbox" id="visProjects"> إظهار قسم المشاريع بالموقع</label></div>
         <p class="form-note mt-2">شبكة صور بسيطة تظهر بالموقع بين "من نحن" و"تواصل معنا" — تختفي تلقائيًا إن كانت فارغة.</p>
         <div id="projectsList" class="mt-3"></div>
         <button class="btn btn-outline mt-2" id="addProjectBtn">+ إضافة مشروع</button>
@@ -284,6 +298,7 @@
     <div class="admin-tab-panel" data-panel="about" style="display:none">
       <div class="admin-card">
         <h3>قسم "من نحن"</h3>
+        <div class="field mb-3"><label><input type="checkbox" id="visAbout"> إظهار قسم "من نحن" بالموقع</label></div>
         <div class="admin-grid-2">
           <div class="field"><label>العنوان</label><input type="text" id="aboutTitleInput"></div>
           <div class="field"><label>Title (EN — اختياري)</label><input type="text" id="aboutTitleInputEn"></div>
@@ -882,9 +897,13 @@ function renderSettings(){
   document.getElementById("setCfToken").value = s.cfAnalyticsToken || "";
   document.getElementById("setMetaPixel").value = s.metaPixelId || "";
   document.getElementById("setTiktokPixel").value = s.tiktokPixelId || "";
+  document.getElementById("setSliderPc").checked = s.productSlider?.pc !== false;
+  document.getElementById("setSliderMobile").checked = !!s.productSlider?.mobile;
+  document.getElementById("setSliderInterval").value = s.productSlider?.interval || 6;
   document.getElementById("setSeoTitle").value = s.seoTitle || "";
   document.getElementById("setSeoDescription").value = s.seoDescription || "";
   document.getElementById("setOgImage").value = s.ogImage || "";
+  document.getElementById("setVisHero").checked = s.sectionsVisible?.hero !== false;
   const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=" + encodeURIComponent(location.origin + "/index.html");
   document.getElementById("qrPreview").src = qrUrl;
   document.getElementById("qrDownload").href = qrUrl;
@@ -918,9 +937,18 @@ document.getElementById("saveSettingsBtn").addEventListener("click", async () =>
     cfAnalyticsToken: document.getElementById("setCfToken").value.trim(),
     metaPixelId: document.getElementById("setMetaPixel").value.trim(),
     tiktokPixelId: document.getElementById("setTiktokPixel").value.trim(),
+    productSlider: {
+      pc: document.getElementById("setSliderPc").checked,
+      mobile: document.getElementById("setSliderMobile").checked,
+      interval: parseFloat(document.getElementById("setSliderInterval").value) || 6
+    },
     seoTitle: document.getElementById("setSeoTitle").value.trim().slice(0, 120),
     seoDescription: document.getElementById("setSeoDescription").value.trim().slice(0, 300),
     ogImage: document.getElementById("setOgImage").value.trim().slice(0, 500),
+    sectionsVisible: {
+      ...(SITE.settings.sectionsVisible || {}),
+      hero: document.getElementById("setVisHero").checked
+    },
     socials: {
       instagram: document.getElementById("setInstagram").value.trim(),
       facebook: document.getElementById("setFacebook").value.trim(),
@@ -1231,6 +1259,7 @@ document.getElementById("saveHeroBtn").addEventListener("click", async () => {
     slide.secondaryLabel = row.querySelector(".s-secondary").value.trim();
     slide.secondaryLabelEn = row.querySelector(".s-secondary-en").value.trim();
     slide.secondaryLink = safeAdminLink(row.querySelector(".s-secondary-link").value, "#mosques");
+    slide.reflection = row.querySelector(".s-reflection").checked;
     slide.textColorMode = row.querySelector(".s-text-color-mode").value === "manual" ? "manual" : "auto";
     slide.textColor = normalizeHexColor(row.querySelector(".s-text-color").value, "#ffffff");
     slide.autoTextColor = normalizeHexColor(slide.autoTextColor, "#ffffff");
@@ -1246,32 +1275,46 @@ document.getElementById("saveHeroBtn").addEventListener("click", async () => {
 function renderCategoriesTab(){
   const list = document.getElementById("categoriesList");
   list.innerHTML = "";
-  SITE.categories.forEach((cat) => {
-    const row = document.createElement("div");
-    row.className = "admin-card";
-    row.style.background = "var(--canvas-soft)";
-    row.dataset.id = cat.id;
-    row.innerHTML = `
-      <div class="admin-grid-2">
-        <div class="field"><label>الاسم</label><input type="text" class="c-name" value="${esc(cat.name)}"></div>
-        <div class="field"><label>Name (EN — اختياري)</label><input type="text" class="c-name-en" value="${esc(cat.nameEn||'')}"></div>
-      </div>
-      <div class="admin-grid-2">
-        <div class="field"><label>الوصف القصير</label><input type="text" class="c-desc" value="${esc(cat.desc||"")}"></div>
-        <div class="field"><label>Description (EN — اختياري)</label><input type="text" class="c-desc-en" value="${esc(cat.descEn||'')}"></div>
-      </div>
-      <div class="field">
-        <label>صورة البطاقة</label>
-        <div class="img-upload-field">
-          <img class="c-preview" src="${esc(cat.image)}" style="${cat.image ? "" : "display:none"}">
-          <input type="file" class="c-file" accept="image/*">
-          <button type="button" class="media-picker-btn c-pick-btn">اختر من المكتبة</button>
+    SITE.categories.forEach((cat) => {
+      const row = document.createElement("div");
+      row.className = "admin-card";
+      row.style.background = "var(--canvas-soft)";
+      row.dataset.id = cat.id;
+      const isVisible = SITE.settings.sectionsVisible?.[cat.id] !== false;
+      const headVisible = SITE.settings.componentsVisible?.[cat.id + 'Header'] !== false;
+      const gridVisible = SITE.settings.componentsVisible?.[cat.id + 'Grid'] !== false;
+      row.innerHTML = `
+        <div class="admin-grid-2">
+          <div class="field"><label>الاسم</label><input type="text" class="c-name" value="${esc(cat.name)}"></div>
+          <div class="field"><label>Name (EN — اختياري)</label><input type="text" class="c-name-en" value="${esc(cat.nameEn||'')}"></div>
         </div>
-      </div>
-      <div class="field mt-2">
-        <label><input type="checkbox" class="c-show-filter" ${cat.showColorFilter !== false ? "checked" : ""}> إظهار فلتر الألوان في صفحة هذا القسم</label>
-      </div>
-    `;
+        <div class="admin-grid-2">
+          <div class="field"><label>الوصف القصير</label><input type="text" class="c-desc" value="${esc(cat.desc||"")}"></div>
+          <div class="field"><label>Description (EN — اختياري)</label><input type="text" class="c-desc-en" value="${esc(cat.descEn||'')}"></div>
+        </div>
+        <div class="field">
+          <label>صورة البطاقة</label>
+          <div class="img-upload-field">
+            <img class="c-preview" src="${esc(cat.image)}" style="${cat.image ? "" : "display:none"}">
+            <input type="file" class="c-file" accept="image/*">
+            <button type="button" class="media-picker-btn c-pick-btn">اختر من المكتبة</button>
+          </div>
+        </div>
+        <div class="admin-grid-2 mt-3" style="border-top:1px dashed var(--hairline); padding-top:12px">
+          <div class="field">
+            <label><input type="checkbox" class="c-visible" ${isVisible ? "checked" : ""}> ظهور القسم بالكامل</label>
+          </div>
+          <div class="field">
+            <label><input type="checkbox" class="c-show-filter" ${cat.showColorFilter !== false ? "checked" : ""}> تفعيل فلتر الألوان</label>
+          </div>
+          <div class="field">
+            <label><input type="checkbox" class="c-head-visible" ${headVisible ? "checked" : ""}> ظهور العنوان والوصف</label>
+          </div>
+          <div class="field">
+            <label><input type="checkbox" class="c-grid-visible" ${gridVisible ? "checked" : ""}> ظهور شبكة المنتجات</label>
+          </div>
+        </div>
+      `;
     row.querySelector(".c-file").addEventListener("change", async (e) => {
       const file = e.target.files[0]; if (!file) return;
       toast("جارٍ رفع الصورة...");
@@ -1295,6 +1338,9 @@ function renderCategoriesTab(){
   makeCompactRows(list, row => row.querySelector(".c-name")?.value || "قسم");
 }
 document.getElementById("saveCategoriesBtn").addEventListener("click", async () => {
+  if (!SITE.settings.sectionsVisible) SITE.settings.sectionsVisible = {};
+  if (!SITE.settings.componentsVisible) SITE.settings.componentsVisible = {};
+  
   document.querySelectorAll("#categoriesList > div").forEach(row => {
     const cat = SITE.categories.find(c => c.id === row.dataset.id);
     if (!cat) return;
@@ -1303,9 +1349,18 @@ document.getElementById("saveCategoriesBtn").addEventListener("click", async () 
     cat.desc = row.querySelector(".c-desc").value.trim();
     cat.descEn = row.querySelector(".c-desc-en").value.trim();
     cat.showColorFilter = row.querySelector(".c-show-filter").checked;
+    
+    SITE.settings.sectionsVisible[cat.id] = row.querySelector(".c-visible").checked;
+    SITE.settings.componentsVisible[cat.id + 'Header'] = row.querySelector(".c-head-visible").checked;
+    SITE.settings.componentsVisible[cat.id + 'Grid'] = row.querySelector(".c-grid-visible").checked;
   });
-  await saveSite({ categories: SITE.categories });
-  toast("تم حفظ الأقسام");
+  
+  await saveSite({ 
+    categories: SITE.categories,
+    settings: SITE.settings 
+  });
+  recordAuditLog({ user: CURRENT_USER, role: CURRENT_ROLE, action: "update", entity: "categories", entityId: "site", summary: "Visibility and Category updates", changedFields: ["categories", "visibility"] }).catch(console.warn);
+  toast("تم حفظ الأقسام والإعدادات");
 });
 
 /* ---------------- PRODUCTS TAB ---------------- */
@@ -1550,6 +1605,9 @@ function renderProductsTab(){
 
 /* ---------------- PROJECTS TAB ---------------- */
 function renderProjectsTab(){
+  const vis = SITE.settings.sectionsVisible || {};
+  const visProjects = document.getElementById("visProjects");
+  if (visProjects) visProjects.checked = vis.projects !== false;
   const list = document.getElementById("projectsList");
   list.innerHTML = "";
   (SITE.projects || []).forEach((proj) => {
@@ -1607,7 +1665,11 @@ document.getElementById("saveProjectsBtn").addEventListener("click", async () =>
     proj.captionEn = row.querySelector(".pj-caption-en").value.trim();
     proj.order = i;
   });
-  await saveSite({ projects: SITE.projects });
+  SITE.settings.sectionsVisible = {
+    ...(SITE.settings.sectionsVisible || {}),
+    projects: document.getElementById("visProjects") ? document.getElementById("visProjects").checked : true
+  };
+  await saveSite({ projects: SITE.projects, settings: SITE.settings });
   toast("تم حفظ المشاريع");
 });
 
@@ -1756,6 +1818,9 @@ document.getElementById("saveTrustBtn").addEventListener("click", async () => {
 
 /* ---------------- ABOUT TAB ---------------- */
 function renderAboutTab(){
+  const vis = SITE.settings.sectionsVisible || {};
+  const visAbout = document.getElementById("visAbout");
+  if (visAbout) visAbout.checked = vis.about !== false;
   document.getElementById("aboutTitleInput").value = SITE.about.title || "";
   document.getElementById("aboutTitleInputEn").value = SITE.about.titleEn || "";
   document.getElementById("aboutTextInput").value = SITE.about.text || "";
@@ -1783,7 +1848,11 @@ document.getElementById("saveAboutBtn").addEventListener("click", async () => {
   SITE.about.text = document.getElementById("aboutTextInput").value.trim();
   SITE.about.textEn = document.getElementById("aboutTextInputEn").value.trim();
   SITE.about.image = img.dataset.value || SITE.about.image || "";
-  await saveSite({ about: SITE.about });
+  SITE.settings.sectionsVisible = {
+    ...(SITE.settings.sectionsVisible || {}),
+    about: document.getElementById("visAbout") ? document.getElementById("visAbout").checked : true
+  };
+  await saveSite({ about: SITE.about, settings: SITE.settings });
   toast("تم الحفظ");
 });
 

@@ -876,7 +876,7 @@ function renderHero(slides){
   if (!slides.length) return;
   slides.forEach((s, i) => {
     const el = document.createElement("div");
-    el.className = "hero-slide" + (i === 0 ? " is-active" : "");
+    el.className = "hero-slide" + (i === 0 ? " is-active" : "") + (s.reflection ? " has-reflection" : "");
     const textColor = s.textColorMode === "manual" ? safeHexColor(s.textColor) : safeHexColor(s.autoTextColor);
     el.style.setProperty("--hero-text-color", textColor);
     el.style.setProperty("--hero-text-muted-color", hexToRgba(textColor, .86));
@@ -1081,15 +1081,19 @@ function renderSwatches(containerId, sectionKey, show, onChange){
 
 /* ---------------- Product card builder (shared template) ---------------- */
 function productCardHTML(p){
-  const base = safeImageUrl((p.images && p.images[0]) || "");
-  const hover = safeImageUrl(p.hoverImage || "");
   const name = tf(p, "name", currentLang);
   const snap = JSON.stringify(snapshotOf(p)).replace(/"/g, "&quot;");
+  const allImages = [...(p.images || [])];
+  if (p.hoverImage && !allImages.includes(p.hoverImage)) allImages.push(p.hoverImage);
+  
+  const imagesHTML = allImages.map((url, idx) => `
+    <img class="${idx === 0 ? 'is-active' : ''}" src="${esc(safeImageUrl(url))}" loading="lazy" decoding="async" alt="${esc(name)}" data-idx="${idx}">
+  `).join("");
+
   return `
     <div class="product-card" data-name="${esc(name)}">
       <div class="img">
-        <img class="img-base" src="${esc(base)}" loading="lazy" decoding="async" alt="${esc(name)}">
-        ${hover ? `<img class="img-hover" src="${esc(hover)}" loading="lazy" decoding="async" alt="${esc(name)}">` : ""}
+        ${imagesHTML}
       </div>
       <div class="info">
         <span class="name">${esc(name)}</span>
@@ -1097,6 +1101,54 @@ function productCardHTML(p){
       </div>
       <button type="button" class="card-quote-btn" data-open-quote data-product-snapshot="${snap}">${esc(I18N[currentLang]["card.quote"])}</button>
     </div>`;
+}
+
+let productSliderInterval = null;
+let currentProductImageIdx = 0;
+
+function initProductSlider(settings) {
+  if (productSliderInterval) clearInterval(productSliderInterval);
+  
+  const isMobile = window.innerWidth <= 768;
+  const enabled = isMobile ? settings.productSlider?.mobile : (settings.productSlider?.pc !== false);
+  const intervalSec = settings.productSlider?.interval || 6;
+
+  if (!enabled) return;
+
+  let progress = 0;
+  const step = 100 / (intervalSec * 10); // 100ms updates
+  
+  productSliderInterval = setInterval(() => {
+    progress += step;
+    document.documentElement.style.setProperty('--slider-progress', `${progress}%`);
+    
+    if (progress >= 100) {
+      progress = 0;
+      currentProductImageIdx++;
+      
+      document.querySelectorAll('.product-card .img').forEach(container => {
+        const imgs = container.querySelectorAll('img');
+        if (imgs.length <= 1) return;
+        
+        const nextIdx = currentProductImageIdx % imgs.length;
+        const current = container.querySelector('img.is-active');
+        const next = imgs[nextIdx] || imgs[0];
+        
+        if (current) {
+          current.classList.remove('is-active');
+          current.classList.add('is-prev');
+        }
+        
+        next.classList.remove('is-prev');
+        next.classList.add('is-active');
+        
+        // Cleanup prev after transition
+        setTimeout(() => {
+          imgs.forEach(img => { if(img !== next) img.classList.remove('is-prev'); });
+        }, 800);
+      });
+    }
+  }, 100);
 }
 function wireProductCards(container, list, categoryName, categoryId){
   container.querySelectorAll(".product-card").forEach((card, i) => {
@@ -1109,10 +1161,25 @@ function wireProductCards(container, list, categoryName, categoryId){
 
 /* ---------------- Render: mosques (filters + slider preview + grid) ---------------- */
 function renderMosques(products, categories){
+  const cv = SITE.settings?.componentsVisible || {};
   const all = products.filter(p => p.categoryId === "mosques" && isProductPublic(p));
   mosqueList = all;
   const cat = categories.find(c => c.id === "mosques");
   const catName = tf(cat, "name", currentLang) || "المساجد";
+
+  const head = document.getElementById("mosques").querySelector(".section-head");
+  if (head) head.style.display = cv.mosquesHeader === false ? "none" : "block";
+  
+  const gridWrap = document.getElementById("mosqueGrid");
+  const colToggle = document.getElementById("mosquesColToggle");
+  const swatches = document.getElementById("mosquesSwatches");
+  const sliderWrap = document.getElementById("mosqueSliderWrap");
+  
+  const showGrid = cv.mosquesGrid !== false;
+  gridWrap.style.display = showGrid ? "" : "none";
+  if (colToggle) colToggle.style.display = showGrid ? "" : "none";
+  if (swatches) swatches.style.display = showGrid ? "" : "none";
+  if (sliderWrap) sliderWrap.style.display = showGrid ? "" : "none";
 
   document.getElementById("mosquesCount").textContent = all.length ? `${all.length} ${I18N[currentLang]["products.count"]}` : "";
 
@@ -1162,9 +1229,25 @@ function renderMosques(products, categories){
 
 /* ---------------- Render: plain segment grids (hotels/schools/halls) ---------------- */
 function renderPlainGrid(products, categoryId, gridId, emptyId, swatchId, countId, categories){
+  const cv = SITE.settings?.componentsVisible || {};
   const all = products.filter(p => p.categoryId === categoryId && isProductPublic(p));
   const cat = categories.find(c => c.id === categoryId);
   const catName = tf(cat, "name", currentLang) || "";
+
+  const headerKey = categoryId + "Header";
+  const gridKey = categoryId + "Grid";
+  
+  const hero = document.getElementById(categoryId + "-hero");
+  if (hero) hero.style.display = cv[headerKey] === false ? "none" : "block";
+  
+  const gridWrap = document.getElementById(gridId);
+  const colToggle = document.getElementById(categoryId + "ColToggle");
+  const swatches = document.getElementById(swatchId);
+  
+  const showGrid = cv[gridKey] !== false;
+  gridWrap.style.display = showGrid ? "" : "none";
+  if (colToggle) colToggle.style.display = showGrid ? "" : "none";
+  if (swatches) swatches.style.display = showGrid ? "" : "none";
 
   document.getElementById(countId).textContent = all.length ? `${all.length} ${I18N[currentLang]["products.count"]}` : "";
 
@@ -1405,16 +1488,45 @@ function trackMarketingEvent(eventName, params = {}){
 
 /* ---------------- Master render + boot ---------------- */
 function renderAll(){
+  const sv = SITE.settings?.sectionsVisible || {};
+  
   renderHero(SITE.hero.slides || []);
+  
+  // Categories section (Intro)
+  const catSection = document.getElementById("catGrid").closest(".section");
+  if (catSection) catSection.style.display = sv.categories === false ? "none" : "block";
   renderCategories(SITE.categories || []);
+  
+  // Product sections
+  document.getElementById("mosques").style.display = sv.mosques === false ? "none" : "block";
   renderMosques(SITE.products || [], SITE.categories || []);
+  
+  const hotelsHero = document.getElementById("hotels-hero");
+  const hotelsSection = document.getElementById("hotels");
+  if (hotelsHero) hotelsHero.style.display = sv.hotels === false ? "none" : "block";
+  if (hotelsSection) hotelsSection.style.display = sv.hotels === false ? "none" : "block";
   renderPlainGrid(SITE.products || [], "hotels", "hotelsGrid", "hotelsEmpty", "hotelsSwatches", "hotelsCount", SITE.categories);
+  
+  const schoolsHero = document.getElementById("schools-hero");
+  const schoolsSection = document.getElementById("schools");
+  if (schoolsHero) schoolsHero.style.display = sv.schools === false ? "none" : "block";
+  if (schoolsSection) schoolsSection.style.display = sv.schools === false ? "none" : "block";
   renderPlainGrid(SITE.products || [], "schools", "schoolsGrid", "schoolsEmpty", "schoolsSwatches", "schoolsCount", SITE.categories);
+  
+  const hallsHero = document.getElementById("halls-hero");
+  const hallsSection = document.getElementById("halls");
+  if (hallsHero) hallsHero.style.display = sv.halls === false ? "none" : "block";
+  if (hallsSection) hallsSection.style.display = sv.halls === false ? "none" : "block";
   renderPlainGrid(SITE.products || [], "halls", "hallsGrid", "hallsEmpty", "hallsSwatches", "hallsCount", SITE.categories);
+  
+  // About, Projects, Trust, Contact
+  document.getElementById("about").style.display = sv.about === false ? "none" : "block";
   renderAbout(SITE);
-  renderProjects(SITE);
-  renderTrustBlock(SITE);
+  
+  renderProjects(SITE); // Has its own sv.projects check inside
+  renderTrustBlock(SITE); // Has its own sv checks inside
   renderContact(SITE);
+  
   applySeoMeta(SITE.settings || {});
   renderSectionMenu();
   applyGridCols();
@@ -1446,6 +1558,7 @@ subscribeSite((site) => {
   renderAll();
   applyTranslations();
   injectPixels(site.settings || {});
+  initProductSlider(site.settings || {});
   finishInitialLoad();
 });
 window.addEventListener("hashchange", tryOpenFromHash);
