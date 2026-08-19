@@ -1132,6 +1132,9 @@ function renderHeroTab(){
           <button type="button" class="media-picker-btn s-pick-btn">اختر من المكتبة</button>
         </div>
       </div>
+      <div class="field mt-2">
+        <label><input type="checkbox" class="s-reflection" ${slide.reflection ? "checked" : ""}> تفعيل التظليل العلوي (Reflection) لتحسين وضوح الشعار والقائمة</label>
+      </div>
       <div class="hero-color-tools">
         <div class="admin-grid-2">
           <div class="field">
@@ -1259,7 +1262,8 @@ document.getElementById("saveHeroBtn").addEventListener("click", async () => {
     slide.secondaryLabel = row.querySelector(".s-secondary").value.trim();
     slide.secondaryLabelEn = row.querySelector(".s-secondary-en").value.trim();
     slide.secondaryLink = safeAdminLink(row.querySelector(".s-secondary-link").value, "#mosques");
-    slide.reflection = row.querySelector(".s-reflection").checked;
+    const reflectionEl = row.querySelector(".s-reflection");
+    slide.reflection = reflectionEl ? reflectionEl.checked : false;
     slide.textColorMode = row.querySelector(".s-text-color-mode").value === "manual" ? "manual" : "auto";
     slide.textColor = normalizeHexColor(row.querySelector(".s-text-color").value, "#ffffff");
     slide.autoTextColor = normalizeHexColor(slide.autoTextColor, "#ffffff");

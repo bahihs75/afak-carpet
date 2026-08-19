@@ -1181,7 +1181,9 @@ function renderMosques(products, categories){
   if (swatches) swatches.style.display = showGrid ? "" : "none";
   if (sliderWrap) sliderWrap.style.display = showGrid ? "" : "none";
 
-  document.getElementById("mosquesCount").textContent = all.length ? `${all.length} ${I18N[currentLang]["products.count"]}` : "";
+  const mosquesCountEl = document.getElementById("mosquesCount");
+  mosquesCountEl.textContent = all.length ? `${all.length} ${I18N[currentLang]["products.count"]}` : "";
+  mosquesCountEl.dataset.count = all.length;
 
   renderSwatches("mosquesSwatches", "mosques", cat?.showColorFilter !== false, refresh);
 
@@ -1249,7 +1251,9 @@ function renderPlainGrid(products, categoryId, gridId, emptyId, swatchId, countI
   if (colToggle) colToggle.style.display = showGrid ? "" : "none";
   if (swatches) swatches.style.display = showGrid ? "" : "none";
 
-  document.getElementById(countId).textContent = all.length ? `${all.length} ${I18N[currentLang]["products.count"]}` : "";
+  const countEl = document.getElementById(countId);
+  countEl.textContent = all.length ? `${all.length} ${I18N[currentLang]["products.count"]}` : "";
+  countEl.dataset.count = all.length;
 
   renderSwatches(swatchId, categoryId, cat?.showColorFilter !== false, refresh);
 
