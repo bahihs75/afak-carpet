@@ -922,7 +922,13 @@ function restartHeroTimer(count){
   clearInterval(heroTimer);
   if (count > 1 && !motionReduced()) heroTimer = setInterval(() => goToHero(heroIndex + 1), 6000);
 }
-motionQuery.addEventListener?.("change", () => restartHeroTimer(document.querySelectorAll(".hero-slide").length));
+motionQuery.addEventListener?.("change", () => {
+  restartHeroTimer(document.querySelectorAll(".hero-slide").length);
+  if (SITE){
+    renderAll();
+    initProductSlider(SITE.settings || {});
+  }
+});
 document.getElementById("heroNext").addEventListener("click", () => goToHero(heroIndex + 1));
 document.getElementById("heroPrev").addEventListener("click", () => goToHero(heroIndex - 1));
 
@@ -1085,18 +1091,26 @@ function renderSwatches(containerId, sectionKey, show, onChange){
 }
 
 /* ---------------- Product card builder (shared template) ---------------- */
+function productSliderEnabled(settings){
+  const isMobile = window.innerWidth <= 768;
+  const configured = isMobile ? settings.productSlider?.mobile === true : settings.productSlider?.pc !== false;
+  return configured && !motionReduced();
+}
 function productCardHTML(p){
   const name = tf(p, "name", currentLang);
   const snap = JSON.stringify(snapshotOf(p)).replace(/"/g, "&quot;");
   const allImages = [...(p.images || [])];
-  if (p.hoverImage && !allImages.includes(p.hoverImage)) allImages.push(p.hoverImage);
+  const hoverImage = safeImageUrl(p.hoverImage || "");
+  if (hoverImage && !allImages.includes(p.hoverImage)) allImages.push(p.hoverImage);
+  const isAutoSliding = productSliderEnabled(SITE?.settings || {});
+  const cardMode = isAutoSliding ? "is-auto-sliding" : "is-static";
   
   const imagesHTML = allImages.map((url, idx) => `
-    <img class="${idx === 0 ? 'is-active' : ''}" src="${esc(safeImageUrl(url))}" loading="lazy" decoding="async" alt="${esc(name)}" data-idx="${idx}">
+    <img class="${idx === 0 ? 'is-active ' : ''}${hoverImage && safeImageUrl(url) === hoverImage ? 'is-hover-image' : ''}" src="${esc(safeImageUrl(url))}" loading="lazy" decoding="async" alt="${esc(name)}" data-idx="${idx}">
   `).join("");
 
   return `
-    <div class="product-card" data-name="${esc(name)}">
+    <div class="product-card ${cardMode}" data-name="${esc(name)}">
       <div class="img">
         ${imagesHTML}
       </div>
@@ -1113,10 +1127,11 @@ let currentProductImageIdx = 0;
 
 function initProductSlider(settings) {
   if (productSliderInterval) clearInterval(productSliderInterval);
+  currentProductImageIdx = 0;
+  document.documentElement.style.setProperty('--slider-progress', '0%');
   
-  const isMobile = window.innerWidth <= 768;
-  const enabled = isMobile ? settings.productSlider?.mobile : (settings.productSlider?.pc !== false);
-  const intervalSec = settings.productSlider?.interval || 6;
+  const enabled = productSliderEnabled(settings);
+  const intervalSec = Math.max(2, Number(settings.productSlider?.interval) || 6);
 
   if (!enabled) return;
 
@@ -1155,6 +1170,13 @@ function initProductSlider(settings) {
     }
   }, 100);
 }
+
+const productSliderViewportQuery = window.matchMedia("(max-width: 768px)");
+productSliderViewportQuery.addEventListener?.("change", () => {
+  if (!SITE) return;
+  renderAll();
+  initProductSlider(SITE.settings || {});
+});
 function wireProductCards(container, list, categoryName, categoryId){
   container.querySelectorAll(".product-card").forEach((card, i) => {
     card.addEventListener("click", (e) => {

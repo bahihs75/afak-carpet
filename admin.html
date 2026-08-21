@@ -232,14 +232,11 @@
         <div class="field">
           <label>صور المنتج (يمكن اختيار أكثر من صورة)</label>
           <div class="img-upload-field">
-            <div id="pImagesPreview" style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center"></div>
+            <div id="pImagesPreview" class="product-images-preview"></div>
             <input type="file" id="pImagesFile" accept="image/*" multiple>
             <button type="button" class="media-picker-btn" id="pMediaPickerBtn">+ أضف من مكتبة الصور</button>
           </div>
-        </div>
-        <div class="field">
-          <label>صورة المرور (Hover) — تظهر بدل الصورة الأساسية عند مرور الفأرة على البطاقة</label>
-          <select id="pHoverImage"><option value="">بدون صورة مرور</option></select>
+          <p class="form-note">الصورة الأولى هي الصورة الرئيسية. اضغط على صورة مرة واحدة لتحديدها كصورة Hover، واضغط عليها مرتين لإلغاء التحديد. يمكن اختيار صورة Hover واحدة فقط.</p>
         </div>
         <input type="hidden" id="pEditId">
         <button class="btn btn-primary mt-3" id="saveProductBtn">إضافة المنتج</button>
@@ -1469,6 +1466,7 @@ document.getElementById("saveCategoriesBtn").addEventListener("click", async () 
 
 /* ---------------- PRODUCTS TAB ---------------- */
 let pendingImages = [];
+let pendingHoverImage = "";
 document.getElementById("pImagesFile").addEventListener("change", async (e) => {
   const files = Array.from(e.target.files || []);
   if (!files.length) return;
@@ -1490,22 +1488,52 @@ document.getElementById("pMediaPickerBtn").addEventListener("click", () => {
 });
 function renderPendingImages(){
   const wrap = document.getElementById("pImagesPreview");
-  wrap.innerHTML = pendingImages.map((url,i) => `
-    <div style="position:relative">
-      <img src="${esc(url)}" style="width:70px; height:70px; object-fit:cover; border:1px solid var(--hairline)">
-      <button type="button" data-i="${i}" style="position:absolute; top:-6px; left:-6px; width:20px; height:20px; border-radius:50%; border:none; background:var(--danger); color:#fff; font-size:11px; cursor:pointer">✕</button>
-    </div>`).join("");
-  wrap.querySelectorAll("button").forEach(btn => {
-    btn.addEventListener("click", () => {
-      pendingImages.splice(Number(btn.dataset.i), 1);
+  if (!pendingImages.includes(pendingHoverImage)) pendingHoverImage = "";
+  wrap.innerHTML = pendingImages.map((url,i) => {
+    const selected = pendingHoverImage === url;
+    return `
+      <div class="product-image-option${selected ? " is-hover-selected" : ""}" data-i="${i}">
+        <img class="product-image-option-preview" src="${esc(url)}" alt="معاينة الصورة ${i + 1}" loading="lazy" decoding="async">
+        <label class="product-image-hover-choice">
+          <input type="checkbox" class="p-hover-choice" data-url="${esc(url)}" ${selected ? "checked" : ""}>
+          <span>Hover</span>
+        </label>
+        <button type="button" class="product-image-remove" data-i="${i}" aria-label="حذف الصورة ${i + 1}">✕</button>
+      </div>`;
+  }).join("");
+
+  const selectHoverImage = (url) => {
+    pendingHoverImage = pendingHoverImage === url ? "" : url;
+    renderPendingImages();
+  };
+  wrap.querySelectorAll(".product-image-option-preview").forEach(img => {
+    img.addEventListener("click", () => selectHoverImage(img.closest(".product-image-option").dataset.i !== undefined ? pendingImages[Number(img.closest(".product-image-option").dataset.i)] : ""));
+    img.addEventListener("dblclick", (event) => {
+      event.preventDefault();
+      const row = img.closest(".product-image-option");
+      const url = pendingImages[Number(row.dataset.i)];
+      if (pendingHoverImage === url) {
+        pendingHoverImage = "";
+        renderPendingImages();
+      }
+    });
+  });
+  wrap.querySelectorAll(".p-hover-choice").forEach(input => {
+    input.addEventListener("click", event => event.stopPropagation());
+    input.addEventListener("change", () => {
+      pendingHoverImage = input.checked ? input.dataset.url : "";
       renderPendingImages();
     });
   });
-  const hoverSel = document.getElementById("pHoverImage");
-  const current = hoverSel.value;
-  hoverSel.innerHTML = '<option value="">بدون صورة مرور</option>' +
-    pendingImages.map((url,i) => `<option value="${esc(url)}">الصورة ${i+1}</option>`).join("");
-  hoverSel.value = pendingImages.includes(current) ? current : "";
+  wrap.querySelectorAll(".product-image-remove").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const index = Number(btn.dataset.i);
+      const removed = pendingImages[index];
+      if (pendingHoverImage === removed) pendingHoverImage = "";
+      pendingImages.splice(index, 1);
+      renderPendingImages();
+    });
+  });
 }
 
 function toDateTimeLocal(value){
@@ -1527,6 +1555,7 @@ function resetProductForm(){
   document.getElementById("saveProductBtn").textContent = "إضافة المنتج";
   document.getElementById("productFormTitle").textContent = "إضافة منتج جديد";
   pendingImages = [];
+  pendingHoverImage = "";
   renderPendingImages();
 }
 
@@ -1556,7 +1585,7 @@ document.getElementById("saveProductBtn").addEventListener("click", async () => 
     publishAt: document.getElementById("pPublishAt").value ? new Date(document.getElementById("pPublishAt").value).toISOString() : "",
     unpublishAt: document.getElementById("pUnpublishAt").value ? new Date(document.getElementById("pUnpublishAt").value).toISOString() : "",
     offer: { enabled: document.getElementById("pOfferEnabled").checked, label: document.getElementById("pOfferLabel").value.trim().slice(0,80), price: document.getElementById("pOfferPrice").value.trim(), startsAt: document.getElementById("pOfferStartsAt").value ? new Date(document.getElementById("pOfferStartsAt").value).toISOString() : "", endsAt: document.getElementById("pOfferEndsAt").value ? new Date(document.getElementById("pOfferEndsAt").value).toISOString() : "" },
-    hoverImage: document.getElementById("pHoverImage").value,
+    hoverImage: pendingImages.includes(pendingHoverImage) ? pendingHoverImage : "",
     images: pendingImages.length ? pendingImages : (editId ? (SITE.products.find(p=>p.id===editId)?.images||[]) : []),
     order: editId ? (SITE.products.find(p => p.id === editId)?.order ?? SITE.products.findIndex(p => p.id === editId)) : SITE.products.length
   };
@@ -1566,7 +1595,7 @@ document.getElementById("saveProductBtn").addEventListener("click", async () => 
     SITE.products.push(productData);
   }
   await saveSite({ products: SITE.products });
-  recordAuditLog({ user: CURRENT_USER, role: CURRENT_ROLE, action: editId ? "update" : "create", entity: "product", entityId: productData.id, summary: productData.name, changedFields: ["name","price","status","publishAt","unpublishAt","offer","images"] }).catch(console.warn);
+  recordAuditLog({ user: CURRENT_USER, role: CURRENT_ROLE, action: editId ? "update" : "create", entity: "product", entityId: productData.id, summary: productData.name, changedFields: ["name","price","status","publishAt","unpublishAt","offer","images","hoverImage"] }).catch(console.warn);
   toast(editId ? "تم تعديل المنتج" : "تمت إضافة المنتج");
   resetProductForm();
   renderProductsTab();
@@ -1634,8 +1663,8 @@ function renderProductsTab(){
       document.getElementById("productFormTitle").textContent = "تعديل: " + p.name;
       document.getElementById("cancelEditBtn").style.display = "inline-flex";
       pendingImages = [...(p.images || [])];
+      pendingHoverImage = pendingImages.includes(p.hoverImage) ? p.hoverImage : "";
       renderPendingImages();
-      document.getElementById("pHoverImage").value = p.hoverImage || "";
       document.querySelector('.admin-tab[data-tab="products"]').click();
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
