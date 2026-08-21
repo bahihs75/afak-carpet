@@ -877,6 +877,8 @@ function renderHero(slides){
   slides.forEach((s, i) => {
     const el = document.createElement("div");
     el.className = "hero-slide" + (i === 0 ? " is-active" : "") + (s.reflection ? " has-reflection" : "") + (s.textBackdrop ? " has-text-backdrop" : "");
+    const desktopImage = safeImageUrl(s.desktopImage || s.image || s.mobileImage);
+    const mobileImage = safeImageUrl(s.mobileImage || s.desktopImage || s.image);
     const textColor = s.textColorMode === "manual" ? safeHexColor(s.textColor) : safeHexColor(s.autoTextColor);
     el.style.setProperty("--hero-text-color", textColor);
     el.style.setProperty("--hero-text-muted-color", hexToRgba(textColor, .86));
@@ -884,7 +886,10 @@ function renderHero(slides){
     const secondaryLink = safePageUrl(s.secondaryLink, "#mosques");
     const isExternal = /^https?:\/\//i.test(secondaryLink);
     el.innerHTML = `
-      <img src="${esc(safeImageUrl(s.image))}" loading="eager" fetchpriority="high" decoding="async" alt="">
+      <picture class="hero-slide-picture">
+        ${mobileImage ? `<source media="(max-width: 767px)" srcset="${esc(mobileImage)}">` : ""}
+        <img src="${esc(desktopImage || mobileImage)}" loading="eager" fetchpriority="high" decoding="async" alt="">
+      </picture>
       <div class="hero-slide-content">
         <span class="label-eyebrow">${esc(tf(s,"eyebrow",currentLang))}</span>
         <h1>${esc(tf(s,"title",currentLang))}</h1>

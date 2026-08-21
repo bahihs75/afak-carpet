@@ -1161,12 +1161,26 @@ function renderHeroTab(){
         <label>رابط الزر الثانوي (قسم داخلي مثل #mosques، أو رابط خارجي كامل)</label>
         <input type="text" class="s-secondary-link" value="${esc(slide.secondaryLink||'#mosques')}" placeholder="#mosques">
       </div>
-      <div class="field">
-        <label>صورة الخلفية</label>
-        <div class="img-upload-field">
-          <img class="s-preview" src="${esc(slide.image)}" style="${slide.image ? "" : "display:none"}">
-          <input type="file" class="s-file" accept="image/*">
-          <button type="button" class="media-picker-btn s-pick-btn">اختر من المكتبة</button>
+      <div class="admin-grid-2 hero-device-image-grid">
+        <div class="field">
+          <label>صورة سطح المكتب (Desktop)</label>
+          <div class="img-upload-field">
+            <img class="s-preview s-desktop-preview" src="${esc(slide.desktopImage || slide.image || slide.mobileImage || '')}" style="${slide.desktopImage || slide.image || slide.mobileImage ? "" : "display:none"}" alt="معاينة صورة سطح المكتب">
+            <input type="hidden" class="s-desktop-url" value="${esc(slide.desktopImage || slide.image || '')}">
+            <input type="file" class="s-desktop-file" accept="image/*">
+            <button type="button" class="media-picker-btn s-desktop-pick">اختر من المكتبة</button>
+          </div>
+          <p class="form-note">تُستخدم للشاشات الكبيرة. إذا لم تُحدد، تُستخدم الصورة الحالية للشريحة.</p>
+        </div>
+        <div class="field">
+          <label>صورة الهاتف (Mobile)</label>
+          <div class="img-upload-field">
+            <img class="s-preview s-mobile-preview" src="${esc(slide.mobileImage || slide.desktopImage || slide.image || '')}" style="${slide.mobileImage || slide.desktopImage || slide.image ? "" : "display:none"}" alt="معاينة صورة الهاتف">
+            <input type="hidden" class="s-mobile-url" value="${esc(slide.mobileImage || '')}">
+            <input type="file" class="s-mobile-file" accept="image/*">
+            <button type="button" class="media-picker-btn s-mobile-pick">اختر من المكتبة</button>
+          </div>
+          <p class="form-note">تُستخدم على الهاتف فقط. إذا تُركت فارغة، تُستخدم صورة سطح المكتب تلقائياً.</p>
         </div>
       </div>
       <div class="field mt-2">
@@ -1202,17 +1216,51 @@ function renderHeroTab(){
     const colorSwatch = row.querySelector(".hero-color-swatch");
     const colorResult = row.querySelector(".s-color-result");
     const analyzeButton = row.querySelector(".s-analyze-color");
+    const desktopUrlInput = row.querySelector(".s-desktop-url");
+    const mobileUrlInput = row.querySelector(".s-mobile-url");
+    const desktopPreview = row.querySelector(".s-desktop-preview");
+    const mobilePreview = row.querySelector(".s-mobile-preview");
+    const updateDeviceImage = (device, url) => {
+      const cleanUrl = String(url || "").trim();
+      if (device === "desktop") {
+        slide.desktopImage = cleanUrl;
+        if (!slide.image) slide.image = cleanUrl;
+        if (desktopUrlInput) desktopUrlInput.value = cleanUrl;
+        if (desktopPreview) {
+          desktopPreview.src = cleanUrl;
+          desktopPreview.style.display = cleanUrl ? "block" : "none";
+        }
+      } else {
+        slide.mobileImage = cleanUrl;
+        if (mobileUrlInput) mobileUrlInput.value = cleanUrl;
+        if (mobilePreview) {
+          mobilePreview.src = cleanUrl || slide.desktopImage || slide.image || "";
+          mobilePreview.style.display = (cleanUrl || slide.desktopImage || slide.image) ? "block" : "none";
+        }
+      }
+    };
+    const updateDevicePreviewFallbacks = () => {
+      if (desktopPreview && !slide.desktopImage && slide.image) {
+        desktopPreview.src = slide.image;
+        desktopPreview.style.display = "block";
+      }
+      if (mobilePreview && !slide.mobileImage && (slide.desktopImage || slide.image)) {
+        mobilePreview.src = slide.desktopImage || slide.image;
+        mobilePreview.style.display = "block";
+      }
+    };
     const updateColorPreview = () => {
       const color = normalizeHexColor(colorInput.value);
       colorInput.value = color;
       colorSwatch.style.background = color;
     };
     const analyzeHeroColor = async () => {
-      if (!slide.image){ toast("أضف صورة الخلفية أولًا"); return; }
+      const analysisImage = slide.desktopImage || slide.image || slide.mobileImage;
+      if (!analysisImage){ toast("أضف صورة الكمبيوتر أو الصورة الأساسية أولًا"); return; }
       analyzeButton.disabled = true;
       analyzeButton.textContent = "جارٍ التحليل...";
       try{
-        const result = await detectHeroTextColor(slide.image);
+        const result = await detectHeroTextColor(analysisImage);
         slide.autoTextColor = result.color;
         if (modeSelect.value === "auto") colorInput.value = result.color;
         updateColorPreview();
@@ -1248,32 +1296,35 @@ function renderHeroTab(){
       updateColorPreview();
     });
     analyzeButton.addEventListener("click", analyzeHeroColor);
-    row.querySelector(".s-pick-btn").addEventListener("click", () => {
-      openMediaPicker(async (url) => {
-        slide.image = url;
-        const prev = row.querySelector(".s-preview");
-        prev.src = url; prev.style.display = "block";
-        await analyzeHeroColor();
+    const bindImagePicker = (device, pickerSelector, fileSelector) => {
+      row.querySelector(pickerSelector).addEventListener("click", () => {
+        openMediaPicker(async (url) => {
+          updateDeviceImage(device, url);
+          updateDevicePreviewFallbacks();
+          await analyzeHeroColor();
+        });
       });
-    });
-    row.querySelector(".s-file").addEventListener("change", async (e) => {
-      const file = e.target.files[0]; if (!file) return;
-      toast("جارٍ رفع الصورة...");
-      try{
-        const url = await uploadOne(file);
-        slide.image = url;
-        const prev = row.querySelector(".s-preview");
-        prev.src = url; prev.style.display = "block";
-        toast("تم رفع الصورة");
-        await analyzeHeroColor();
-      } catch(err){ toast("فشل الرفع: " + err.message); }
-    });
+      row.querySelector(fileSelector).addEventListener("change", async (e) => {
+        const file = e.target.files[0]; if (!file) return;
+        toast("جارٍ رفع الصورة...");
+        try{
+          const url = await uploadOne(file);
+          updateDeviceImage(device, url);
+          updateDevicePreviewFallbacks();
+          toast("تم رفع الصورة");
+          await analyzeHeroColor();
+        } catch(err){ toast("فشل الرفع: " + err.message); }
+      });
+    };
+    bindImagePicker("desktop", ".s-desktop-pick", ".s-desktop-file");
+    bindImagePicker("mobile", ".s-mobile-pick", ".s-mobile-file");
     row.querySelector(".remove-slide").addEventListener("click", () => {
       SITE.hero.slides = SITE.hero.slides.filter(s => s.id !== slide.id);
       renderHeroTab();
     });
     list.appendChild(row);
-    if (slide.image && !slide.autoTextColor) window.setTimeout(analyzeHeroColor, 0);
+    updateDevicePreviewFallbacks();
+    if ((slide.desktopImage || slide.image || slide.mobileImage) && !slide.autoTextColor) window.setTimeout(analyzeHeroColor, 0);
   });
   makeCompactRows(list, row => row.querySelector(".s-title")?.value || "شريحة", { reorder: true });
 }
@@ -1283,6 +1334,7 @@ document.getElementById("addSlideBtn").addEventListener("click", () => {
     text:"", textEn:"", ctaLabel:"اطلب عرض سعر", ctaLabelEn:"",
     secondaryLabel:"استكشف المنتجات", secondaryLabelEn:"", secondaryLink:"#mosques",
     reflection: false, textBackdrop: false,
+    desktopImage:"", mobileImage:"",
     textColorMode:"auto", textColor:"#ffffff", autoTextColor:"#ffffff"
   });
   renderHeroTab();
@@ -1303,6 +1355,11 @@ document.getElementById("saveHeroBtn").addEventListener("click", async () => {
     slide.secondaryLabel = row.querySelector(".s-secondary").value.trim();
     slide.secondaryLabelEn = row.querySelector(".s-secondary-en").value.trim();
     slide.secondaryLink = safeAdminLink(row.querySelector(".s-secondary-link").value, "#mosques");
+    const desktopImageEl = row.querySelector(".s-desktop-url");
+    const mobileImageEl = row.querySelector(".s-mobile-url");
+    slide.desktopImage = (desktopImageEl?.value || slide.desktopImage || slide.image || "").trim();
+    slide.mobileImage = (mobileImageEl?.value || slide.mobileImage || "").trim();
+    slide.image = slide.desktopImage || slide.image || slide.mobileImage || "";
     const reflectionEl = row.querySelector(".s-reflection");
     slide.reflection = reflectionEl ? reflectionEl.checked : false;
     const textBackdropEl = row.querySelector(".s-text-backdrop");
