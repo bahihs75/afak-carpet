@@ -8,9 +8,14 @@ service cloud.firestore {
         : '';
     }
     function tokenRole() {
-      return signedIn() && request.auth.token.role is string ? request.auth.token.role : '';
+      return signedIn() && request.auth.token.role is string &&
+        request.auth.token.role in ['admin', 'editor', 'marketing']
+        ? request.auth.token.role
+        : '';
     }
-    function role() { return tokenRole() != '' ? tokenRole() : profileRole(); }
+    function role() {
+      return profileRole() in ['admin', 'editor', 'marketing'] ? profileRole() : tokenRole();
+    }
     function isAdmin() { return signedIn() && role() == 'admin'; }
     function canEditContent() { return signedIn() && role() in ['admin', 'editor']; }
     function canEditSettings() { return signedIn() && role() in ['admin', 'marketing']; }

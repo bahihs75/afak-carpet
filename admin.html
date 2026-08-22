@@ -164,6 +164,12 @@
         <h3>النسخة الاحتياطية للبيانات</h3>
         <p class="form-note mt-2">صدّر نسخة JSON قبل أي تعديل كبير. الملف يتضمن محتوى الموقع، الطلبات، وسجل النشاط. لا يتضمن كلمات مرور Firebase أو ملفات الصور نفسها؛ يحتفظ بروابط الصور فقط.</p>
         <button type="button" class="btn btn-outline mt-3" id="exportSiteJsonBtn">تصدير نسخة JSON</button>
+        <div class="field mt-3">
+          <label for="importSiteJsonInput">استيراد نسخة JSON</label>
+          <input type="file" id="importSiteJsonInput" accept="application/json,.json">
+        </div>
+        <button type="button" class="btn btn-outline mt-2" id="importSiteJsonBtn" disabled>استيراد النسخة المحددة</button>
+        <p class="form-note mt-2" id="importJsonPreview" aria-live="polite"></p>
         <p class="form-note mt-2" id="exportJsonStatus" aria-live="polite"></p>
       </div>
       <button class="btn btn-primary" id="saveSettingsBtn">حفظ الإعدادات</button>
@@ -432,6 +438,7 @@ let ORDER_RECORDS = [];
 let orderToolsBound = false;
 let auditUnsubscribe = null;
 let teamUnsubscribe = null;
+let pendingSiteImport = null;
 const ROLE_LABELS = { admin: "Admin", editor: "Editor", marketing: "Marketing" };
 
 function canManage(section){
@@ -967,17 +974,56 @@ async function readCollectionForExport(collectionName){
   return snapshot.docs.map(item => ({ id: item.id, data: exportSerializable(item.data()) }));
 }
 
-function downloadJsonFile(payload){
+async function buildBackupPayload(){
+  const [site, orders, auditLogs] = await Promise.all([
+    getSiteOnce(),
+    readCollectionForExport("orders"),
+    readCollectionForExport("auditLogs")
+  ]);
+  return {
+    format: "afak-carpet-backup",
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    projectId: "afak-carpet",
+    source: "admin-panel",
+    includes: ["content/site", "orders", "auditLogs"],
+    notes: [
+      "هذه نسخة قراءة فقط من بيانات الموقع وقت التصدير.",
+      "لا تتضمن كلمات مرور أو بيانات اعتماد Firebase أو ملفات الصور المستضافة؛ روابط الصور محفوظة ضمن البيانات."
+    ],
+    contentSite: exportSerializable(site),
+    orders: { count: orders.length, items: orders },
+    auditLogs: { count: auditLogs.length, items: auditLogs }
+  };
+}
+
+function downloadJsonFile(payload, prefix = "afak-carpet-backup"){
   const stamp = new Date().toISOString().replace(/[.:]/g, "-");
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `afak-carpet-backup-${stamp}.json`;
+  link.download = `${prefix}-${stamp}.json`;
   document.body.appendChild(link);
   link.click();
   link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function describeSiteSnapshot(site){
+  const count = (key) => Array.isArray(site?.[key]) ? site[key].length : 0;
+  return `النسخة تحتوي على ${count("products")} منتج، ${Array.isArray(site?.hero?.slides) ? site.hero.slides.length : 0} شريحة Hero، ${count("categories")} قسم، ${count("projects")} مشروع، و${count("testimonials")} شهادة.`;
+}
+
+function validateImportPayload(payload){
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) throw new Error("بنية ملف JSON غير صحيحة");
+  if (payload.format !== "afak-carpet-backup" || payload.version !== 1) throw new Error("هذا الملف ليس نسخة AFAK CARPET مدعومة");
+  if (!payload.contentSite || typeof payload.contentSite !== "object" || Array.isArray(payload.contentSite)) throw new Error("الملف لا يحتوي على contentSite صالح");
+  if (payload.projectId !== "afak-carpet") throw new Error("النسخة تخص مشروعًا آخر");
+  const allowedKeys = new Set(["settings", "hero", "categories", "products", "about", "projects", "testimonials", "stats", "certifications", "mediaLibrary", "ordersCount"]);
+  const unknownKeys = Object.keys(payload.contentSite).filter(key => !allowedKeys.has(key));
+  if (unknownKeys.length) throw new Error(`حقول غير معروفة داخل contentSite: ${unknownKeys.join(", ")}`);
+  return payload;
 }
 
 document.getElementById("exportSiteJsonBtn")?.addEventListener("click", async (event) => {
@@ -992,28 +1038,9 @@ document.getElementById("exportSiteJsonBtn")?.addEventListener("click", async (e
   button.textContent = "جارٍ تجهيز النسخة...";
   if (status) status.textContent = "تُقرأ البيانات فقط، ولن يتم تعديل Firebase.";
   try{
-    const [site, orders, auditLogs] = await Promise.all([
-      getSiteOnce(),
-      readCollectionForExport("orders"),
-      readCollectionForExport("auditLogs")
-    ]);
-    const payload = {
-      format: "afak-carpet-backup",
-      version: 1,
-      exportedAt: new Date().toISOString(),
-      projectId: "afak-carpet",
-      source: "admin-panel",
-      includes: ["content/site", "orders", "auditLogs"],
-      notes: [
-        "هذه نسخة قراءة فقط من بيانات الموقع وقت التصدير.",
-        "لا تتضمن كلمات مرور أو بيانات اعتماد Firebase أو ملفات الصور المستضافة؛ روابط الصور محفوظة ضمن البيانات."
-      ],
-      contentSite: exportSerializable(site),
-      orders: { count: orders.length, items: orders },
-      auditLogs: { count: auditLogs.length, items: auditLogs }
-    };
+    const payload = await buildBackupPayload();
     downloadJsonFile(payload);
-    const summary = `تم التصدير: ${orders.length} طلب و${auditLogs.length} سجل نشاط.`;
+    const summary = `تم التصدير: ${payload.orders.count} طلب و${payload.auditLogs.count} سجل نشاط.`;
     if (status) status.textContent = summary;
     toast("تم تنزيل نسخة JSON بنجاح");
   } catch (error){
@@ -1022,6 +1049,80 @@ document.getElementById("exportSiteJsonBtn")?.addEventListener("click", async (e
     toast("فشل تصدير النسخة الاحتياطية");
   } finally {
     button.disabled = false;
+    button.textContent = originalLabel;
+  }
+});
+
+document.getElementById("importSiteJsonInput")?.addEventListener("change", async (event) => {
+  const input = event.currentTarget;
+  const button = document.getElementById("importSiteJsonBtn");
+  const preview = document.getElementById("importJsonPreview");
+  pendingSiteImport = null;
+  if (button) button.disabled = true;
+  if (preview) preview.textContent = "";
+  const file = input.files?.[0];
+  if (!file) return;
+  if (file.size > 10 * 1024 * 1024){
+    if (preview) preview.textContent = "الملف كبير جدًا؛ الحد الأقصى 10MB.";
+    return;
+  }
+  try{
+    const payload = validateImportPayload(JSON.parse(await file.text()));
+    pendingSiteImport = payload;
+    if (preview) preview.textContent = `${file.name}: ${describeSiteSnapshot(payload.contentSite)} سيتم استيراد محتوى الموقع فقط؛ الطلبات وسجل النشاط لن يتغيرا.`;
+    if (button) button.disabled = false;
+  } catch (error){
+    console.error("JSON import validation failed:", error);
+    if (preview) preview.textContent = error.message || "ملف JSON غير صالح.";
+  }
+});
+
+document.getElementById("importSiteJsonBtn")?.addEventListener("click", async (event) => {
+  if (CURRENT_ROLE !== "admin"){
+    toast("استيراد النسخة الاحتياطية متاح للـ Admin فقط");
+    return;
+  }
+  if (!pendingSiteImport) return;
+  const button = event.currentTarget;
+  const status = document.getElementById("exportJsonStatus");
+  const preview = document.getElementById("importJsonPreview");
+  const originalLabel = button.textContent;
+  button.disabled = true;
+  button.textContent = "جارٍ إنشاء النسخة الوقائية...";
+  try{
+    const confirmation = confirm("سيتم أولًا تنزيل نسخة احتياطية من الحالة الحالية، ثم استيراد محتوى الموقع من الملف المحدد. لن تتغير الطلبات أو سجلات النشاط. هل تريد المتابعة؟");
+    if (!confirmation) return;
+    const currentBackup = await buildBackupPayload();
+    downloadJsonFile(currentBackup, "afak-carpet-pre-import-backup");
+    if (status) status.textContent = "تم تنزيل النسخة الوقائية. جارٍ استيراد محتوى الموقع...";
+    const nextSite = await saveSite(pendingSiteImport.contentSite);
+    SITE = nextSite;
+    renderSettings();
+    try{
+      await recordAuditLog({
+        user: CURRENT_USER,
+        role: CURRENT_ROLE,
+        action: "import",
+        entity: "site",
+        entityId: "site",
+        summary: "استيراد نسخة JSON لمحتوى الموقع",
+        changedFields: Object.keys(pendingSiteImport.contentSite)
+      });
+    } catch (auditError){
+      console.warn("Import audit log failed:", auditError);
+    }
+    if (preview) preview.textContent = "تم الاستيراد بنجاح. تم تغيير محتوى الموقع فقط، مع الاحتفاظ بالطلبات وسجل النشاط.";
+    if (status) status.textContent = "تم الاستيراد بعد تنزيل النسخة الوقائية.";
+    toast("تم استيراد نسخة الموقع بنجاح");
+    pendingSiteImport = null;
+    const input = document.getElementById("importSiteJsonInput");
+    if (input) input.value = "";
+  } catch (error){
+    console.error("JSON import failed:", error);
+    if (status) status.textContent = "فشل الاستيراد؛ لم تكتمل عملية الكتابة أو تحقق من الصلاحيات والاتصال.";
+    toast("فشل استيراد النسخة الاحتياطية");
+  } finally {
+    button.disabled = !pendingSiteImport;
     button.textContent = originalLabel;
   }
 });
