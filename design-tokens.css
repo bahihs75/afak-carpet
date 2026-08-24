@@ -1,0 +1,83 @@
+/*
+ * AFAK CARPET — shared design tokens
+ * Load before style.css on index.html, admin.html, and 404.html.
+ * Keep values stable: visual identity changes require an explicit design decision.
+ */
+:root {
+  /* ---- Color: single accent (Navy), everything else neutral ---- */
+  --navy: #17233F;
+  --navy-active: #0E1830;
+  --navy-hover: #223060;
+  --ink: #14171F;
+  --body: #4B4F58;
+  --muted: #7C808A;
+  --hairline: #E2E2DE;
+  --hairline-soft: #EFEFEC;
+  --canvas: #FFFFFF;
+  --canvas-soft: #F5F5F3;
+  --canvas-strong: #ECECE8;
+  --on-navy: #FFFFFF;
+  --success: #2E7D32;
+  --danger: #B3261E;
+
+  /* ---- Type ---- */
+  --font-display: "AlJazeeraArabic", "Tajawal", "Segoe UI", sans-serif;
+  --font-body: "AlJazeeraArabic", "Tajawal", "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", "Courier New", monospace;
+
+  /* ---- Motion ---- */
+  --ease: cubic-bezier(.22,.8,.36,1);
+  --ease-emphasized: cubic-bezier(.2,.75,.25,1);
+  --dur-fast: 120ms;
+  --dur: 220ms;
+  --dur-slow: 420ms;
+
+  /* ---- Spacing ladder (4px base) ---- */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 16px;
+  --sp-4: 24px;
+  --sp-5: 32px;
+  --sp-6: 48px;
+  --sp-7: 64px;
+  --sp-8: 96px;
+  --sp-9: 128px;
+
+  /* ---- Shape ---- */
+  --radius-none: 0;
+  --radius-soft: 6px;
+  --radius-circle: 50%;
+
+  /* ---- Elevation ---- */
+  --shadow-header: 0 1px 0 var(--hairline);
+  --shadow-card: 0 4px 16px rgba(20,23,31,.08);
+  --shadow-button: 0 6px 16px rgba(20,23,31,.16);
+  --shadow-popover: 0 12px 32px rgba(20,23,31,.18);
+  --shadow-consent: 0 18px 50px rgba(8,20,40,.16);
+  --shadow-drawer: -18px 0 42px rgba(20,23,31,.14);
+  --shadow-admin-drawer: -10px 0 30px rgba(0,0,0,.3);
+
+  /* ---- Layering ---- */
+  --z-content: 1;
+  --z-product-image: 2;
+  --z-product-progress: 3;
+  --z-header: 50;
+  --z-drawer: 60;
+  --z-utility: 80;
+  --z-detail: 90;
+  --z-overlay: 100;
+  --z-admin-mobile: 110;
+  --z-consent: 1200;
+  --z-toast: 200;
+  --z-loader: 999;
+  --z-skip: 999999;
+
+  /* ---- Media ratios ---- */
+  --ratio-product: 4 / 3;
+  --ratio-category: 3 / 4;
+  --ratio-about: 4 / 3;
+  --ratio-project: 4 / 3;
+  --ratio-detail: 16 / 10;
+  --ratio-gallery: 4 / 3;
+  --ratio-square: 1 / 1;
+}
