@@ -27,6 +27,11 @@ export const DEFAULT_SITE = {
     siteName: "AFAK CARPET",
     logoUrl: "",
     imgbbKey: DEFAULT_IMGBB_KEY,
+    imageStorageProvider: "imgbb",
+    cloudflareR2UploadUrl: "",
+    cloudflareR2PublicUrl: "",
+    cloudflareR2UploadToken: "",
+    webpQuality: 0.82,
     phone: "",
     whatsapp: "",
     email: "",
@@ -281,6 +286,27 @@ export async function compressImage(file, maxDimension = 1600, quality = 0.82){
   }
 }
 
+/** Decode, resize without changing aspect ratio, and encode as WebP in the browser. */
+export async function convertImageToWebp(file, { maxDimension = 1600, quality = 0.82 } = {}){
+  if (!file || !String(file.type || "").startsWith("image/")) throw new Error("اختر ملف صورة صالحًا");
+  if (file.type === "image/svg+xml" || String(file.name || "").toLowerCase().endsWith(".svg")) return file;
+  const safeQuality = Math.min(1, Math.max(0.1, Number(quality) || 0.82));
+  let bitmap;
+  try { bitmap = await createImageBitmap(file); }
+  catch { throw new Error("تعذر قراءة الصورة في هذا المتصفح. صور HEIC تحتاج متصفحًا يدعم HEIC أو تحويلها أولًا."); }
+  let { width, height } = bitmap;
+  if (width > maxDimension || height > maxDimension){
+    const scale = maxDimension / Math.max(width, height);
+    width = Math.max(1, Math.round(width * scale)); height = Math.max(1, Math.round(height * scale));
+  }
+  const canvas = document.createElement("canvas"); canvas.width = width; canvas.height = height;
+  canvas.getContext("2d", { alpha: true }).drawImage(bitmap, 0, 0, width, height); bitmap.close?.();
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/webp", safeQuality));
+  if (!blob) throw new Error("تعذر إنشاء ملف WebP");
+  const baseName = String(file.name || "image").replace(/\.[^.]+$/, "") || "image";
+  return new File([blob], `${baseName}.webp`, { type: "image/webp", lastModified: Date.now() });
+}
+
 /* ------------------------------------------------------------------ */
 /* Upload validation + imgbb upload — used only from the admin panel   */
 /* ------------------------------------------------------------------ */
@@ -307,7 +333,7 @@ export async function uploadToImgbb(file, apiKey){
   if (file.size > 12 * 1024 * 1024) throw new Error("حجم الصورة يتجاوز 12MB");
   await validateSvgFile(file);
   const key = apiKey || DEFAULT_IMGBB_KEY;
-  const compressed = await compressImage(file);
+  const compressed = await convertImageToWebp(file);
   const formData = new FormData();
   formData.append("image", compressed);
   const res = await fetch(`https://api.imgbb.com/1/upload?key=${key}`, {
@@ -317,6 +343,23 @@ export async function uploadToImgbb(file, apiKey){
   const json = await res.json();
   if (!json.success) throw new Error(json.error?.message || "فشل رفع الصورة");
   return json.data.url; // direct image link
+}
+
+export async function uploadToCloudflareR2(file, settings = {}){
+  if (!file || !String(file.type || "").startsWith("image/")) throw new Error("اختر ملف صورة صالحًا");
+  if (file.size > 25 * 1024 * 1024) throw new Error("حجم الصورة يتجاوز 25MB");
+  await validateSvgFile(file);
+  const endpoint = String(settings.cloudflareR2UploadUrl || "").trim().replace(/\/$/, "");
+  if (!endpoint) throw new Error("أدخل رابط Cloudflare R2 Worker أولًا");
+  const converted = await convertImageToWebp(file, { quality: settings.webpQuality || 0.82 });
+  const headers = { "Content-Type": converted.type, "X-File-Name": encodeURIComponent(converted.name) };
+  if (settings.cloudflareR2UploadToken) headers.Authorization = `Bearer ${settings.cloudflareR2UploadToken}`;
+  const response = await fetch(endpoint, { method: "POST", headers, body: converted });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload.error || "فشل رفع الصورة إلى Cloudflare R2");
+  const url = payload.url || payload.publicUrl || (settings.cloudflareR2PublicUrl ? `${String(settings.cloudflareR2PublicUrl).replace(/\/$/, "")}/${encodeURIComponent(converted.name)}` : "");
+  if (!url) throw new Error("أعد Worker رابط الصورة في url أو publicUrl، أو أدخل رابط العرض العام");
+  return url;
 }
 
 /* ------------------------------------------------------------------ */

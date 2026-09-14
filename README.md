@@ -82,7 +82,7 @@ AFAK CARPET is intentionally lightweight. It does not require a bundler, a serve
 | Client logic | `index.html`, `admin.html`, and the shared `app.js` data layer. |
 | Data | Cloud Firestore for site content and quote requests [1] [2]. |
 | Authentication | Firebase Authentication for protected admin access [3]. |
-| Image hosting | ImgBB upload integration, initiated from the admin panel. |
+| Image hosting | Admin-selectable ImgBB or Cloudflare R2 upload, with browser-side WebP conversion. |
 | Administrative data | `algeria-data.js`, containing Arabic wilaya and commune data for the current 58-wilaya structure. |
 | Deployment model | Static hosting, compatible with Cloudflare Pages or any equivalent static host. |
 
@@ -157,6 +157,14 @@ python3 -m http.server 4173
 ```
 
 The same URLs will work in the browser.
+
+### Image storage and WebP conversion
+
+The admin panel now lets you choose **ImgBB** or **Cloudflare R2** for new uploads. PNG, JPG, JPEG, and other browser-decodable raster images are converted to WebP in the browser before upload, preserving the aspect ratio and using the configured quality value. SVG files remain SVG so that logos and icons do not lose their vector properties. HEIC support depends on the browser's native decoder; if the browser cannot decode HEIC, convert it before uploading.
+
+For Cloudflare R2, deploy [`cloudflare-r2-upload-worker.js`](./cloudflare-r2-upload-worker.js) as a Worker and bind an R2 bucket named `IMAGES`. Configure the Worker variables `PUBLIC_BASE_URL` (the public custom domain or R2 delivery URL) and `UPLOAD_TOKEN` (optional but recommended). The Worker must be deployed with CORS enabled for the site's domain; replace the wildcard origin with the production domain before launch. Paste the Worker URL into **Settings → Image storage → R2 upload Worker URL**, optionally enter the public base URL and the same upload token, then save settings. R2 credentials and S3 secret keys must never be placed in the browser or Firestore.
+
+The included Worker is intentionally small and stores only the uploaded object; configure R2 lifecycle rules, a custom public domain or signed delivery layer, rate limits, and an allowlist for the production origin in Cloudflare before using it publicly.
 
 ### Firebase configuration
 

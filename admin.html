@@ -118,9 +118,16 @@
         <button class="btn btn-outline mt-2" id="addNavMenuItemBtn">+ إضافة عنصر</button>
       </div>
       <div class="admin-card">
-        <h3>مفتاح imgbb API</h3>
-        <div class="field"><label>API Key</label><input type="text" id="setImgbbKey"></div>
-        <p class="form-note">يمكنك تغييره من هنا في أي وقت دون الحاجة لتعديل الكود. الحصول على مفتاح جديد من api.imgbb.com</p>
+        <h3>تخزين الصور والتحويل إلى WebP</h3>
+        <div class="admin-grid-2">
+          <div class="field"><label>مكان التخزين</label><select id="setImageStorageProvider"><option value="imgbb">ImgBB</option><option value="cloudflare-r2">Cloudflare R2</option></select></div>
+          <div class="field"><label>جودة WebP (من 0.1 إلى 1)</label><input type="number" id="setWebpQuality" min="0.1" max="1" step="0.01"></div>
+          <div class="field"><label>ImgBB API Key</label><input type="text" id="setImgbbKey"></div>
+          <div class="field"><label>رابط Worker لرفع R2</label><input type="url" id="setR2UploadUrl" placeholder="https://images.example.workers.dev/upload"></div>
+          <div class="field"><label>الرابط العام لـ R2 (اختياري)</label><input type="url" id="setR2PublicUrl" placeholder="https://cdn.example.com"></div>
+          <div class="field"><label>رمز Worker (اختياري)</label><input type="password" id="setR2UploadToken" autocomplete="new-password"></div>
+        </div>
+        <p class="form-note">كل الصور غير SVG تُحوَّل إلى WebP داخل المتصفح بطريقة مشابهة لـ Squoosh ثم تُرفع إلى المكان الذي تختاره. لا تضع مفتاح R2 السري هنا؛ استخدم رمزًا محدودًا أو حماية Worker.</p>
       </div>
       <div class="admin-card">
         <h3>إعدادات السلايدر التلقائي للمنتجات</h3>
@@ -310,7 +317,7 @@
         <h3>مكتبة الصور</h3>
         <p class="form-note mt-2">
           كل صورة رفعتها من قبل (شعار، سلايدر، أقسام، منتجات، من نحن) تُحفظ هنا تلقائيًا لإعادة استخدامها بلا رفع جديد.
-          ملاحظة مهمة: imgbb لا يوفر حذف تلقائي عبر الكود — زر "إزالة من المكتبة" يشيل الصورة من هالقائمة فقط (ما يمسحهاش من سيرفر imgbb نفسه).
+          ملاحظة مهمة: زر "إزالة من المكتبة" يشيل الصورة من هذه القائمة فقط ولا يحذف الملف من ImgBB أو Cloudflare R2.
         </p>
         <div class="media-grid mt-4" id="mediaLibraryGrid"></div>
         <p class="empty-state" id="mediaEmpty" style="display:none">لا توجد صور مرفوعة بعد.</p>
@@ -429,7 +436,7 @@ import {
   collection, query, orderBy, onSnapshot, getDocs, doc, updateDoc, setDoc
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import {
-  getSiteOnce, saveSite, uploadToImgbb, esc, uid, money, getAdminRole, recordAuditLog, PRODUCT_STATUSES
+  getSiteOnce, saveSite, uploadToImgbb, uploadToCloudflareR2, esc, uid, money, getAdminRole, recordAuditLog, PRODUCT_STATUSES
 } from "./app.js";
 
 let SITE = null;
@@ -761,8 +768,18 @@ function makeCompactRows(list, summaryFn, options = {}){
 
 /* ---------------- imgbb upload + media library tracking ---------------- */
 async function uploadOne(file){
-  const key = document.getElementById("setImgbbKey").value || SITE.settings.imgbbKey;
-  const url = await uploadToImgbb(file, key);
+  const settings = {
+    ...SITE.settings,
+    imageStorageProvider: document.getElementById("setImageStorageProvider")?.value || SITE.settings.imageStorageProvider || "imgbb",
+    imgbbKey: document.getElementById("setImgbbKey")?.value || SITE.settings.imgbbKey,
+    cloudflareR2UploadUrl: document.getElementById("setR2UploadUrl")?.value || SITE.settings.cloudflareR2UploadUrl,
+    cloudflareR2PublicUrl: document.getElementById("setR2PublicUrl")?.value || SITE.settings.cloudflareR2PublicUrl,
+    cloudflareR2UploadToken: document.getElementById("setR2UploadToken")?.value || localStorage.getItem("afak-r2-upload-token") || "",
+    webpQuality: Number(document.getElementById("setWebpQuality")?.value || SITE.settings.webpQuality || 0.82)
+  };
+  const url = settings.imageStorageProvider === "cloudflare-r2"
+    ? await uploadToCloudflareR2(file, settings)
+    : await uploadToImgbb(file, settings.imgbbKey);
   if (!SITE.mediaLibrary.includes(url)){
     SITE.mediaLibrary.push(url);
     saveSite({ mediaLibrary: SITE.mediaLibrary }).catch(() => {});
@@ -942,6 +959,11 @@ function renderSettings(){
   document.getElementById("setTiktok").value = s.socials?.tiktok || "";
   document.getElementById("setLinkedin").value = s.socials?.linkedin || "";
   document.getElementById("setImgbbKey").value = s.imgbbKey || "";
+  document.getElementById("setImageStorageProvider").value = s.imageStorageProvider || "imgbb";
+  document.getElementById("setWebpQuality").value = s.webpQuality || 0.82;
+  document.getElementById("setR2UploadUrl").value = s.cloudflareR2UploadUrl || "";
+  document.getElementById("setR2PublicUrl").value = s.cloudflareR2PublicUrl || "";
+  document.getElementById("setR2UploadToken").value = localStorage.getItem("afak-r2-upload-token") || "";
   document.getElementById("setCfToken").value = s.cfAnalyticsToken || "";
   document.getElementById("setMetaPixel").value = s.metaPixelId || "";
   document.getElementById("setTiktokPixel").value = s.tiktokPixelId || "";
@@ -1150,6 +1172,10 @@ document.getElementById("saveSettingsBtn").addEventListener("click", async () =>
     email: document.getElementById("setEmail").value.trim(),
     address: document.getElementById("setAddress").value.trim(),
     imgbbKey: document.getElementById("setImgbbKey").value.trim(),
+    imageStorageProvider: document.getElementById("setImageStorageProvider").value === "cloudflare-r2" ? "cloudflare-r2" : "imgbb",
+    webpQuality: Math.min(1, Math.max(0.1, Number(document.getElementById("setWebpQuality").value) || 0.82)),
+    cloudflareR2UploadUrl: document.getElementById("setR2UploadUrl").value.trim().slice(0, 500),
+    cloudflareR2PublicUrl: document.getElementById("setR2PublicUrl").value.trim().slice(0, 500),
     cfAnalyticsToken: document.getElementById("setCfToken").value.trim(),
     metaPixelId: document.getElementById("setMetaPixel").value.trim(),
     tiktokPixelId: document.getElementById("setTiktokPixel").value.trim(),
@@ -1174,6 +1200,9 @@ document.getElementById("saveSettingsBtn").addEventListener("click", async () =>
     colorPalette: collectPaletteFromDOM(),
     navMenuItems: collectNavMenuFromDOM()
   };
+  const r2Token = document.getElementById("setR2UploadToken").value.trim();
+  if (r2Token) localStorage.setItem("afak-r2-upload-token", r2Token);
+  else localStorage.removeItem("afak-r2-upload-token");
   if (!['admin','marketing'].includes(CURRENT_ROLE)){ toast("لا تملك صلاحية تعديل الإعدادات"); return; }
   await saveSite({ settings: SITE.settings });
   recordAuditLog({ user: CURRENT_USER, role: CURRENT_ROLE, action: "update", entity: "settings", entityId: "site", summary: SITE.settings.siteName, changedFields: ["settings","seo","socials","pixels","palette","navigation"] }).catch(console.warn);
