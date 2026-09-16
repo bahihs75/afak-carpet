@@ -30,7 +30,7 @@
     <nav class="nav-links">
       <a class="nav-link" href="#mosques" data-i18n="nav.mosques">المساجد</a>
       <a class="nav-link" href="#hotels" data-i18n="nav.hotels">الفنادق</a>
-      <a class="nav-link" href="#schools" data-i18n="nav.schools">الروضات</a>
+      <a class="nav-link" href="#schools" data-i18n="nav.schools">المنازل</a>
       <a class="nav-link" href="#halls" data-i18n="nav.halls">القاعات والمساحات الكبرى</a>
       <a class="nav-link" href="#about" data-i18n="nav.about">من نحن</a>
       <a class="nav-link" href="#contact" data-i18n="nav.contact">تواصل معنا</a>
@@ -54,7 +54,7 @@
   <ul class="drawer-links">
     <li><a href="#mosques" data-i18n="nav.mosques">المساجد</a></li>
     <li><a href="#hotels" data-i18n="nav.hotels">الفنادق</a></li>
-    <li><a href="#schools" data-i18n="nav.schools">الروضات</a></li>
+    <li><a href="#schools" data-i18n="nav.schools">المنازل</a></li>
     <li><a href="#halls" data-i18n="nav.halls">القاعات والمساحات الكبرى</a></li>
     <li><a href="#about" data-i18n="nav.about">من نحن</a></li>
     <li><a href="#contact" data-i18n="nav.contact">تواصل معنا</a></li>
@@ -129,12 +129,12 @@
     </div>
   </section>
 
-  <!-- ===================== SCHOOLS ===================== -->
+  <!-- ===================== HOUSE RUGS ===================== -->
   <section class="segment-hero" id="schools-hero">
     <div class="container">
-      <span class="label-eyebrow" style="color:rgba(255,255,255,.6)">03 — <span data-i18n="nav.schools">الروضات</span></span>
-      <h1><span data-i18n="schools.title">سجاد آمن لفضاءات الأطفال</span><span class="count-badge" id="schoolsCount" style="border-color:rgba(255,255,255,.3); color:rgba(255,255,255,.6)"></span></h1>
-      <p data-i18n="schools.text">خامات مريحة وسهلة الصيانة لفضاءات الروضات والمدارس.</p>
+      <span class="label-eyebrow" style="color:rgba(255,255,255,.6)">03 — <span data-i18n="nav.schools">المنازل</span></span>
+      <h1><span data-i18n="schools.title">سجاد أنيق ومريح للمنزل</span><span class="count-badge" id="schoolsCount" style="border-color:rgba(255,255,255,.3); color:rgba(255,255,255,.6)"></span></h1>
+      <p data-i18n="schools.text">اختيارات دافئة للصالونات وغرف النوم ومختلف فضاءات المنزل.</p>
     </div>
   </section>
   <section class="section section-soft" id="schools">
@@ -146,7 +146,7 @@
       </div>
       <div class="product-grid" id="schoolsGrid"></div>
       <p class="empty-state" id="schoolsEmpty" style="display:none" data-i18n="empty.products">لا توجد منتجات مضافة بعد لهذا القسم.</p>
-      <div class="center mt-4"><button class="btn btn-outline" data-open-quote data-i18n="schools.cta">اطلب عرض سعر لروضتك</button></div>
+      <div class="center mt-4"><button class="btn btn-outline" data-open-quote data-i18n="schools.cta">اطلب عرض سعر لمنزلك</button> <a class="btn btn-outline" href="ar/manazil/" data-house-page-link>عرض سجاد المنازل</a></div>
     </div>
   </section>
 
@@ -252,7 +252,7 @@
       <ul>
         <li><a href="#mosques" data-i18n="nav.mosques">المساجد</a></li>
         <li><a href="#hotels" data-i18n="nav.hotels">الفنادق</a></li>
-        <li><a href="#schools" data-i18n="nav.schools">الروضات</a></li>
+        <li><a href="#schools" data-i18n="nav.schools">المنازل</a></li>
         <li><a href="#halls" data-i18n="footer.hallsShort">القاعات الكبرى</a></li>
       </ul>
     </div>
@@ -329,7 +329,7 @@
           <option value="" data-i18n="quote.categoryPlaceholder">اختر المجال</option>
           <option value="mosques" data-i18n="nav.mosques">المساجد</option>
           <option value="hotels" data-i18n="nav.hotels">الفنادق</option>
-          <option value="schools" data-i18n="nav.schools">الروضات</option>
+          <option value="schools" data-i18n="nav.schools">المنازل</option>
           <option value="halls" data-i18n="nav.halls">قاعات المؤتمرات والمساحات الكبرى</option>
         </select>
       </div>
@@ -454,7 +454,7 @@ function hexToRgba(hex, alpha){
    ================================================================== */
 const I18N = {
   ar: {
-    "nav.mosques": "المساجد", "nav.hotels": "الفنادق", "nav.schools": "الروضات",
+    "nav.mosques": "المساجد", "nav.hotels": "الفنادق", "nav.schools": "المنازل",
     "nav.halls": "القاعات والمساحات الكبرى", "nav.about": "من نحن", "nav.contact": "تواصل معنا",
     "cta.quote": "اطلب عرض سعر",
     "cats.eyebrow": "مجالات العمل", "cats.title": "سجاد لكل فضاء يستحق العناية",
@@ -463,8 +463,8 @@ const I18N = {
     "mosques.text": "كل سجادة تُفصَّل على مقاس المسجد، بمحاذاة دقيقة للصفوف والقبلة.",
     "hotels.title": "سجاد بلمسة فندقية راقية", "hotels.text": "للردهات وغرف النزلاء وقاعات الاستقبال.",
     "hotels.cta": "اطلب عرض سعر لفندقك",
-    "schools.title": "سجاد آمن لفضاءات الأطفال", "schools.text": "خامات مريحة وسهلة الصيانة لفضاءات الروضات والمدارس.",
-    "schools.cta": "اطلب عرض سعر لروضتك",
+    "schools.title": "سجاد أنيق ومريح للمنزل", "schools.text": "اختيارات دافئة للصالونات وغرف النوم ومختلف فضاءات المنزل.",
+    "schools.cta": "اطلب عرض سعر لمنزلك",
     "halls.title": "تغطية شاملة للمساحات الواسعة", "halls.text": "قاعات المؤتمرات، المعارض، والمساحات المؤسساتية الكبرى.",
     "halls.cta": "اطلب عرض سعر لقاعتك",
     "empty.products": "لا توجد منتجات مضافة بعد لهذا القسم.",
@@ -489,7 +489,7 @@ const I18N = {
     "privacy.title": "الخصوصية والاختيارات", "privacy.text": "نستخدم ملفات تحليل اختيارية لفهم أداء الموقع وتحسينه. لن نحمّل Meta أو TikTok قبل موافقتك.", "privacy.reject": "رفض الاختياري", "privacy.accept": "السماح بالتحليل", "privacy.manage": "إدارة الخصوصية"
   },
   en: {
-    "nav.mosques": "Mosques", "nav.hotels": "Hotels", "nav.schools": "Kindergartens",
+    "nav.mosques": "Mosques", "nav.hotels": "Hotels", "nav.schools": "House Rugs",
     "nav.halls": "Conference Halls", "nav.about": "About Us", "nav.contact": "Contact Us",
     "cta.quote": "Get a Quote",
     "cats.eyebrow": "What We Do", "cats.title": "Carpets for every space that deserves care",
@@ -498,8 +498,8 @@ const I18N = {
     "mosques.text": "Every carpet is tailored to the mosque's exact size, precisely aligned with rows and qibla.",
     "hotels.title": "Carpets with a refined hotel touch", "hotels.text": "For lobbies, guest rooms, and reception halls.",
     "hotels.cta": "Get a quote for your hotel",
-    "schools.title": "Safe carpets for children's spaces", "schools.text": "Comfortable, easy-to-maintain materials for kindergartens and schools.",
-    "schools.cta": "Get a quote for your kindergarten",
+    "schools.title": "Elegant rugs for the home", "schools.text": "Warm choices for living rooms, bedrooms, and every home space.",
+    "schools.cta": "Get a quote for your home",
     "halls.title": "Full coverage for large spaces", "halls.text": "Conference halls, exhibitions, and large institutional spaces.",
     "halls.cta": "Get a quote for your hall",
     "empty.products": "No products added yet for this section.",
@@ -1415,7 +1415,7 @@ function renderContact(site){
 /* ---------------- SEO metadata (admin-controlled, visual-neutral) ---------------- */
 function applySeoMeta(settings){
   const title = cleanText(settings?.seoTitle || "AFAK CARPET — سجاد المساجد والفنادق والمؤسسات", 120);
-  const description = cleanText(settings?.seoDescription || "آفاق كاربت: توريد وتفصيل السجاد للمساجد والفنادق والروضات وقاعات المؤتمرات في الجزائر.", 300);
+  const description = cleanText(settings?.seoDescription || "آفاق كاربت: توريد وتفصيل السجاد للمساجد والفنادق والمنازل وقاعات المؤتمرات في الجزائر.", 300);
   document.title = title;
   document.querySelector('meta[name="description"]')?.setAttribute("content", description);
   const upsert = (property, content) => {

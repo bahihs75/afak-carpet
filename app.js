@@ -51,7 +51,7 @@ export const DEFAULT_SITE = {
     consentVersion: "2026-08-15",
     privacyPolicyUrl: "",
     seoTitle: "AFAK CARPET — سجاد المساجد والفنادق والمؤسسات",
-    seoDescription: "آفاق كاربت: توريد وتفصيل السجاد للمساجد والفنادق والروضات وقاعات المؤتمرات في الجزائر.",
+    seoDescription: "آفاق كاربت: توريد وتفصيل السجاد للمساجد والفنادق والمنازل وقاعات المؤتمرات في الجزائر.",
     ogImage: "",
     // Independent visibility switches for the "trust" blocks — a block also
     // auto-hides itself when it has zero items, regardless of this switch.
@@ -60,7 +60,7 @@ export const DEFAULT_SITE = {
     navMenuItems: [
       { id: "m1", icon: "🕌", label: "المساجد", labelEn: "Mosques", link: "#mosques", order: 1 },
       { id: "m2", icon: "🏨", label: "الفنادق", labelEn: "Hotels", link: "#hotels", order: 2 },
-      { id: "m3", icon: "🎒", label: "الروضات", labelEn: "Kindergartens", link: "#schools", order: 3 },
+      { id: "m3", icon: "🏠", label: "المنازل", labelEn: "House Rugs", link: "#schools", order: 3 },
       { id: "m4", icon: "🏛️", label: "القاعات الكبرى", labelEn: "Halls", link: "#halls", order: 4 },
       { id: "m5", icon: "ℹ️", label: "من نحن", labelEn: "About", link: "#about", order: 5 },
       { id: "m6", icon: "✉️", label: "تواصل معنا", labelEn: "Contact", link: "#contact", order: 6 }
@@ -85,7 +85,7 @@ export const DEFAULT_SITE = {
   categories: [
     { id: "mosques", order: 1, name: "المساجد", nameEn: "", image: "", desc: "سجاد المحراب والمصلى بمقاسات دقيقة ومطابقة للمساحة.", descEn: "", showColorFilter: true },
     { id: "hotels", order: 2, name: "الفنادق", nameEn: "", image: "", desc: "سجاد للردهات والغرف والقاعات بلمسة فندقية راقية.", descEn: "", showColorFilter: true },
-    { id: "schools", order: 3, name: "الروضات", nameEn: "", image: "", desc: "سجاد آمن ومريح لفضاءات الأطفال.", descEn: "", showColorFilter: true },
+    { id: "schools", order: 3, name: "المنازل", nameEn: "House Rugs", image: "", desc: "سجاد أنيق ومريح للصالونات وغرف النوم ومختلف فضاءات المنزل.", descEn: "Elegant, comfortable rugs for living rooms, bedrooms, and every home space.", showColorFilter: true },
     { id: "halls", order: 4, name: "قاعات المؤتمرات والمساحات الكبرى", nameEn: "", image: "", desc: "تغطية شاملة للمساحات الواسعة والقاعات الرسمية.", descEn: "", showColorFilter: true }
   ],
   // product: { id, categoryId, name, nameEn, price, size, sizeEn, color,
@@ -109,6 +109,23 @@ export const DEFAULT_SITE = {
 
 let cache = null;
 const listeners = new Set();
+
+function migrateHouseRugLabels(site){
+  const legacy = new Set(["الروضات", "Kindergartens", "سجاد آمن لفضاءات الأطفال"]);
+  const category = site.categories?.find(item => item.id === "schools");
+  if (category && (legacy.has(category.name) || legacy.has(category.nameEn) || legacy.has(category.desc))) {
+    category.name = "المنازل";
+    category.nameEn = "House Rugs";
+    category.desc = "سجاد أنيق ومريح للصالونات وغرف النوم ومختلف فضاءات المنزل.";
+    category.descEn = "Elegant, comfortable rugs for living rooms, bedrooms, and every home space.";
+  }
+  (site.settings?.navMenuItems || []).forEach(item => {
+    if (legacy.has(item.label) || legacy.has(item.labelEn)) {
+      item.icon = "🏠"; item.label = "المنازل"; item.labelEn = "House Rugs"; item.link = "#schools";
+    }
+  });
+  return site;
+}
 
 export function subscribeSite(cb){
   listeners.add(cb);
@@ -136,7 +153,7 @@ export function initSiteListener(){
         catch (writeError) { console.warn("Default site could not be created:", writeError); }
         publish(structuredClone(DEFAULT_SITE));
       } else {
-        publish(deepMerge(structuredClone(DEFAULT_SITE), snap.data()));
+        publish(migrateHouseRugLabels(deepMerge(structuredClone(DEFAULT_SITE), snap.data())));
       }
     } catch (error) {
       publishFallback(error);
@@ -147,7 +164,7 @@ export function initSiteListener(){
 export async function getSiteOnce(){
   const snap = await getDoc(SITE_DOC);
   if (!snap.exists()) return structuredClone(DEFAULT_SITE);
-  return deepMerge(structuredClone(DEFAULT_SITE), snap.data());
+  return migrateHouseRugLabels(deepMerge(structuredClone(DEFAULT_SITE), snap.data()));
 }
 
 export async function saveSite(partial){

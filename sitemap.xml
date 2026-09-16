@@ -20,4 +20,16 @@
     <xhtml:link rel="alternate" hreflang="fr" href="https://afak-carpet.pages.dev/fr/mosquees/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://afak-carpet.pages.dev/" />
   </url>
+  <url>
+    <loc>https://afak-carpet.pages.dev/ar/manazil/</loc>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://afak-carpet.pages.dev/ar/manazil/" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://afak-carpet.pages.dev/fr/maisons/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://afak-carpet.pages.dev/ar/manazil/" />
+  </url>
+  <url>
+    <loc>https://afak-carpet.pages.dev/fr/maisons/</loc>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://afak-carpet.pages.dev/ar/manazil/" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://afak-carpet.pages.dev/fr/maisons/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://afak-carpet.pages.dev/ar/manazil/" />
+  </url>
 </urlset>

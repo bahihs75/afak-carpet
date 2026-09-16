@@ -25,7 +25,7 @@
 
 A carpet supplier should not force visitors to navigate a generic online store. A mosque committee, hotel manager, school administrator, or project owner usually begins with a place, a use case, and a need for accurate guidance. AFAK CARPET is designed around that reality.
 
-The public website leads visitors through four clear business areas: **mosques**, **hotels**, **kindergartens and schools**, and **conference halls or large spaces**. Each area can present its own products, images, descriptions, color options, specifications, and call-to-action. The result is closer to a carefully art-directed showroom than a basic product grid.
+The public website leads visitors through four clear business areas: **mosques**, **hotels**, **house rugs**, and **conference halls or large spaces**. Each area can present its own products, images, descriptions, color options, specifications, and call-to-action. The result is closer to a carefully art-directed showroom than a basic product grid.
 
 The experience is available in Arabic and English, supports right-to-left and left-to-right layouts, and is optimized for both desktop browsing and mobile interaction.
 
