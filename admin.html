@@ -319,6 +319,11 @@
           كل صورة رفعتها من قبل (شعار، سلايدر، أقسام، منتجات، من نحن) تُحفظ هنا تلقائيًا لإعادة استخدامها بلا رفع جديد.
           ملاحظة مهمة: زر "إزالة من المكتبة" يشيل الصورة من هذه القائمة فقط ولا يحذف الملف من ImgBB أو Cloudflare R2.
         </p>
+        <div class="field media-library-upload">
+          <label for="mediaLibraryFile">رفع صور مباشرة إلى المكتبة</label>
+          <input type="file" id="mediaLibraryFile" accept="image/*" multiple>
+          <p class="form-note">يمكنك رفع صور متعددة إلى المكتبة دون ربطها بمنتج الآن.</p>
+        </div>
         <div class="media-grid mt-4" id="mediaLibraryGrid"></div>
         <p class="empty-state" id="mediaEmpty" style="display:none">لا توجد صور مرفوعة بعد.</p>
       </div>
@@ -859,6 +864,18 @@ function renderMediaLibraryTab(){
     });
   });
 }
+document.getElementById("mediaLibraryFile")?.addEventListener("change", async event => {
+  const files = Array.from(event.target.files || []);
+  if (!files.length) return;
+  if (!canManage("media")){ toast("لا تملك صلاحية رفع الصور"); return; }
+  toast("جارٍ رفع الصور إلى المكتبة...");
+  try{
+    for (const file of files) await uploadOne(file);
+    renderMediaLibraryTab();
+    toast("تمت إضافة الصور إلى المكتبة");
+  } catch (error){ toast("فشل رفع الصور: " + error.message); }
+  event.target.value = "";
+});
 
 function formatAdminDate(value){
   const date = value?.toDate ? value.toDate() : (value ? new Date(value) : null);
@@ -1705,6 +1722,11 @@ function renderPendingImages(){
     return `
       <div class="product-image-option${selected ? " is-hover-selected" : ""}" data-i="${i}">
         <img class="product-image-option-preview" src="${esc(url)}" alt="معاينة الصورة ${i + 1}" loading="lazy" decoding="async">
+        <span class="product-image-order">${i + 1}</span>
+        <div class="product-image-order-actions">
+          <button type="button" class="product-image-move-up" data-i="${i}" ${i === 0 ? "disabled" : ""} aria-label="تحريك الصورة إلى الأمام">↑</button>
+          <button type="button" class="product-image-move-down" data-i="${i}" ${i === pendingImages.length - 1 ? "disabled" : ""} aria-label="تحريك الصورة إلى الخلف">↓</button>
+        </div>
         <label class="product-image-hover-choice">
           <input type="checkbox" class="p-hover-choice" data-url="${esc(url)}" ${selected ? "checked" : ""}>
           <span>Hover</span>
@@ -1745,6 +1767,14 @@ function renderPendingImages(){
       renderPendingImages();
     });
   });
+  const moveImage = (index, direction) => {
+    const target = index + direction;
+    if (target < 0 || target >= pendingImages.length) return;
+    [pendingImages[index], pendingImages[target]] = [pendingImages[target], pendingImages[index]];
+    renderPendingImages();
+  };
+  wrap.querySelectorAll(".product-image-move-up").forEach(btn => btn.addEventListener("click", () => moveImage(Number(btn.dataset.i), -1)));
+  wrap.querySelectorAll(".product-image-move-down").forEach(btn => btn.addEventListener("click", () => moveImage(Number(btn.dataset.i), 1)));
 }
 
 function toDateTimeLocal(value){

@@ -280,13 +280,17 @@
     <button class="detail-back" id="detailClose">‹ <span data-i18n="detail.back">رجوع</span></button>
   </div>
   <div class="detail-body">
-    <div class="detail-hero"><img id="detailImg" src="" alt=""></div>
+    <div class="detail-gallery-stage" id="detailGalleryStage">
+      <button type="button" class="detail-gallery-arrow detail-gallery-prev" id="detailGalleryPrev" aria-label="الصورة السابقة">‹</button>
+      <div class="detail-hero"><img id="detailImg" src="" alt=""></div>
+      <button type="button" class="detail-gallery-arrow detail-gallery-next" id="detailGalleryNext" aria-label="الصورة التالية">›</button>
+    </div>
+    <div class="detail-thumbnails" id="detailThumbnails" aria-label="صور المنتج"></div>
     <nav class="breadcrumb" id="detailBreadcrumb"></nav>
     <span class="label-eyebrow" id="detailCat">—</span>
     <h1 class="detail-title" id="detailName">—</h1>
     <p class="mt-3" id="detailDesc"></p>
     <div class="detail-spec-table" id="detailSpecs"></div>
-    <div class="detail-gallery" id="detailGallery"></div>
     <button class="btn btn-primary mt-4" data-open-quote data-i18n="detail.cta">اطلب عرض سعر لهذا المنتج</button>
   </div>
 </div>
@@ -735,6 +739,7 @@ quoteForm.addEventListener("submit", async (e) => {
 /* ---------------- Product detail overlay ---------------- */
 const detailOverlay = document.getElementById("detailOverlay");
 let lastDetailFocus = null;
+let currentDetailProduct = null;
 function setDetailOpen(open){
   const isOpen = Boolean(open);
   if (isOpen) {
@@ -815,10 +820,43 @@ function snapshotOf(p, categoryName){
   };
 }
 
+let detailImages = [], detailImageIndex = 0;
+function renderDetailImage(){
+  const image = detailImages[detailImageIndex] || "";
+  const imageEl = document.getElementById("detailImg");
+  imageEl.src = safeImageUrl(image);
+  imageEl.alt = tf(currentDetailProduct, "name", currentLang);
+  document.querySelectorAll("#detailThumbnails button").forEach((button, index) => {
+    button.classList.toggle("is-active", index === detailImageIndex);
+    button.setAttribute("aria-current", String(index === detailImageIndex));
+  });
+  const hasMultiple = detailImages.length > 1;
+  document.getElementById("detailGalleryPrev").hidden = !hasMultiple;
+  document.getElementById("detailGalleryNext").hidden = !hasMultiple;
+}
+function changeDetailImage(step){
+  if (detailImages.length < 2) return;
+  detailImageIndex = (detailImageIndex + step + detailImages.length) % detailImages.length;
+  renderDetailImage();
+}
+function bindDetailGallery(){
+  document.getElementById("detailGalleryPrev").onclick = () => changeDetailImage(document.documentElement.dir === "rtl" ? 1 : -1);
+  document.getElementById("detailGalleryNext").onclick = () => changeDetailImage(document.documentElement.dir === "rtl" ? -1 : 1);
+  const stage = document.getElementById("detailGalleryStage");
+  let startX = 0, startY = 0;
+  stage.onpointerdown = event => { if (event.pointerType === "mouse") return; startX = event.clientX; startY = event.clientY; stage.setPointerCapture?.(event.pointerId); };
+  stage.onpointerup = event => {
+    const dx = event.clientX - startX, dy = event.clientY - startY;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) changeDetailImage(dx > 0 ? -1 : 1);
+  };
+}
+
 function openDetail(p, categoryName, categoryId){
+  currentDetailProduct = p;
   currentProductRef = snapshotOf(p, categoryName);
   trackMarketingEvent("ViewContent", { content_name: currentProductRef.name, content_ids: [currentProductRef.id], content_category: categoryName || p.categoryId });
-  document.getElementById("detailImg").src = safeImageUrl((p.images && p.images[0]) || "");
+  detailImages = [...new Set((p.images || []).filter(Boolean))];
+  detailImageIndex = 0;
   document.getElementById("detailCat").textContent = categoryName || "";
   document.getElementById("detailName").textContent = tf(p, "name", currentLang);
   document.getElementById("detailDesc").textContent = tf(p, "desc", currentLang);
@@ -846,13 +884,11 @@ function openDetail(p, categoryName, categoryId){
     div.innerHTML = `<span class="k">${esc(k)}</span><span>${esc(v)}</span>`;
     specs.appendChild(div);
   });
-  const gallery = document.getElementById("detailGallery");
-  gallery.innerHTML = "";
-  (p.images || []).slice(1).forEach(url => {
-    const fig = document.createElement("figure");
-    fig.innerHTML = `<img src="${esc(safeImageUrl(url))}" loading="lazy" decoding="async" alt="${esc(tf(p,"name",currentLang))}">`;
-    gallery.appendChild(fig);
-  });
+  const thumbs = document.getElementById("detailThumbnails");
+  thumbs.innerHTML = detailImages.map((url, index) => `<button type="button" class="detail-thumbnail${index === 0 ? " is-active" : ""}" data-index="${index}" aria-label="الصورة ${index + 1}" aria-current="${index === 0}"><img src="${esc(safeImageUrl(url))}" loading="lazy" decoding="async" alt=""></button>`).join("");
+  thumbs.querySelectorAll("button").forEach(button => button.addEventListener("click", () => { detailImageIndex = Number(button.dataset.index); renderDetailImage(); }));
+  renderDetailImage();
+  bindDetailGallery();
   setDetailOpen(true);
   detailOverlay.scrollTop = 0;
   history.replaceState(null, "", `#p-${p.id}`);
