@@ -836,16 +836,23 @@ function renderDetailImage(){
 }
 function changeDetailImage(step){
   if (detailImages.length < 2) return;
-  detailImageIndex = (detailImageIndex + step + detailImages.length) % detailImages.length;
+  const nextIndex = detailImageIndex + step;
+  detailImageIndex = (nextIndex < 0 ? detailImages.length - 1 : nextIndex >= detailImages.length ? 0 : nextIndex);
   renderDetailImage();
 }
 function bindDetailGallery(){
-  document.getElementById("detailGalleryPrev").onclick = () => changeDetailImage(document.documentElement.dir === "rtl" ? 1 : -1);
-  document.getElementById("detailGalleryNext").onclick = () => changeDetailImage(document.documentElement.dir === "rtl" ? -1 : 1);
+  const previousButton = document.getElementById("detailGalleryPrev");
+  const nextButton = document.getElementById("detailGalleryNext");
+  previousButton.onclick = event => { event.preventDefault(); event.stopPropagation(); changeDetailImage(document.documentElement.dir === "rtl" ? 1 : -1); };
+  nextButton.onclick = event => { event.preventDefault(); event.stopPropagation(); changeDetailImage(document.documentElement.dir === "rtl" ? -1 : 1); };
   const stage = document.getElementById("detailGalleryStage");
   let startX = 0, startY = 0;
-  stage.onpointerdown = event => { if (event.pointerType === "mouse") return; startX = event.clientX; startY = event.clientY; stage.setPointerCapture?.(event.pointerId); };
+  stage.onpointerdown = event => {
+    if (event.pointerType === "mouse" || event.target.closest(".detail-gallery-arrow, .detail-thumbnail")) return;
+    startX = event.clientX; startY = event.clientY; stage.setPointerCapture?.(event.pointerId);
+  };
   stage.onpointerup = event => {
+    if (event.target.closest(".detail-gallery-arrow, .detail-thumbnail")) return;
     const dx = event.clientX - startX, dy = event.clientY - startY;
     if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) changeDetailImage(dx > 0 ? -1 : 1);
   };
