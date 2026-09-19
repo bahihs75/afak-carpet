@@ -289,9 +289,10 @@
     <nav class="breadcrumb" id="detailBreadcrumb"></nav>
     <span class="label-eyebrow" id="detailCat">—</span>
     <h1 class="detail-title" id="detailName">—</h1>
-    <p class="mt-3" id="detailDesc"></p>
+    <div class="detail-product-price" id="detailProductPrice">—</div>
+    <p class="detail-product-description" id="detailDesc"></p>
     <div class="detail-spec-table" id="detailSpecs"></div>
-    <button class="btn btn-primary mt-4" data-open-quote data-i18n="detail.cta">اطلب عرض سعر لهذا المنتج</button>
+    <div class="detail-sticky-action"><button class="btn btn-primary" id="detailStickyCta" data-open-quote>اطلب الفاتورة النموذجية</button></div>
   </div>
 </div>
 
@@ -351,13 +352,19 @@
         <label for="qMessage" data-i18n="quote.message">تفاصيل إضافية (المساحة، الكمية...)</label>
         <textarea id="qMessage" data-i18n-placeholder="quote.messagePlaceholder" placeholder="مثال: قاعة صلاة 200م²"></textarea>
       </div>
+      <div class="checkout-only-fields" id="checkoutOnlyFields" hidden>
+        <div class="admin-grid-2">
+          <div class="field"><label for="qQuantity">الكمية *</label><input type="number" id="qQuantity" min="1" value="1"></div>
+          <div class="field"><label for="qAddress">عنوان التوصيل *</label><input type="text" id="qAddress" maxlength="240"></div>
+        </div>
+      </div>
       <div class="honeypot-field" aria-hidden="true">
         <label for="qWebsite">اترك هذا الحقل فارغًا</label>
         <input type="text" id="qWebsite" tabindex="-1" autocomplete="off">
       </div>
       <p class="form-error" id="quoteError" role="alert" hidden></p>
-      <button type="submit" class="btn btn-primary btn-block" data-i18n="quote.submit">إرسال الطلب</button>
-      <p class="form-note" data-i18n="quote.note">سنتواصل معكم في أقرب وقت لتأكيد التفاصيل والسعر.</p>
+      <button type="submit" class="btn btn-primary btn-block" id="quoteSubmitButton" data-i18n="quote.submit">إرسال الطلب</button>
+      <p class="form-note" id="quoteNote" data-i18n="quote.note">سنتواصل معكم في أقرب وقت لتأكيد التفاصيل والسعر.</p>
     </form>
     <div class="form-success" id="quoteSuccess" style="display:none">
       <div class="icon">✓</div>
@@ -640,6 +647,13 @@ const quoteProductRefBox = document.getElementById("quoteProductRefBox");
 function openQuote(productSnapshot){
   clearQuoteError();
   currentProductRef = productSnapshot || null;
+  const isHouseOrder = currentProductRef?.categoryId === "schools";
+  const checkoutFields = document.getElementById("checkoutOnlyFields");
+  checkoutFields.hidden = !isHouseOrder;
+  document.getElementById("qQuantity").value = "1";
+  document.getElementById("qAddress").value = "";
+  document.getElementById("quoteSubmitButton").textContent = isHouseOrder ? (currentLang === "ar" ? "تأكيد الطلب" : "Confirm order") : (currentLang === "ar" ? "إرسال الطلب" : "Send request");
+  document.getElementById("quoteNote").textContent = isHouseOrder ? (currentLang === "ar" ? "سنتواصل معكم لتأكيد التوفر والتوصيل والسعر النهائي." : "We will contact you to confirm availability, delivery, and the final price.") : (currentLang === "ar" ? "سنتواصل معكم في أقرب وقت لتأكيد التفاصيل والسعر." : "We will contact you shortly to confirm the details and price.");
   if (currentProductRef){
     document.getElementById("qCategory").value = currentProductRef.categoryId || "";
     document.getElementById("quoteProductRefImg").src = currentProductRef.image || "";
@@ -686,6 +700,8 @@ quoteForm.addEventListener("submit", async (e) => {
   const wilayaName = cleanText(qWilaya.options[qWilaya.selectedIndex]?.text || "", 100);
   const commune = cleanText(qCommune.value, 100);
   const message = cleanMultiline(document.getElementById("qMessage").value, 1000);
+  const quantity = Math.max(1, Number.parseInt(document.getElementById("qQuantity")?.value || "1", 10) || 1);
+  const deliveryAddress = cleanText(document.getElementById("qAddress")?.value, 240);
   const rawProduct = currentProductRef;
   const product = rawProduct ? {
     id: cleanText(rawProduct.id, 80), name: cleanText(rawProduct.name, 160),
@@ -697,13 +713,13 @@ quoteForm.addEventListener("submit", async (e) => {
     image: safeImageUrl(rawProduct.image),
     link: safePageUrl(rawProduct.link, "")
   } : null;
-  if (name.length < 2 || phone.replace(/\D/g, "").length < 8 || !allowedCategories.has(category) || !wilayaCode){
+  if (name.length < 2 || phone.replace(/\D/g, "").length < 8 || !allowedCategories.has(category) || !wilayaCode || (category === "schools" && !deliveryAddress)){
     submitBtn.disabled = false;
     showQuoteError("تحقق من الاسم ورقم الهاتف والمجال والولاية.");
     return;
   }
   const payload = {
-    name, phone, category, wilayaCode, wilayaName, commune, message, product,
+    name, phone, category, wilayaCode, wilayaName, commune, message, quantity, deliveryAddress, product,
     attribution: firstTouchAttribution
   };
   try{
@@ -719,6 +735,8 @@ quoteForm.addEventListener("submit", async (e) => {
       const lines = [
         `${payload.name} :الاسم`,
         payload.product ? `${payload.product.name} :المنتج` : null,
+        payload.category === "schools" ? `${payload.quantity} :الكمية` : null,
+        payload.category === "schools" ? `${payload.deliveryAddress} :عنوان التوصيل` : null,
         `${catLabel} :المجال`,
         payload.message ? `${payload.message} :ملاحظات` : null
       ].filter(Boolean);
@@ -866,7 +884,12 @@ function openDetail(p, categoryName, categoryId){
   detailImageIndex = 0;
   document.getElementById("detailCat").textContent = categoryName || "";
   document.getElementById("detailName").textContent = tf(p, "name", currentLang);
+  const offer = activeProductOffer(p);
+  document.getElementById("detailProductPrice").textContent = offer?.price ? money(offer.price) : money(p.price);
   document.getElementById("detailDesc").textContent = tf(p, "desc", currentLang);
+  const detailCta = document.getElementById("detailStickyCta");
+  const isHouseProduct = p.categoryId === "schools";
+  detailCta.textContent = isHouseProduct ? (currentLang === "ar" ? "اطلب الآن" : "Order now") : (currentLang === "ar" ? "اطلب الفاتورة النموذجية" : "Request a standard invoice");
 
   const crumb = document.getElementById("detailBreadcrumb");
   crumb.innerHTML = `<a href="#${esc(categoryId||p.categoryId)}">${esc(categoryName||"")}</a><span class="sep">‹</span><span>${esc(tf(p,"name",currentLang))}</span>`;
@@ -879,10 +902,9 @@ function openDetail(p, categoryName, categoryId){
     en: { size: "Size", color: "Color", material: "Material", price: "Price", sku: "SKU" }
   };
   const L = SPEC_LABELS[currentLang];
-  const offer = activeProductOffer(p);
   const rows = [
     [L.size, tf(p,"size",currentLang) || p.size], [L.color, [p.color, ...(p.secondaryColors || [])].filter(Boolean).join(", ")],
-    [L.material, tf(p,"material",currentLang) || p.material], [L.price, offer?.price ? money(offer.price) : money(p.price)],
+    [L.material, tf(p,"material",currentLang) || p.material],
     [L.sku, p.sku]
   ];
   rows.forEach(([k,v]) => {

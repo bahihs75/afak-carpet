@@ -367,7 +367,7 @@
           <button type="button" class="btn btn-outline" id="exportOrdersBtn">تصدير CSV</button>
         </div>
         <table class="admin-table">
-          <thead><tr><th>الاسم</th><th>الهاتف</th><th>المجال</th><th>الولاية / البلدية</th><th>المنتج المرتبط</th><th>المصدر / الحملة</th><th>الحالة</th><th>ملاحظات</th><th>التاريخ</th></tr></thead>
+          <thead><tr><th>الاسم</th><th>الهاتف</th><th>المجال</th><th>الولاية / البلدية</th><th>المنتج المرتبط</th><th>الكمية / العنوان</th><th>المصدر / الحملة</th><th>الحالة</th><th>ملاحظات</th><th>التاريخ</th></tr></thead>
           <tbody id="ordersTableBody"></tbody>
         </table>
         <p class="empty-state" id="ordersEmpty" style="display:none">لا توجد طلبات بعد.</p>
@@ -2264,7 +2264,7 @@ function getFilteredOrderRecords(){
   const status = document.getElementById("ordersStatusFilter")?.value || "";
   return ORDER_RECORDS.filter(({ data: o }) => {
     const normalized = normalizedOrderStatus(o.status);
-    const text = [o.name, o.phone, o.wilayaName, o.commune, o.message, o.product?.name, o.product?.sku, o.product?.material, o.attribution?.utmSource, o.attribution?.utmMedium, o.attribution?.utmCampaign].filter(Boolean).join(" ").toLowerCase();
+    const text = [o.name, o.phone, o.wilayaName, o.commune, o.deliveryAddress, o.quantity, o.message, o.product?.name, o.product?.sku, o.product?.material, o.attribution?.utmSource, o.attribution?.utmMedium, o.attribution?.utmCampaign].filter(Boolean).join(" ").toLowerCase();
     const statusMatch = !status || normalized === status || (status === "pending" && o.status === "new");
     return statusMatch && (!search || text.includes(search));
   });
@@ -2297,6 +2297,7 @@ function renderOrdersView(){
       <td>${esc(catNames[o.category] || o.category || "—")}</td>
       <td>${esc(o.wilayaName || "")} ${o.commune ? "/ " + esc(o.commune) : ""}</td>
       <td>${prodCell}</td>
+      <td>${o.quantity ? `${esc(o.quantity)} × ` : ""}${esc(o.deliveryAddress || "—")}</td>
       <td>${sourceCell}</td>
       <td>${orderStatusSelect(id, o.status)}</td>
       <td>${esc(o.message || "—")}</td>
@@ -2308,9 +2309,9 @@ function renderOrdersView(){
 function csvCell(value){ return `"${String(value ?? "").replace(/"/g, '""').replace(/[\r\n]+/g, " ")}"`; }
 function exportOrdersCsv(){
   const records = getFilteredOrderRecords();
-  const headers = ["Name", "Phone", "Category", "Wilaya", "Commune", "Product", "SKU", "Size", "Color", "Material", "UTM Source", "UTM Medium", "UTM Campaign", "Status", "Message", "Created At"];
+  const headers = ["Name", "Phone", "Category", "Wilaya", "Commune", "Product", "Quantity", "Delivery Address", "SKU", "Size", "Color", "Material", "UTM Source", "UTM Medium", "UTM Campaign", "Status", "Message", "Created At"];
   const rows = records.map(({ data: o }) => [
-    o.name, o.phone, o.category, o.wilayaName, o.commune, o.product?.name, o.product?.sku, o.product?.size,
+    o.name, o.phone, o.category, o.wilayaName, o.commune, o.product?.name, o.quantity, o.deliveryAddress, o.product?.sku, o.product?.size,
     o.product?.color, o.product?.material, o.attribution?.utmSource, o.attribution?.utmMedium, o.attribution?.utmCampaign,
     normalizedOrderStatus(o.status), o.message, o.createdAt?.toDate ? o.createdAt.toDate().toISOString() : ""
   ]);

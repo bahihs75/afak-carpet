@@ -233,6 +233,8 @@ export async function submitOrder(order){
     category: clean(order.category, 20), wilayaCode: clean(order.wilayaCode, 10),
     wilayaName: clean(order.wilayaName, 100), commune: clean(order.commune, 100),
     message: String(order.message ?? "").replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "").trim().slice(0, 1000),
+    quantity: Math.max(1, Math.min(9999, Number.parseInt(order.quantity, 10) || 1)),
+    deliveryAddress: clean(order.deliveryAddress, 240),
     product: order.product && typeof order.product === "object" ? {
       id: clean(order.product.id, 80), name: clean(order.product.name, 160),
       categoryId: clean(order.product.categoryId, 20), categoryName: clean(order.product.categoryName, 120),
@@ -256,7 +258,7 @@ export async function submitOrder(order){
       utmSource: "", utmMedium: "", utmCampaign: "", utmTerm: "", utmContent: "", fbclid: "", ttclid: ""
     }
   };
-  if (payload.name.length < 2 || phone.replace(/\D/g, "").length < 8 || !allowedCategories.has(payload.category) || !payload.wilayaCode){
+  if (payload.name.length < 2 || phone.replace(/\D/g, "").length < 8 || !allowedCategories.has(payload.category) || !payload.wilayaCode || (payload.category === "schools" && !payload.deliveryAddress)){
     throw new Error("بيانات الطلب غير صالحة");
   }
   await addDoc(ORDERS_COL, { ...payload, status: "new", createdAt: serverTimestamp() });
