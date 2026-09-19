@@ -280,19 +280,25 @@
     <button class="detail-back" id="detailClose">‹ <span data-i18n="detail.back">رجوع</span></button>
   </div>
   <div class="detail-body">
-    <div class="detail-gallery-stage" id="detailGalleryStage">
-      <button type="button" class="detail-gallery-arrow detail-gallery-prev" id="detailGalleryPrev" aria-label="الصورة السابقة">‹</button>
-      <div class="detail-hero"><img id="detailImg" src="" alt=""></div>
-      <button type="button" class="detail-gallery-arrow detail-gallery-next" id="detailGalleryNext" aria-label="الصورة التالية">›</button>
+    <div class="detail-layout">
+      <section class="detail-gallery-column" aria-label="معرض صور المنتج">
+        <div class="detail-gallery-stage" id="detailGalleryStage">
+          <button type="button" class="detail-gallery-arrow detail-gallery-prev" id="detailGalleryPrev" aria-label="الصورة السابقة">‹</button>
+          <div class="detail-hero"><img id="detailImg" src="" alt=""></div>
+          <button type="button" class="detail-gallery-arrow detail-gallery-next" id="detailGalleryNext" aria-label="الصورة التالية">›</button>
+        </div>
+        <div class="detail-thumbnails" id="detailThumbnails" aria-label="صور المنتج"></div>
+      </section>
+      <section class="detail-info-column" aria-label="معلومات المنتج">
+        <nav class="breadcrumb" id="detailBreadcrumb"></nav>
+        <span class="label-eyebrow" id="detailCat">—</span>
+        <h1 class="detail-title" id="detailName">—</h1>
+        <div class="detail-product-price" id="detailProductPrice">—</div>
+        <p class="detail-product-description" id="detailDesc"></p>
+        <div class="detail-spec-table" id="detailSpecs"></div>
+        <div class="detail-sticky-action"><button class="btn btn-primary" id="detailStickyCta" data-open-quote>اطلب الفاتورة النموذجية</button></div>
+      </section>
     </div>
-    <div class="detail-thumbnails" id="detailThumbnails" aria-label="صور المنتج"></div>
-    <nav class="breadcrumb" id="detailBreadcrumb"></nav>
-    <span class="label-eyebrow" id="detailCat">—</span>
-    <h1 class="detail-title" id="detailName">—</h1>
-    <div class="detail-product-price" id="detailProductPrice">—</div>
-    <p class="detail-product-description" id="detailDesc"></p>
-    <div class="detail-spec-table" id="detailSpecs"></div>
-    <div class="detail-sticky-action"><button class="btn btn-primary" id="detailStickyCta" data-open-quote>اطلب الفاتورة النموذجية</button></div>
   </div>
 </div>
 
