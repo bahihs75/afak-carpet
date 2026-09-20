@@ -197,7 +197,7 @@
     <div class="admin-tab-panel" data-panel="categories" style="display:none">
       <div class="admin-card">
         <h3>الأقسام الأربعة</h3>
-        <p class="form-note mt-2">هذه الأقسام ثابتة في بنية الموقع — يمكنك تعديل الاسم والوصف والصورة، وتفعيل/تعطيل فلتر الألوان لكل قسم على حدة.</p>
+        <p class="form-note mt-2">يمكنك تعديل الأقسام الرئيسية وإنشاء تصنيفات منتجات مستقلة لكل قسم. لا يمكن حذف تصنيف مرتبط بمنتجات.</p>
         <div id="categoriesList" class="mt-4"></div>
       </div>
       <button class="btn btn-primary" id="saveCategoriesBtn">حفظ الأقسام</button>
@@ -218,6 +218,10 @@
               <option value="schools">المنازل — سجاد البيوت</option>
               <option value="halls">قاعات المؤتمرات والمساحات الكبرى</option>
             </select>
+          </div>
+          <div class="field">
+            <label>تصنيف المنتج داخل القسم *</label>
+            <select id="pProductCategory" required></select>
           </div>
           <div class="field"><label>الرمز المرجعي (SKU) — اختياري</label><input type="text" id="pSku" placeholder="مثال: MSQ-001"></div>
           <div class="field"><label>المقاس</label><input type="text" id="pSize" placeholder="مثال: 3م × 5م"></div>
@@ -952,6 +956,7 @@ async function boot(){
   renderHeroTab();
   renderCategoriesTab();
   renderSecondaryColorOptions();
+  renderProductCategoryOptions();
   renderProductsTab();
   renderProjectsTab();
   renderTrustTab();
@@ -1629,6 +1634,11 @@ function renderCategoriesTab(){
             <button type="button" class="media-picker-btn c-pick-btn">اختر من المكتبة</button>
           </div>
         </div>
+        <div class="field product-category-manager">
+          <label>تصنيفات المنتجات داخل هذا القسم</label>
+          <div class="product-category-admin-list"></div>
+          <button type="button" class="btn btn-outline mt-2 add-product-category">+ إضافة تصنيف</button>
+        </div>
         <div class="admin-grid-2 mt-3" style="border-top:1px dashed var(--hairline); padding-top:12px">
           <div class="field">
             <label><input type="checkbox" class="c-visible" ${isVisible ? "checked" : ""}> ظهور القسم بالكامل</label>
@@ -1644,6 +1654,40 @@ function renderCategoriesTab(){
           </div>
         </div>
       `;
+    const categoryList = row.querySelector(".product-category-admin-list");
+    const renderProductCategoryAdmin = () => {
+      const items = Array.isArray(cat.productCategories) && cat.productCategories.length ? cat.productCategories : [{ id: "general", name: "عام", nameEn: "General" }];
+      cat.productCategories = items;
+      categoryList.innerHTML = items.map(item => {
+        const used = SITE.products.some(product => product.categoryId === cat.id && product.productCategoryId === item.id);
+        return `<div class="product-category-admin-row" data-id="${esc(item.id)}">
+          <input class="pc-name" value="${esc(item.name)}" placeholder="اسم التصنيف">
+          <input class="pc-name-en" value="${esc(item.nameEn || "")}" placeholder="Name (EN)">
+          <button type="button" class="danger pc-delete" ${used ? "disabled title=\"لا يمكن حذف تصنيف مستخدم\"" : ""}>حذف</button>
+          ${used ? '<small class="form-note">مستخدم من منتجات</small>' : ""}
+        </div>`;
+      }).join("");
+      categoryList.querySelectorAll(".pc-delete").forEach(button => button.addEventListener("click", () => {
+        const itemRow = button.closest(".product-category-admin-row");
+        const item = cat.productCategories.find(entry => entry.id === itemRow.dataset.id);
+        if (SITE.products.some(product => product.categoryId === cat.id && product.productCategoryId === item?.id)){
+          toast("لا يمكن حذف تصنيف مرتبط بمنتجات"); return;
+        }
+        if (cat.productCategories.length <= 1){ toast("يجب الاحتفاظ بتصنيف واحد على الأقل"); return; }
+        cat.productCategories = cat.productCategories.filter(entry => entry.id !== itemRow.dataset.id);
+        renderProductCategoryAdmin();
+      }));
+    };
+    renderProductCategoryAdmin();
+    row.querySelector(".add-product-category").addEventListener("click", () => {
+      cat.productCategories = [...categoryList.querySelectorAll(".product-category-admin-row")].map(itemRow => ({
+        id: itemRow.dataset.id,
+        name: itemRow.querySelector(".pc-name").value.trim() || "عام",
+        nameEn: itemRow.querySelector(".pc-name-en").value.trim()
+      }));
+      cat.productCategories.push({ id: "pc-" + uid(), name: "تصنيف جديد", nameEn: "New category" });
+      renderProductCategoryAdmin();
+    });
     row.querySelector(".c-file").addEventListener("change", async (e) => {
       const file = e.target.files[0]; if (!file) return;
       toast("جارٍ رفع الصورة...");
@@ -1678,15 +1722,27 @@ document.getElementById("saveCategoriesBtn").addEventListener("click", async () 
     cat.desc = row.querySelector(".c-desc").value.trim();
     cat.descEn = row.querySelector(".c-desc-en").value.trim();
     cat.showColorFilter = row.querySelector(".c-show-filter").checked;
+    cat.productCategories = [...row.querySelectorAll(".product-category-admin-row")].map(itemRow => ({
+      id: itemRow.dataset.id,
+      name: itemRow.querySelector(".pc-name").value.trim() || "عام",
+      nameEn: itemRow.querySelector(".pc-name-en").value.trim()
+    }));
+    if (!cat.productCategories.length) cat.productCategories = [{ id: "general", name: "عام", nameEn: "General" }];
     
     SITE.settings.sectionsVisible[cat.id] = row.querySelector(".c-visible").checked;
     SITE.settings.componentsVisible[cat.id + 'Header'] = row.querySelector(".c-head-visible").checked;
     SITE.settings.componentsVisible[cat.id + 'Grid'] = row.querySelector(".c-grid-visible").checked;
   });
+  SITE.products.forEach(product => {
+    const cat = SITE.categories.find(category => category.id === product.categoryId);
+    const valid = cat?.productCategories?.some(item => item.id === product.productCategoryId);
+    if (!valid) product.productCategoryId = cat?.productCategories?.[0]?.id || "general";
+  });
   
   await saveSite({ 
     categories: SITE.categories,
-    settings: SITE.settings 
+    settings: SITE.settings,
+    products: SITE.products
   });
   recordAuditLog({ user: CURRENT_USER, role: CURRENT_ROLE, action: "update", entity: "categories", entityId: "site", summary: "Visibility and Category updates", changedFields: ["categories", "visibility"] }).catch(console.warn);
   toast("تم حفظ الأقسام والإعدادات");
@@ -1784,6 +1840,15 @@ function toDateTimeLocal(value){
   const pad = n => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
+function renderProductCategoryOptions(selected = ""){
+  const mainCategory = document.getElementById("pCategory").value;
+  const category = SITE?.categories?.find(item => item.id === mainCategory);
+  const options = category?.productCategories?.length ? category.productCategories : [{ id: "general", name: "عام", nameEn: "General" }];
+  const select = document.getElementById("pProductCategory");
+  select.innerHTML = options.map(item => `<option value="${esc(item.id)}">${esc(item.name)}${item.nameEn ? ` — ${esc(item.nameEn)}` : ""}</option>`).join("");
+  select.value = options.some(item => item.id === selected) ? selected : options[0].id;
+}
+document.getElementById("pCategory").addEventListener("change", () => renderProductCategoryOptions());
 function resetProductForm(){
   ["pName","pNameEn","pSize","pSizeEn","pColor","pMaterial","pMaterialEn","pSku","pPrice","pDesc","pDescEn","pPublishAt","pUnpublishAt","pOfferLabel","pOfferPrice","pOfferStartsAt","pOfferEndsAt"].forEach(id => document.getElementById(id).value = "");
   setCheckedColors([]);
@@ -1791,6 +1856,7 @@ function resetProductForm(){
   document.getElementById("pVisible").checked = true;
   document.getElementById("pStatus").value = "draft";
   document.getElementById("pOfferEnabled").checked = false;
+  renderProductCategoryOptions("general");
   document.getElementById("pEditId").value = "";
   document.getElementById("cancelEditBtn").style.display = "none";
   document.getElementById("saveProductBtn").textContent = "إضافة المنتج";
@@ -1808,6 +1874,7 @@ document.getElementById("saveProductBtn").addEventListener("click", async () => 
   const productData = {
     id: editId || uid(),
     categoryId: document.getElementById("pCategory").value,
+    productCategoryId: document.getElementById("pProductCategory").value,
     name,
     nameEn: document.getElementById("pNameEn").value.trim(),
     sku: document.getElementById("pSku").value.trim(),
@@ -1879,6 +1946,7 @@ function renderProductsTab(){
       document.getElementById("pName").value = p.name;
       document.getElementById("pNameEn").value = p.nameEn || "";
       document.getElementById("pCategory").value = p.categoryId;
+      renderProductCategoryOptions(p.productCategoryId || "general");
       document.getElementById("pSku").value = p.sku || "";
       document.getElementById("pSize").value = p.size || "";
       document.getElementById("pSizeEn").value = p.sizeEn || "";

@@ -93,6 +93,7 @@
         <p data-i18n="mosques.text">كل سجادة تُفصَّل على مقاس المسجد، بمحاذاة دقيقة للصفوف والقبلة.</p>
       </div>
 
+      <div class="product-category-filters" id="mosquesProductCategories" aria-label="تصنيف المنتجات"></div>
       <div class="color-swatches" id="mosquesSwatches"></div>
       <div class="col-toggle" id="mosquesColToggle" data-grid="mosqueGrid">
         <button type="button" data-cols="1" aria-label="عمود واحد" aria-pressed="false" title="عمود واحد"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="4" width="14" height="16" rx="1"/></svg></button>
@@ -118,6 +119,7 @@
   </section>
   <section class="section" id="hotels">
     <div class="container">
+      <div class="product-category-filters" id="hotelsProductCategories" aria-label="تصنيف المنتجات"></div>
       <div class="color-swatches" id="hotelsSwatches"></div>
       <div class="col-toggle" id="hotelsColToggle" data-grid="hotelsGrid">
         <button type="button" data-cols="1" aria-label="عمود واحد" aria-pressed="false" title="عمود واحد"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="4" width="14" height="16" rx="1"/></svg></button>
@@ -139,6 +141,7 @@
   </section>
   <section class="section section-soft" id="schools">
     <div class="container">
+      <div class="product-category-filters" id="schoolsProductCategories" aria-label="تصنيف المنتجات"></div>
       <div class="color-swatches" id="schoolsSwatches"></div>
       <div class="col-toggle" id="schoolsColToggle" data-grid="schoolsGrid">
         <button type="button" data-cols="1" aria-label="عمود واحد" aria-pressed="false" title="عمود واحد"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="4" width="14" height="16" rx="1"/></svg></button>
@@ -160,6 +163,7 @@
   </section>
   <section class="section" id="halls">
     <div class="container">
+      <div class="product-category-filters" id="hallsProductCategories" aria-label="تصنيف المنتجات"></div>
       <div class="color-swatches" id="hallsSwatches"></div>
       <div class="col-toggle" id="hallsColToggle" data-grid="hallsGrid">
         <button type="button" data-cols="1" aria-label="عمود واحد" aria-pressed="false" title="عمود واحد"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="4" width="14" height="16" rx="1"/></svg></button>
@@ -448,12 +452,28 @@ function showQuoteError(message){
 }
 // One active color per section: selecting a new swatch immediately clears the old one.
 const colorFilterState = { mosques: null, hotels: null, schools: null, halls: null };
+const productCategoryFilterState = { mosques: null, hotels: null, schools: null, halls: null };
 
 // Backward-compatible reader: supports both the old single `secondaryColor`
 // field and the newer `secondaryColors` array.
 function productColors(p){
   if (Array.isArray(p.secondaryColors)) return p.secondaryColors;
   return p.secondaryColor ? [p.secondaryColor] : [];
+}
+function renderProductCategoryFilters(containerId, sectionKey, category, show, onChange){
+  const wrap = document.getElementById(containerId);
+  const items = Array.isArray(category?.productCategories) ? category.productCategories : [];
+  if (!show || !items.length){ wrap.style.display = "none"; wrap.innerHTML = ""; return; }
+  wrap.style.display = "flex";
+  wrap.innerHTML = items.map(item => `
+    <button type="button" class="product-category-filter${productCategoryFilterState[sectionKey] === item.id ? " is-active" : ""}"
+      data-product-category="${esc(item.id)}" aria-pressed="${productCategoryFilterState[sectionKey] === item.id}">${esc(tf(item, "name", currentLang))}</button>`).join("");
+  wrap.querySelectorAll("button").forEach(button => button.addEventListener("click", () => {
+    const id = button.dataset.productCategory;
+    productCategoryFilterState[sectionKey] = productCategoryFilterState[sectionKey] === id ? null : id;
+    renderProductCategoryFilters(containerId, sectionKey, category, show, onChange);
+    onChange();
+  }));
 }
 function safeHexColor(value, fallback = "#ffffff"){
   const raw = String(value || "").trim();
@@ -1284,11 +1304,13 @@ function renderMosques(products, categories){
   mosquesCountEl.textContent = all.length ? `${all.length} ${I18N[currentLang]["products.count"]}` : "";
   mosquesCountEl.dataset.count = all.length;
 
+  renderProductCategoryFilters("mosquesProductCategories", "mosques", cat, cat?.showProductCategoryFilter !== false, refresh);
   renderSwatches("mosquesSwatches", "mosques", cat?.showColorFilter !== false, refresh);
 
   function applyFilter(){
-    const selected = colorFilterState.mosques;
-    return selected ? all.filter(p => productColors(p).includes(selected)) : all;
+    const selectedColor = colorFilterState.mosques;
+    const selectedCategory = productCategoryFilterState.mosques;
+    return all.filter(p => (!selectedColor || productColors(p).includes(selectedColor)) && (!selectedCategory || p.productCategoryId === selectedCategory));
   }
 
   function renderSlider(list){
@@ -1354,11 +1376,13 @@ function renderPlainGrid(products, categoryId, gridId, emptyId, swatchId, countI
   countEl.textContent = all.length ? `${all.length} ${I18N[currentLang]["products.count"]}` : "";
   countEl.dataset.count = all.length;
 
+  renderProductCategoryFilters(categoryId + "ProductCategories", categoryId, cat, cat?.showProductCategoryFilter !== false, refresh);
   renderSwatches(swatchId, categoryId, cat?.showColorFilter !== false, refresh);
 
   function refresh(){
-    const selected = colorFilterState[categoryId];
-    const list = selected ? all.filter(p => productColors(p).includes(selected)) : all;
+    const selectedColor = colorFilterState[categoryId];
+    const selectedCategory = productCategoryFilterState[categoryId];
+    const list = all.filter(p => (!selectedColor || productColors(p).includes(selectedColor)) && (!selectedCategory || p.productCategoryId === selectedCategory));
     const grid = document.getElementById(gridId);
     const empty = document.getElementById(emptyId);
     if (!list.length){ grid.innerHTML = ""; empty.style.display = "block"; return; }

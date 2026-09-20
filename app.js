@@ -83,14 +83,14 @@ export const DEFAULT_SITE = {
     ]
   },
   categories: [
-    { id: "mosques", order: 1, name: "المساجد", nameEn: "", image: "", desc: "سجاد المحراب والمصلى بمقاسات دقيقة ومطابقة للمساحة.", descEn: "", showColorFilter: true },
-    { id: "hotels", order: 2, name: "الفنادق", nameEn: "", image: "", desc: "سجاد للردهات والغرف والقاعات بلمسة فندقية راقية.", descEn: "", showColorFilter: true },
-    { id: "schools", order: 3, name: "المنازل", nameEn: "House Rugs", image: "", desc: "سجاد أنيق ومريح للصالونات وغرف النوم ومختلف فضاءات المنزل.", descEn: "Elegant, comfortable rugs for living rooms, bedrooms, and every home space.", showColorFilter: true },
-    { id: "halls", order: 4, name: "قاعات المؤتمرات والمساحات الكبرى", nameEn: "", image: "", desc: "تغطية شاملة للمساحات الواسعة والقاعات الرسمية.", descEn: "", showColorFilter: true }
+    { id: "mosques", order: 1, name: "المساجد", nameEn: "", image: "", desc: "سجاد المحراب والمصلى بمقاسات دقيقة ومطابقة للمساحة.", descEn: "", showColorFilter: true, productCategories: [{ id: "general", name: "عام", nameEn: "General" }] },
+    { id: "hotels", order: 2, name: "الفنادق", nameEn: "", image: "", desc: "سجاد للردهات والغرف والقاعات بلمسة فندقية راقية.", descEn: "", showColorFilter: true, productCategories: [{ id: "general", name: "عام", nameEn: "General" }] },
+    { id: "schools", order: 3, name: "المنازل", nameEn: "House Rugs", image: "", desc: "سجاد أنيق ومريح للصالونات وغرف النوم ومختلف فضاءات المنزل.", descEn: "Elegant, comfortable rugs for living rooms, bedrooms, and every home space.", showColorFilter: true, productCategories: [{ id: "general", name: "عام", nameEn: "General" }] },
+    { id: "halls", order: 4, name: "قاعات المؤتمرات والمساحات الكبرى", nameEn: "", image: "", desc: "تغطية شاملة للمساحات الواسعة والقاعات الرسمية.", descEn: "", showColorFilter: true, productCategories: [{ id: "general", name: "عام", nameEn: "General" }] }
   ],
   // product: { id, categoryId, name, nameEn, price, size, sizeEn, color,
   //   secondaryColors: [], material, materialEn, sku, desc, descEn, images:[],
-  //   hoverImage, featured, visible, status, publishAt, unpublishAt, offer, order }
+  //   productCategoryId, hoverImage, featured, visible, status, publishAt, unpublishAt, offer, order }
   products: [],
   about: {
     title: "من نحن", titleEn: "",
@@ -127,6 +127,26 @@ function migrateHouseRugLabels(site){
   return site;
 }
 
+function normalizeProductCategories(site){
+  const categoryIds = new Set((site.categories || []).map(category => category.id));
+  (site.categories || []).forEach(category => {
+    if (!Array.isArray(category.productCategories) || !category.productCategories.length){
+      category.productCategories = [{ id: "general", name: "عام", nameEn: "General" }];
+    }
+    category.productCategories = category.productCategories
+      .filter(item => item && item.id && item.name)
+      .map(item => ({ id: String(item.id), name: String(item.name), nameEn: String(item.nameEn || "") }));
+    if (!category.productCategories.length) category.productCategories = [{ id: "general", name: "عام", nameEn: "General" }];
+  });
+  (site.products || []).forEach(product => {
+    if (!categoryIds.has(product.categoryId)) product.categoryId = "mosques";
+    const category = site.categories.find(item => item.id === product.categoryId);
+    const validIds = new Set(category?.productCategories?.map(item => item.id) || ["general"]);
+    if (!validIds.has(product.productCategoryId)) product.productCategoryId = category?.productCategories?.[0]?.id || "general";
+  });
+  return site;
+}
+
 export function subscribeSite(cb){
   listeners.add(cb);
   if (cache) cb(cache);
@@ -153,7 +173,7 @@ export function initSiteListener(){
         catch (writeError) { console.warn("Default site could not be created:", writeError); }
         publish(structuredClone(DEFAULT_SITE));
       } else {
-        publish(migrateHouseRugLabels(deepMerge(structuredClone(DEFAULT_SITE), snap.data())));
+        publish(normalizeProductCategories(migrateHouseRugLabels(deepMerge(structuredClone(DEFAULT_SITE), snap.data()))));
       }
     } catch (error) {
       publishFallback(error);
@@ -164,7 +184,7 @@ export function initSiteListener(){
 export async function getSiteOnce(){
   const snap = await getDoc(SITE_DOC);
   if (!snap.exists()) return structuredClone(DEFAULT_SITE);
-  return migrateHouseRugLabels(deepMerge(structuredClone(DEFAULT_SITE), snap.data()));
+  return normalizeProductCategories(migrateHouseRugLabels(deepMerge(structuredClone(DEFAULT_SITE), snap.data())));
 }
 
 export async function saveSite(partial){
@@ -404,7 +424,8 @@ export function uid(){
   return Date.now().toString(36) + Math.random().toString(36).slice(2,8);
 }
 
-export function money(n){
+export function money(n, lang = document.documentElement.lang || "ar"){
   if (n === undefined || n === null || n === "") return "";
-  return Number(n).toLocaleString("ar-DZ") + " دج";
+  const isEnglish = lang === "en";
+  return Number(n).toLocaleString(isEnglish ? "en-DZ" : "ar-DZ") + (isEnglish ? " DA" : " دج");
 }
