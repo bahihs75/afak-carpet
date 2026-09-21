@@ -281,7 +281,7 @@ html:lang(en) .hero-scroll-hint{ letter-spacing:.08em; }
 .cat-card-label h3{ color:#fff; font-size:20px; margin-top:4px; }
 
 /* ==========================================================================
-   MOSQUES — plain filters + slider preview + grid (no decorative framing;
+   MOSQUES — plain filters + grid (no decorative framing;
    photos display exactly as uploaded, uncropped)
    ========================================================================== */
 .product-category-filters,
@@ -298,20 +298,6 @@ html:lang(en) .hero-scroll-hint{ letter-spacing:.08em; }
 .color-swatch.is-active{ border-color:#000; box-shadow:0 0 0 2px #000; }
 .color-swatch.is-active::after{ content:none; }
 .color-swatch .sr-only{ position:absolute; }
-
-.mosque-slider{ position:relative; overflow:hidden; width:100vw; margin-top:var(--sp-7); margin-inline:calc(50% - 50vw); }
-.mosque-slider-track{ display:flex; gap:var(--sp-3); overflow-x:auto; scroll-snap-type:x mandatory; padding:0 clamp(16px,5vw,64px) var(--sp-2); scrollbar-width:none; }
-.mosque-slider-track::-webkit-scrollbar{ display:none; }
-.mosque-slide-card{ flex:0 0 260px; scroll-snap-align:start; border:1px solid var(--hairline); background:#fff; cursor:pointer; }
-.mosque-slide-card .img{ position:relative; aspect-ratio:var(--ratio-product); overflow:hidden; background:var(--canvas-strong); }
-.mosque-slide-card .img img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
-.mosque-slide-card .img .img-base{ opacity:1; transition:opacity var(--dur) var(--ease); }
-.mosque-slide-card .img .img-hover{ opacity:0; transition:opacity var(--dur) var(--ease); }
-.mosque-slide-card:hover .img-hover{ opacity:1; }
-.mosque-slide-card:hover .img-base{ opacity:0; }
-.mosque-slide-card .info{ padding:10px var(--sp-3); display:flex; align-items:center; justify-content:space-between; gap:var(--sp-2); border-top:1px solid var(--hairline-soft); }
-.mosque-slide-card .info .name{ font-weight:700; color:var(--ink); font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.mosque-slide-card .info .price{ font-family:inherit; font-size:14px; font-weight:700; color:var(--navy); white-space:nowrap; flex-shrink:0; }
 
 /* ---- Product grid (mosques full list, and plain grid for other 3 segments) ---- */
 .product-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),360px)); justify-content:center; gap:var(--sp-4); margin-top:var(--sp-6); min-width:0; }
@@ -469,8 +455,8 @@ html:lang(en) .hero-scroll-hint{ letter-spacing:.08em; }
   .section-menu-btn{ display:flex; }
 }
 
-/* ---- Mobile column toggle (1 / 2 columns) ---- */
-.col-toggle{ display:none; align-items:center; gap:6px; justify-content:center; margin-bottom:var(--sp-3); }
+/* ---- Responsive column toggle: 1/2 on mobile, 3/6 on desktop ---- */
+.col-toggle{ display:flex; align-items:center; gap:6px; justify-content:center; margin-bottom:var(--sp-3); }
 .col-toggle button{
   width:36px; height:36px; border:1px solid var(--hairline); background:#fff; cursor:pointer;
   display:flex; align-items:center; justify-content:center; color:var(--muted);
@@ -479,9 +465,14 @@ html:lang(en) .hero-scroll-hint{ letter-spacing:.08em; }
 .col-toggle button.is-active{ background:var(--navy); border-color:var(--navy); color:#fff; }
 .col-toggle svg{ width:16px; height:16px; }
 @media (max-width:560px){
-  .col-toggle{ display:flex; }
+  .col-toggle button[data-cols="3"], .col-toggle button[data-cols="6"]{ display:none; }
   .product-grid.cols-1{ grid-template-columns:1fr; }
   .product-grid.cols-2{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media (min-width:561px){
+  .col-toggle button[data-cols="1"], .col-toggle button[data-cols="2"]{ display:none; }
+  .product-grid.cols-3{ grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .product-grid.cols-6{ grid-template-columns:repeat(6,minmax(0,1fr)); }
 }
 
 .site-footer{ background:var(--ink); color:rgba(255,255,255,.65); padding:var(--sp-7) 0 var(--sp-4); }
