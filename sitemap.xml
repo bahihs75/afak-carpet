@@ -2,34 +2,39 @@
 <urlset
   xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <!-- Homepage -->
   <url>
-    <loc>https://afak-carpet.pages.dev/</loc>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://afak-carpet.pages.dev/ar/masajid/" />
-    <xhtml:link rel="alternate" hreflang="fr" href="https://afak-carpet.pages.dev/fr/mosquees/" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://afak-carpet.pages.dev/" />
+    <loc>https://afakcarpet.com/</loc>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://afakcarpet.com/ar/masajid/" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://afakcarpet.com/fr/mosquees/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://afakcarpet.com/" />
   </url>
+  <!-- Arabic: Mosques -->
   <url>
-    <loc>https://afak-carpet.pages.dev/ar/masajid/</loc>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://afak-carpet.pages.dev/ar/masajid/" />
-    <xhtml:link rel="alternate" hreflang="fr" href="https://afak-carpet.pages.dev/fr/mosquees/" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://afak-carpet.pages.dev/" />
+    <loc>https://afakcarpet.com/ar/masajid/</loc>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://afakcarpet.com/ar/masajid/" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://afakcarpet.com/fr/mosquees/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://afakcarpet.com/" />
   </url>
+  <!-- French: Mosques -->
   <url>
-    <loc>https://afak-carpet.pages.dev/fr/mosquees/</loc>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://afak-carpet.pages.dev/ar/masajid/" />
-    <xhtml:link rel="alternate" hreflang="fr" href="https://afak-carpet.pages.dev/fr/mosquees/" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://afak-carpet.pages.dev/" />
+    <loc>https://afakcarpet.com/fr/mosquees/</loc>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://afakcarpet.com/ar/masajid/" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://afakcarpet.com/fr/mosquees/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://afakcarpet.com/" />
   </url>
+  <!-- Arabic: Homes -->
   <url>
-    <loc>https://afak-carpet.pages.dev/ar/manazil/</loc>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://afak-carpet.pages.dev/ar/manazil/" />
-    <xhtml:link rel="alternate" hreflang="fr" href="https://afak-carpet.pages.dev/fr/maisons/" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://afak-carpet.pages.dev/ar/manazil/" />
+    <loc>https://afakcarpet.com/ar/manazil/</loc>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://afakcarpet.com/ar/manazil/" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://afakcarpet.com/fr/maisons/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://afakcarpet.com/" />
   </url>
+  <!-- French: Homes -->
   <url>
-    <loc>https://afak-carpet.pages.dev/fr/maisons/</loc>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://afak-carpet.pages.dev/ar/manazil/" />
-    <xhtml:link rel="alternate" hreflang="fr" href="https://afak-carpet.pages.dev/fr/maisons/" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://afak-carpet.pages.dev/ar/manazil/" />
+    <loc>https://afakcarpet.com/fr/maisons/</loc>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://afakcarpet.com/ar/manazil/" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://afakcarpet.com/fr/maisons/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://afakcarpet.com/" />
   </url>
 </urlset>
