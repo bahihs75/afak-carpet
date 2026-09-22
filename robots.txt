@@ -1,6 +1,7 @@
 User-agent: *
 Allow: /
+
 Disallow: /admin
 Disallow: /admin.html
 
-Sitemap: https://afak-carpet.pages.dev/sitemap.xml
+Sitemap: https://afakcarpet.com/sitemap.xml
