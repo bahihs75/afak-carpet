@@ -250,6 +250,7 @@
         <div class="admin-grid-2">
           <div class="field"><label><input type="checkbox" id="pFeatured"> منتج مميز</label></div>
           <div class="field"><label><input type="checkbox" id="pVisible" checked> ظاهر في الموقع (ألغِ التحديد لإخفائه مؤقتًا)</label></div>
+          <div class="field"><label><input type="checkbox" id="pFeltEnabled"> السماح للعميل باختيار الفِلت/العازل لهذا المنتج</label><p class="form-note">تظهر جودة وسعر العازل المضافان إلى فئة المنتج داخل نموذج الطلب.</p></div>
         </div>
         <div class="admin-grid-2">
           <div class="field"><label>حالة المنتج</label><select id="pStatus"><option value="draft">مسودة</option><option value="published">منشور</option><option value="archived">مؤرشف</option></select></div>
@@ -378,10 +379,10 @@
           </select>
           <button type="button" class="btn btn-outline" id="exportOrdersBtn">تصدير CSV</button>
         </div>
-        <table class="admin-table">
-          <thead><tr><th>الاسم</th><th>الهاتف</th><th>المجال</th><th>الولاية / البلدية</th><th>المنتج المرتبط</th><th>الكمية / العنوان</th><th>المصدر / الحملة</th><th>الحالة</th><th>ملاحظات</th><th>التاريخ</th></tr></thead>
+        <div class="admin-table-wrap"><table class="admin-table">
+          <thead><tr><th>الاسم</th><th>الهاتف</th><th>المجال</th><th>الولاية / البلدية</th><th>المنتج المرتبط</th><th>الكمية / العنوان</th><th>المصدر / الحملة</th><th>الحالة</th><th>ملاحظات</th><th>التاريخ</th><th>إجراء</th></tr></thead>
           <tbody id="ordersTableBody"></tbody>
-        </table>
+        </table></div>
         <p class="empty-state" id="ordersEmpty" style="display:none">لا توجد طلبات بعد.</p>
       </div>
     </div>
@@ -450,7 +451,7 @@ import {
   signInWithEmailAndPassword, onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import {
-  collection, query, orderBy, onSnapshot, getDocs, doc, updateDoc, setDoc
+  collection, query, orderBy, onSnapshot, getDocs, doc, updateDoc, setDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import {
   getSiteOnce, saveSite, uploadToImgbb, uploadToCloudflareR2, esc, uid, money, getAdminRole, recordAuditLog, PRODUCT_STATUSES
@@ -1919,6 +1920,7 @@ function resetProductForm(){
   setCheckedColors([]);
   document.getElementById("pFeatured").checked = false;
   document.getElementById("pVisible").checked = true;
+  document.getElementById("pFeltEnabled").checked = false;
   document.getElementById("pStatus").value = "draft";
   document.getElementById("pOfferEnabled").checked = false;
   renderProductCategoryOptions("general");
@@ -1957,6 +1959,7 @@ document.getElementById("saveProductBtn").addEventListener("click", async () => 
     descEn: document.getElementById("pDescEn").value.trim(),
     featured: document.getElementById("pFeatured").checked,
     visible: document.getElementById("pVisible").checked,
+    feltEnabled: document.getElementById("pFeltEnabled").checked,
     status: PRODUCT_STATUSES.includes(document.getElementById("pStatus").value) ? document.getElementById("pStatus").value : "draft",
     publishAt: document.getElementById("pPublishAt").value ? new Date(document.getElementById("pPublishAt").value).toISOString() : "",
     unpublishAt: document.getElementById("pUnpublishAt").value ? new Date(document.getElementById("pUnpublishAt").value).toISOString() : "",
@@ -2029,6 +2032,7 @@ function renderProductsTab(){
       document.getElementById("pDescEn").value = p.descEn || "";
       document.getElementById("pFeatured").checked = !!p.featured;
       document.getElementById("pVisible").checked = p.visible !== false;
+      document.getElementById("pFeltEnabled").checked = p.feltEnabled !== false;
       document.getElementById("pStatus").value = PRODUCT_STATUSES.includes(p.status) ? p.status : "published";
       document.getElementById("pPublishAt").value = toDateTimeLocal(p.publishAt);
       document.getElementById("pUnpublishAt").value = toDateTimeLocal(p.unpublishAt);
@@ -2397,6 +2401,18 @@ async function changeOrderStatus(select){
     toast("تعذر تحديث الحالة: " + err.message);
   } finally { select.disabled = false; }
 }
+async function deleteOrder(button){
+  if (CURRENT_ROLE !== "admin") { toast("حذف الطلبات متاح للأدمن فقط"); return; }
+  const record = ORDER_RECORDS.find(item => item.id === button.dataset.orderId);
+  const name = record?.data?.name || "هذا الطلب";
+  if (!window.confirm(`هل تريد حذف ${name} نهائياً؟ لا يمكن التراجع عن هذا الإجراء.`)) return;
+  button.disabled = true;
+  try{
+    await deleteDoc(doc(db, "orders", button.dataset.orderId));
+    await recordAuditLog({ user: CURRENT_USER, role: CURRENT_ROLE, action: "delete", entity: "order", entityId: button.dataset.orderId, summary: name, changedFields: ["order"] });
+    toast("تم حذف الطلب");
+  } catch(err){ button.disabled = false; toast("تعذر حذف الطلب: " + err.message); }
+}
 function getFilteredOrderRecords(){
   const search = (document.getElementById("ordersSearch")?.value || "").trim().toLowerCase();
   const status = document.getElementById("ordersStatusFilter")?.value || "";
@@ -2441,9 +2457,11 @@ function renderOrdersView(){
       <td>${orderStatusSelect(id, o.status)}</td>
       <td>${esc(o.message || "—")}</td>
       <td style="font-family:var(--font-mono); font-size:12px">${date}</td>
+      <td><button type="button" class="danger order-delete-btn" data-order-id="${esc(id)}" title="حذف الطلب">حذف</button></td>
     </tr>`;
   }).join("");
   body.querySelectorAll(".order-status-select").forEach(select => select.addEventListener("change", () => changeOrderStatus(select)));
+  body.querySelectorAll(".order-delete-btn").forEach(button => button.addEventListener("click", () => deleteOrder(button)));
 }
 function csvCell(value){ return `"${String(value ?? "").replace(/"/g, '""').replace(/[\r\n]+/g, " ")}"`; }
 function exportOrdersCsv(){
@@ -2454,7 +2472,7 @@ function exportOrdersCsv(){
     o.product?.color, o.product?.material, o.insulation?.qualityName || "", o.insulation?.areaSqm || "", o.insulation?.total || "", o.attribution?.utmSource, o.attribution?.utmMedium, o.attribution?.utmCampaign,
     normalizedOrderStatus(o.status), o.message, o.createdAt?.toDate ? o.createdAt.toDate().toISOString() : ""
   ]);
-  const csv = "\\ufeff" + [headers, ...rows].map(row => row.map(csvCell).join(",")).join("\\r\\n");
+  const csv = "\ufeff" + [headers, ...rows].map(row => row.map(csvCell).join(",")).join("\r\n") + "\r\n";
   const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
   const link = document.createElement("a"); link.href = url; link.download = `afak-orders-${new Date().toISOString().slice(0,10)}.csv`; link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);

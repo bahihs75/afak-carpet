@@ -292,7 +292,7 @@
       <section class="detail-gallery-column" aria-label="معرض صور المنتج">
         <div class="detail-gallery-stage" id="detailGalleryStage">
           <button type="button" class="detail-gallery-arrow detail-gallery-prev" id="detailGalleryPrev" aria-label="الصورة السابقة">‹</button>
-          <div class="detail-hero protected-image"><img id="detailImg" src="" alt=""><span class="product-watermark" id="detailWatermark" aria-hidden="true"></span><button type="button" class="detail-zoom-open" id="detailZoomOpen" aria-label="تكبير الصورة">⤢</button></div>
+          <div class="detail-hero protected-image"><img id="detailImg" src="" alt=""><span class="product-watermark" id="detailWatermark" aria-hidden="true"></span></div>
           <button type="button" class="detail-gallery-arrow detail-gallery-next" id="detailGalleryNext" aria-label="الصورة التالية">›</button>
         </div>
         <div class="detail-thumbnails" id="detailThumbnails" aria-label="صور المنتج"></div>
@@ -311,12 +311,13 @@
 </div>
 <div class="image-lightbox" id="imageLightbox" role="dialog" aria-modal="true" aria-hidden="true">
   <div class="image-lightbox-toolbar">
-    <button type="button" id="lightboxZoomOut" aria-label="تصغير الصورة">−</button>
-    <span id="lightboxZoomValue">100%</span>
-    <button type="button" id="lightboxZoomIn" aria-label="تكبير الصورة">+</button>
+    <span id="lightboxImageCount">1 / 1</span>
     <button type="button" id="lightboxClose" aria-label="إغلاق">✕</button>
   </div>
+  <button type="button" class="lightbox-arrow lightbox-prev" id="lightboxPrev" aria-label="الصورة السابقة">‹</button>
   <div class="image-lightbox-stage protected-image" id="imageLightboxStage"><img id="lightboxImage" src="" alt=""><span class="product-watermark" id="lightboxWatermark" aria-hidden="true"></span></div>
+  <button type="button" class="lightbox-arrow lightbox-next" id="lightboxNext" aria-label="الصورة التالية">›</button>
+  <div class="lightbox-thumbnails" id="lightboxThumbnails" aria-label="صور المنتج"></div>
 </div>
 
 <!-- ===================== FLOATING UTILITY BUTTONS ===================== -->
@@ -913,7 +914,7 @@ function snapshotOf(p, categoryName){
     id: p.id || "", categoryId: p.categoryId, name: tf(p, "name", currentLang),
     price: Number.isFinite(Number(p.price)) ? Number(p.price) : null,
     productCategoryId: p.productCategoryId || "general",
-    insulationOptions: (SITE?.categories?.find(category => category.id === p.categoryId)?.productCategories?.find(category => category.id === (p.productCategoryId || "general"))?.insulationOptions || []).map(option => ({ id: option.id, name: tf(option, "name", currentLang), pricePerSqm: Number(option.pricePerSqm) || 0 })),
+    insulationOptions: p.feltEnabled === false ? [] : (SITE?.categories?.find(category => category.id === p.categoryId)?.productCategories?.find(category => category.id === (p.productCategoryId || "general"))?.insulationOptions || []).map(option => ({ id: option.id, name: tf(option, "name", currentLang), pricePerSqm: Number(option.pricePerSqm) || 0 })),
     size: tf(p, "size", currentLang) || p.size || "", color: p.color || "",
     secondaryColors: productColors(p), material: tf(p, "material", currentLang) || p.material || "",
     specifications: (p.specifications || []).slice(0, 30).map(item => ({ label: tf(item, "label", currentLang), value: tf(item, "value", currentLang) })),
@@ -923,19 +924,20 @@ function snapshotOf(p, categoryName){
 }
 
 let detailImages = [], detailImageIndex = 0;
-let lightboxZoom = 1;
 const imageLightbox = document.getElementById("imageLightbox");
 const lightboxImage = document.getElementById("lightboxImage");
-function renderLightboxZoom(){
-  lightboxImage.style.transform = `scale(${lightboxZoom})`;
-  document.getElementById("lightboxZoomValue").textContent = `${Math.round(lightboxZoom * 100)}%`;
-}
-function openImageLightbox(){
-  lightboxZoom = 1;
+function renderLightbox(){
   lightboxImage.src = safeImageUrl(detailImages[detailImageIndex] || "");
   lightboxImage.alt = tf(currentDetailProduct, "name", currentLang);
   document.getElementById("lightboxWatermark").innerHTML = watermarkMarkup();
-  renderLightboxZoom();
+  document.getElementById("lightboxImageCount").textContent = `${detailImageIndex + 1} / ${Math.max(1, detailImages.length)}`;
+  document.getElementById("lightboxPrev").hidden = detailImages.length < 2;
+  document.getElementById("lightboxNext").hidden = detailImages.length < 2;
+  document.getElementById("lightboxThumbnails").innerHTML = detailImages.map((url, index) => `<button type="button" class="lightbox-thumbnail${index === detailImageIndex ? " is-active" : ""}" data-index="${index}" aria-label="الصورة ${index + 1}" aria-current="${index === detailImageIndex}"><img src="${esc(safeImageUrl(url))}" loading="lazy" decoding="async" alt=""></button>`).join("");
+  document.querySelectorAll("#lightboxThumbnails button").forEach(button => button.addEventListener("click", () => { detailImageIndex = Number(button.dataset.index); renderDetailImage(); }));
+}
+function openImageLightbox(){
+  renderLightbox();
   imageLightbox.classList.add("is-open");
   imageLightbox.setAttribute("aria-hidden", "false");
   document.body.classList.add("image-lightbox-open");
@@ -945,12 +947,23 @@ function closeImageLightbox(){
   imageLightbox.setAttribute("aria-hidden", "true");
   document.body.classList.remove("image-lightbox-open");
 }
-document.getElementById("detailZoomOpen").addEventListener("click", openImageLightbox);
+document.getElementById("detailImg").addEventListener("click", openImageLightbox);
 document.getElementById("lightboxClose").addEventListener("click", closeImageLightbox);
-document.getElementById("lightboxZoomIn").addEventListener("click", () => { lightboxZoom = Math.min(3, lightboxZoom + .25); renderLightboxZoom(); });
-document.getElementById("lightboxZoomOut").addEventListener("click", () => { lightboxZoom = Math.max(.5, lightboxZoom - .25); renderLightboxZoom(); });
+document.getElementById("lightboxPrev").addEventListener("click", () => changeDetailImage(document.documentElement.dir === "rtl" ? 1 : -1));
+document.getElementById("lightboxNext").addEventListener("click", () => changeDetailImage(document.documentElement.dir === "rtl" ? -1 : 1));
 imageLightbox.addEventListener("click", event => { if (event.target === imageLightbox || event.target.id === "imageLightboxStage") closeImageLightbox(); });
-document.addEventListener("keydown", event => { if (event.key === "Escape" && imageLightbox.classList.contains("is-open")) closeImageLightbox(); });
+document.addEventListener("keydown", event => {
+  if (!imageLightbox.classList.contains("is-open")) return;
+  if (event.key === "Escape") closeImageLightbox();
+  if (event.key === "ArrowLeft") changeDetailImage(document.documentElement.dir === "rtl" ? 1 : -1);
+  if (event.key === "ArrowRight") changeDetailImage(document.documentElement.dir === "rtl" ? -1 : 1);
+});
+let lightboxTouchStartX = 0;
+imageLightbox.addEventListener("touchstart", event => { lightboxTouchStartX = event.changedTouches[0]?.clientX || 0; }, { passive: true });
+imageLightbox.addEventListener("touchend", event => {
+  const dx = (event.changedTouches[0]?.clientX || 0) - lightboxTouchStartX;
+  if (Math.abs(dx) > 45) changeDetailImage(dx > 0 ? -1 : 1);
+}, { passive: true });
 function renderDetailImage(){
   const image = detailImages[detailImageIndex] || "";
   const imageEl = document.getElementById("detailImg");
@@ -958,8 +971,7 @@ function renderDetailImage(){
   imageEl.alt = tf(currentDetailProduct, "name", currentLang);
   document.getElementById("detailWatermark").innerHTML = watermarkMarkup();
   if (imageLightbox.classList.contains("is-open")){
-    lightboxImage.src = safeImageUrl(image);
-    lightboxImage.alt = imageEl.alt;
+    renderLightbox();
   }
   document.querySelectorAll("#detailThumbnails button").forEach((button, index) => {
     button.classList.toggle("is-active", index === detailImageIndex);
