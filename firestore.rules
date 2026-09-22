@@ -34,7 +34,7 @@ service cloud.firestore {
         product is map &&
         product.keys().hasOnly([
           'id', 'name', 'categoryId', 'categoryName', 'size', 'color',
-          'material', 'sku', 'secondaryColors', 'price', 'image', 'link'
+          'material', 'sku', 'secondaryColors', 'price', 'image', 'link', 'specifications'
         ]) &&
         product.id is string && product.id.size() <= 80 &&
         product.name is string && product.name.size() <= 160 &&
@@ -47,8 +47,35 @@ service cloud.firestore {
         product.secondaryColors is list && product.secondaryColors.size() <= 12 &&
         (product.price == null || product.price is number) &&
         product.image is string && product.image.size() <= 500 &&
-        product.link is string && product.link.size() <= 500
+        product.link is string && product.link.size() <= 500 &&
+        product.specifications is list && product.specifications.size() <= 30
       );
+    }
+    function validInsulation(insulation) {
+      return insulation is map &&
+        insulation.keys().hasOnly(['enabled', 'qualityId', 'qualityName', 'pricePerSqm', 'areaSqm', 'total']) &&
+        insulation.enabled is bool &&
+        insulation.qualityId is string && insulation.qualityId.size() <= 80 &&
+        insulation.qualityName is string && insulation.qualityName.size() <= 160 &&
+        insulation.pricePerSqm is number && insulation.pricePerSqm >= 0 &&
+        insulation.areaSqm is number && insulation.areaSqm >= 0 && insulation.areaSqm <= 100000 &&
+        insulation.total is number && insulation.total >= 0;
+    }
+    function validAttribution(attribution) {
+      return attribution is map &&
+        attribution.keys().hasOnly([
+          'landingPath', 'referrer', 'utmSource', 'utmMedium', 'utmCampaign',
+          'utmTerm', 'utmContent', 'fbclid', 'ttclid'
+        ]) &&
+        attribution.landingPath is string && attribution.landingPath.size() <= 240 &&
+        attribution.referrer is string && attribution.referrer.size() <= 300 &&
+        attribution.utmSource is string && attribution.utmSource.size() <= 100 &&
+        attribution.utmMedium is string && attribution.utmMedium.size() <= 100 &&
+        attribution.utmCampaign is string && attribution.utmCampaign.size() <= 160 &&
+        attribution.utmTerm is string && attribution.utmTerm.size() <= 160 &&
+        attribution.utmContent is string && attribution.utmContent.size() <= 160 &&
+        attribution.fbclid is string && attribution.fbclid.size() <= 180 &&
+        attribution.ttclid is string && attribution.ttclid.size() <= 180;
     }
     function validAuditCreate() {
       return signedIn() &&
@@ -92,7 +119,8 @@ service cloud.firestore {
       allow create: if
         request.resource.data.keys().hasOnly([
           'name', 'phone', 'category', 'wilayaCode', 'wilayaName', 'commune',
-          'message', 'product', 'status', 'createdAt'
+          'message', 'quantity', 'deliveryAddress', 'product', 'insulation',
+          'attribution', 'status', 'createdAt'
         ]) &&
         request.resource.data.name is string &&
         request.resource.data.name.size() >= 2 && request.resource.data.name.size() <= 120 &&
@@ -103,9 +131,13 @@ service cloud.firestore {
         request.resource.data.wilayaName is string && request.resource.data.wilayaName.size() <= 100 &&
         request.resource.data.commune is string && request.resource.data.commune.size() <= 100 &&
         request.resource.data.message is string && request.resource.data.message.size() <= 1000 &&
+        request.resource.data.quantity is number && request.resource.data.quantity >= 1 && request.resource.data.quantity <= 9999 &&
+        request.resource.data.deliveryAddress is string && request.resource.data.deliveryAddress.size() <= 240 &&
         request.resource.data.status == 'new' &&
         request.resource.data.createdAt == request.time &&
-        (!request.resource.data.keys().hasAny(['product']) || validProduct(request.resource.data.product));
+        (!request.resource.data.keys().hasAny(['product']) || validProduct(request.resource.data.product)) &&
+        (!request.resource.data.keys().hasAny(['insulation']) || validInsulation(request.resource.data.insulation)) &&
+        (!request.resource.data.keys().hasAny(['attribution']) || validAttribution(request.resource.data.attribution));
 
       allow read: if canManageOrders();
       allow delete: if isAdmin();
@@ -119,4 +151,3 @@ service cloud.firestore {
 // This site uses Cloud Firestore rather than SQL. The rules above validate
 // document shapes and roles; client-side escaping still protects HTML output.
 // Deploy with: firebase deploy --only firestore:rules
-
