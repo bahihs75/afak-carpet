@@ -292,7 +292,7 @@
       <section class="detail-gallery-column" aria-label="معرض صور المنتج">
         <div class="detail-gallery-stage" id="detailGalleryStage">
           <button type="button" class="detail-gallery-arrow detail-gallery-prev" id="detailGalleryPrev" aria-label="الصورة السابقة">‹</button>
-          <div class="detail-hero"><img id="detailImg" src="" alt=""></div>
+          <div class="detail-hero protected-image"><img id="detailImg" src="" alt=""><span class="product-watermark" id="detailWatermark" aria-hidden="true"></span><button type="button" class="detail-zoom-open" id="detailZoomOpen" aria-label="تكبير الصورة">⤢</button></div>
           <button type="button" class="detail-gallery-arrow detail-gallery-next" id="detailGalleryNext" aria-label="الصورة التالية">›</button>
         </div>
         <div class="detail-thumbnails" id="detailThumbnails" aria-label="صور المنتج"></div>
@@ -308,6 +308,15 @@
       </section>
     </div>
   </div>
+</div>
+<div class="image-lightbox" id="imageLightbox" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="image-lightbox-toolbar">
+    <button type="button" id="lightboxZoomOut" aria-label="تصغير الصورة">−</button>
+    <span id="lightboxZoomValue">100%</span>
+    <button type="button" id="lightboxZoomIn" aria-label="تكبير الصورة">+</button>
+    <button type="button" id="lightboxClose" aria-label="إغلاق">✕</button>
+  </div>
+  <div class="image-lightbox-stage protected-image" id="imageLightboxStage"><img id="lightboxImage" src="" alt=""><span class="product-watermark" id="lightboxWatermark" aria-hidden="true"></span></div>
 </div>
 
 <!-- ===================== FLOATING UTILITY BUTTONS ===================== -->
@@ -332,6 +341,14 @@
         <div style="font-size:12px; color:var(--muted)" data-i18n="quote.aboutProduct">بخصوص المنتج:</div>
         <div id="quoteProductRefName" style="font-weight:700; font-size:14px"></div>
       </div>
+    </div>
+    <div class="insulation-order-fields" id="insulationOrderFields" hidden>
+      <div class="field"><label for="qInsulationEnabled">هل تريد العازل؟</label><select id="qInsulationEnabled"><option value="no">لا</option><option value="yes">نعم</option></select></div>
+      <div class="admin-grid-2" id="insulationQualityFields" hidden>
+        <div class="field"><label for="qInsulationQuality">نوعية العازل</label><select id="qInsulationQuality"></select></div>
+        <div class="field"><label for="qInsulationArea">المساحة بالمتر المربع *</label><input type="number" id="qInsulationArea" min="0.01" step="0.01"></div>
+      </div>
+      <p class="form-note" id="insulationEstimate"></p>
     </div>
     <form id="quoteForm">
       <div class="field">
@@ -665,6 +682,15 @@ function safeImageUrl(value){
     return ["http:", "https:"].includes(url.protocol) ? url.href : "";
   } catch { return ""; }
 }
+function watermarkMarkup(){
+  const settings = SITE?.settings || {};
+  if (settings.watermarkEnabled === false) return "";
+  const logo = safeImageUrl(settings.logoUrl || "");
+  const text = esc(settings.watermarkText || "AFAK CARPET");
+  return `${logo ? `<img src="${esc(logo)}" alt="">` : ""}<span>${text}</span>`;
+}
+document.addEventListener("contextmenu", event => { if (SITE?.settings?.imageProtectionEnabled !== false && event.target.closest(".protected-image")) event.preventDefault(); });
+document.addEventListener("dragstart", event => { if (SITE?.settings?.imageProtectionEnabled !== false && event.target.closest(".protected-image")) event.preventDefault(); });
 function normalizePhone(value){ return String(value ?? "").replace(/[^0-9+]/g, "").slice(0, 20); }
 function lastSubmittedOrder(){ return window.__afakLastOrder || null; }
 
@@ -682,6 +708,15 @@ function openQuote(productSnapshot){
   checkoutFields.hidden = !isHouseOrder;
   document.getElementById("qQuantity").value = "1";
   document.getElementById("qAddress").value = "";
+  const insulationFields = document.getElementById("insulationOrderFields");
+  const insulationQualityFields = document.getElementById("insulationQualityFields");
+  const insulationOptions = Array.isArray(currentProductRef?.insulationOptions) ? currentProductRef.insulationOptions : [];
+  insulationFields.hidden = !currentProductRef || !insulationOptions.length;
+  document.getElementById("qInsulationEnabled").value = "no";
+  document.getElementById("qInsulationArea").value = "";
+  document.getElementById("qInsulationQuality").innerHTML = insulationOptions.map(option => `<option value="${esc(option.id)}" data-price="${Number(option.pricePerSqm) || 0}">${esc(option.name)} — ${esc(money(option.pricePerSqm))}/م²</option>`).join("");
+  insulationQualityFields.hidden = true;
+  document.getElementById("insulationEstimate").textContent = "";
   document.getElementById("quoteSubmitButton").textContent = isHouseOrder ? (currentLang === "ar" ? "تأكيد الطلب" : "Confirm order") : (currentLang === "ar" ? "إرسال الطلب" : "Send request");
   document.getElementById("quoteNote").textContent = isHouseOrder ? (currentLang === "ar" ? "سنتواصل معكم لتأكيد التوفر والتوصيل والسعر النهائي." : "We will contact you to confirm availability, delivery, and the final price.") : (currentLang === "ar" ? "سنتواصل معكم في أقرب وقت لتأكيد التفاصيل والسعر." : "We will contact you shortly to confirm the details and price.");
   if (currentProductRef){
@@ -697,6 +732,17 @@ function openQuote(productSnapshot){
   quoteSuccess.style.display = "none";
   setQuoteModalOpen(true);
 }
+function updateInsulationEstimate(){
+  const enabled = document.getElementById("qInsulationEnabled").value === "yes";
+  const quality = document.getElementById("qInsulationQuality");
+  const area = Math.max(0, Number(document.getElementById("qInsulationArea").value) || 0);
+  const pricePerSqm = Number(quality.selectedOptions[0]?.dataset.price || 0);
+  document.getElementById("insulationQualityFields").hidden = !enabled;
+  document.getElementById("insulationEstimate").textContent = enabled && area && pricePerSqm ? `التقدير: ${area} م² × ${money(pricePerSqm)} = ${money(area * pricePerSqm)}` : "";
+}
+document.getElementById("qInsulationEnabled").addEventListener("change", updateInsulationEstimate);
+document.getElementById("qInsulationQuality").addEventListener("change", updateInsulationEstimate);
+document.getElementById("qInsulationArea").addEventListener("input", updateInsulationEstimate);
 let lastQuoteFocus = null;
 function setQuoteModalOpen(open){
   const isOpen = Boolean(open);
@@ -732,6 +778,10 @@ quoteForm.addEventListener("submit", async (e) => {
   const message = cleanMultiline(document.getElementById("qMessage").value, 1000);
   const quantity = Math.max(1, Number.parseInt(document.getElementById("qQuantity")?.value || "1", 10) || 1);
   const deliveryAddress = cleanText(document.getElementById("qAddress")?.value, 240);
+  const insulationEnabled = document.getElementById("qInsulationEnabled").value === "yes";
+  const insulationOption = currentProductRef?.insulationOptions?.find(option => option.id === document.getElementById("qInsulationQuality").value);
+  const insulationArea = Math.max(0, Number(document.getElementById("qInsulationArea").value) || 0);
+  const insulation = { enabled: insulationEnabled, qualityId: insulationOption?.id || "", qualityName: insulationOption?.name || "", pricePerSqm: Number(insulationOption?.pricePerSqm) || 0, areaSqm: insulationArea, total: insulationEnabled ? insulationArea * (Number(insulationOption?.pricePerSqm) || 0) : 0 };
   const rawProduct = currentProductRef;
   const product = rawProduct ? {
     id: cleanText(rawProduct.id, 80), name: cleanText(rawProduct.name, 160),
@@ -741,15 +791,15 @@ quoteForm.addEventListener("submit", async (e) => {
     secondaryColors: Array.isArray(rawProduct.secondaryColors) ? rawProduct.secondaryColors.map(value => cleanText(value, 60)).filter(Boolean).slice(0, 12) : [],
     price: Number.isFinite(Number(rawProduct.price)) ? Number(rawProduct.price) : null,
     image: safeImageUrl(rawProduct.image),
-    link: safePageUrl(rawProduct.link, "")
+    link: safePageUrl(rawProduct.link, ""), specifications: Array.isArray(rawProduct.specifications) ? rawProduct.specifications : []
   } : null;
-  if (name.length < 2 || phone.replace(/\D/g, "").length < 8 || !allowedCategories.has(category) || !wilayaCode || (category === "schools" && !deliveryAddress)){
+  if (name.length < 2 || phone.replace(/\D/g, "").length < 8 || !allowedCategories.has(category) || !wilayaCode || (category === "schools" && !deliveryAddress) || (insulationEnabled && (!insulationOption || insulationArea <= 0))){
     submitBtn.disabled = false;
     showQuoteError("تحقق من الاسم ورقم الهاتف والمجال والولاية.");
     return;
   }
   const payload = {
-    name, phone, category, wilayaCode, wilayaName, commune, message, quantity, deliveryAddress, product,
+    name, phone, category, wilayaCode, wilayaName, commune, message, quantity, deliveryAddress, product, insulation,
     attribution: firstTouchAttribution
   };
   try{
@@ -767,6 +817,7 @@ quoteForm.addEventListener("submit", async (e) => {
         payload.product ? `${payload.product.name} :المنتج` : null,
         payload.category === "schools" ? `${payload.quantity} :الكمية` : null,
         payload.category === "schools" ? `${payload.deliveryAddress} :عنوان التوصيل` : null,
+        payload.insulation?.enabled ? `${payload.insulation.qualityName} — ${payload.insulation.areaSqm} م² — ${money(payload.insulation.total)} :العازل` : null,
         `${catLabel} :المجال`,
         payload.message ? `${payload.message} :ملاحظات` : null
       ].filter(Boolean);
@@ -861,19 +912,55 @@ function snapshotOf(p, categoryName){
   return {
     id: p.id || "", categoryId: p.categoryId, name: tf(p, "name", currentLang),
     price: Number.isFinite(Number(p.price)) ? Number(p.price) : null,
+    productCategoryId: p.productCategoryId || "general",
+    insulationOptions: (SITE?.categories?.find(category => category.id === p.categoryId)?.productCategories?.find(category => category.id === (p.productCategoryId || "general"))?.insulationOptions || []).map(option => ({ id: option.id, name: tf(option, "name", currentLang), pricePerSqm: Number(option.pricePerSqm) || 0 })),
     size: tf(p, "size", currentLang) || p.size || "", color: p.color || "",
     secondaryColors: productColors(p), material: tf(p, "material", currentLang) || p.material || "",
+    specifications: (p.specifications || []).slice(0, 30).map(item => ({ label: tf(item, "label", currentLang), value: tf(item, "value", currentLang) })),
     sku: p.sku || "", link,
     image: safeImageUrl((p.images && p.images[0]) || ""), categoryName: categoryName || ""
   };
 }
 
 let detailImages = [], detailImageIndex = 0;
+let lightboxZoom = 1;
+const imageLightbox = document.getElementById("imageLightbox");
+const lightboxImage = document.getElementById("lightboxImage");
+function renderLightboxZoom(){
+  lightboxImage.style.transform = `scale(${lightboxZoom})`;
+  document.getElementById("lightboxZoomValue").textContent = `${Math.round(lightboxZoom * 100)}%`;
+}
+function openImageLightbox(){
+  lightboxZoom = 1;
+  lightboxImage.src = safeImageUrl(detailImages[detailImageIndex] || "");
+  lightboxImage.alt = tf(currentDetailProduct, "name", currentLang);
+  document.getElementById("lightboxWatermark").innerHTML = watermarkMarkup();
+  renderLightboxZoom();
+  imageLightbox.classList.add("is-open");
+  imageLightbox.setAttribute("aria-hidden", "false");
+  document.body.classList.add("image-lightbox-open");
+}
+function closeImageLightbox(){
+  imageLightbox.classList.remove("is-open");
+  imageLightbox.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("image-lightbox-open");
+}
+document.getElementById("detailZoomOpen").addEventListener("click", openImageLightbox);
+document.getElementById("lightboxClose").addEventListener("click", closeImageLightbox);
+document.getElementById("lightboxZoomIn").addEventListener("click", () => { lightboxZoom = Math.min(3, lightboxZoom + .25); renderLightboxZoom(); });
+document.getElementById("lightboxZoomOut").addEventListener("click", () => { lightboxZoom = Math.max(.5, lightboxZoom - .25); renderLightboxZoom(); });
+imageLightbox.addEventListener("click", event => { if (event.target === imageLightbox || event.target.id === "imageLightboxStage") closeImageLightbox(); });
+document.addEventListener("keydown", event => { if (event.key === "Escape" && imageLightbox.classList.contains("is-open")) closeImageLightbox(); });
 function renderDetailImage(){
   const image = detailImages[detailImageIndex] || "";
   const imageEl = document.getElementById("detailImg");
   imageEl.src = safeImageUrl(image);
   imageEl.alt = tf(currentDetailProduct, "name", currentLang);
+  document.getElementById("detailWatermark").innerHTML = watermarkMarkup();
+  if (imageLightbox.classList.contains("is-open")){
+    lightboxImage.src = safeImageUrl(image);
+    lightboxImage.alt = imageEl.alt;
+  }
   document.querySelectorAll("#detailThumbnails button").forEach((button, index) => {
     button.classList.toggle("is-active", index === detailImageIndex);
     button.setAttribute("aria-current", String(index === detailImageIndex));
@@ -937,6 +1024,7 @@ function openDetail(p, categoryName, categoryId){
     [L.material, tf(p,"material",currentLang) || p.material],
     [L.sku, p.sku]
   ];
+  (p.specifications || []).forEach(spec => rows.push([tf(spec, "label", currentLang), tf(spec, "value", currentLang)]));
   rows.forEach(([k,v]) => {
     if (!v) return;
     const div = document.createElement("div");
@@ -1173,8 +1261,19 @@ function renderSwatches(containerId, sectionKey, show, onChange){
   if (!show || !SITE.settings.colorPalette || !SITE.settings.colorPalette.length){
     wrap.style.display = "none"; wrap.innerHTML = ""; return;
   }
+  const category = SITE.categories?.find(item => item.id === sectionKey);
+  const selectedCategoryId = productCategoryFilterState[sectionKey];
+  const selectedCategory = category?.productCategories?.find(item => item.id === selectedCategoryId);
+  const categoryColorIds = selectedCategoryId
+    ? (selectedCategory?.colorIds || [])
+    : (category?.productCategories || []).flatMap(item => item.colorIds || []);
+  const productColorIds = SITE.products.filter(product => product.categoryId === sectionKey && (!selectedCategoryId || product.productCategoryId === selectedCategoryId)).flatMap(productColors);
+  const availableIds = new Set(categoryColorIds.length ? categoryColorIds : productColorIds);
+  if (colorFilterState[sectionKey] && availableIds.size && !availableIds.has(colorFilterState[sectionKey])) colorFilterState[sectionKey] = null;
+  const palette = availableIds.size ? SITE.settings.colorPalette.filter(color => availableIds.has(color.id)) : SITE.settings.colorPalette;
+  if (!palette.length){ wrap.style.display = "none"; wrap.innerHTML = ""; return; }
   wrap.style.display = "flex";
-  wrap.innerHTML = SITE.settings.colorPalette.map(c => `
+  wrap.innerHTML = palette.map(c => `
     <button type="button" class="color-swatch${colorFilterState[sectionKey] === c.id ? ' is-active':''}"
       style="--sw-color:${esc(c.hex)}" data-color="${esc(c.id)}" aria-pressed="${colorFilterState[sectionKey] === c.id}" title="${esc(tf(c,'name',currentLang))}">
       <span class="sr-only">${esc(tf(c,'name',currentLang))}</span>
@@ -1211,8 +1310,9 @@ function productCardHTML(p){
 
   return `
     <div class="product-card ${cardMode}" data-name="${esc(name)}">
-      <div class="img">
+      <div class="img protected-image">
         ${imagesHTML}
+        <span class="product-watermark" aria-hidden="true">${watermarkMarkup()}</span>
       </div>
       <div class="info">
         <span class="name">${esc(name)}</span>

@@ -31,6 +31,9 @@ export const DEFAULT_SITE = {
     cloudflareR2UploadUrl: "",
     cloudflareR2PublicUrl: "",
     cloudflareR2UploadToken: "",
+    imageProtectionEnabled: true,
+    watermarkEnabled: true,
+    watermarkText: "AFAK CARPET",
     webpQuality: 0.82,
     phone: "",
     whatsapp: "",
@@ -83,13 +86,13 @@ export const DEFAULT_SITE = {
     ]
   },
   categories: [
-    { id: "mosques", order: 1, name: "المساجد", nameEn: "", image: "", desc: "سجاد المحراب والمصلى بمقاسات دقيقة ومطابقة للمساحة.", descEn: "", showColorFilter: true, productCategories: [{ id: "general", name: "عام", nameEn: "General" }] },
-    { id: "hotels", order: 2, name: "الفنادق", nameEn: "", image: "", desc: "سجاد للردهات والغرف والقاعات بلمسة فندقية راقية.", descEn: "", showColorFilter: true, productCategories: [{ id: "general", name: "عام", nameEn: "General" }] },
-    { id: "schools", order: 3, name: "المنازل", nameEn: "House Rugs", image: "", desc: "سجاد أنيق ومريح للصالونات وغرف النوم ومختلف فضاءات المنزل.", descEn: "Elegant, comfortable rugs for living rooms, bedrooms, and every home space.", showColorFilter: true, productCategories: [{ id: "general", name: "عام", nameEn: "General" }] },
-    { id: "halls", order: 4, name: "قاعات المؤتمرات والمساحات الكبرى", nameEn: "", image: "", desc: "تغطية شاملة للمساحات الواسعة والقاعات الرسمية.", descEn: "", showColorFilter: true, productCategories: [{ id: "general", name: "عام", nameEn: "General" }] }
+    { id: "mosques", order: 1, name: "المساجد", nameEn: "", image: "", desc: "سجاد المحراب والمصلى بمقاسات دقيقة ومطابقة للمساحة.", descEn: "", showColorFilter: true, productCategories: [{ id: "general", name: "عام", nameEn: "General", colorIds: [], insulationOptions: [] }] },
+    { id: "hotels", order: 2, name: "الفنادق", nameEn: "", image: "", desc: "سجاد للردهات والغرف والقاعات بلمسة فندقية راقية.", descEn: "", showColorFilter: true, productCategories: [{ id: "general", name: "عام", nameEn: "General", colorIds: [], insulationOptions: [] }] },
+    { id: "schools", order: 3, name: "المنازل", nameEn: "House Rugs", image: "", desc: "سجاد أنيق ومريح للصالونات وغرف النوم ومختلف فضاءات المنزل.", descEn: "Elegant, comfortable rugs for living rooms, bedrooms, and every home space.", showColorFilter: false, productCategories: [{ id: "general", name: "عام", nameEn: "General", colorIds: [], insulationOptions: [] }] },
+    { id: "halls", order: 4, name: "قاعات المؤتمرات والمساحات الكبرى", nameEn: "", image: "", desc: "تغطية شاملة للمساحات الواسعة والقاعات الرسمية.", descEn: "", showColorFilter: true, productCategories: [{ id: "general", name: "عام", nameEn: "General", colorIds: [], insulationOptions: [] }] }
   ],
   // product: { id, categoryId, name, nameEn, price, size, sizeEn, color,
-  //   secondaryColors: [], material, materialEn, sku, desc, descEn, images:[],
+  //   secondaryColors: [], material, materialEn, sku, desc, descEn, specifications:[], images:[],
   //   productCategoryId, hoverImage, featured, visible, status, publishAt, unpublishAt, offer, order }
   products: [],
   about: {
@@ -135,14 +138,25 @@ function normalizeProductCategories(site){
     }
     category.productCategories = category.productCategories
       .filter(item => item && item.id && item.name)
-      .map(item => ({ id: String(item.id), name: String(item.name), nameEn: String(item.nameEn || "") }));
-    if (!category.productCategories.length) category.productCategories = [{ id: "general", name: "عام", nameEn: "General" }];
+      .map(item => ({
+        id: String(item.id), name: String(item.name), nameEn: String(item.nameEn || ""),
+        colorIds: Array.isArray(item.colorIds) ? item.colorIds.map(String) : [],
+        insulationOptions: Array.isArray(item.insulationOptions) ? item.insulationOptions.filter(option => option && option.id && option.name).map(option => ({
+          id: String(option.id), name: String(option.name), nameEn: String(option.nameEn || ""), pricePerSqm: Math.max(0, Number(option.pricePerSqm) || 0)
+        })) : []
+      }));
+    if (!category.productCategories.length) category.productCategories = [{ id: "general", name: "عام", nameEn: "General", colorIds: [], insulationOptions: [] }];
+    if (category.id === "schools") category.showColorFilter = false;
   });
   (site.products || []).forEach(product => {
     if (!categoryIds.has(product.categoryId)) product.categoryId = "mosques";
     const category = site.categories.find(item => item.id === product.categoryId);
     const validIds = new Set(category?.productCategories?.map(item => item.id) || ["general"]);
     if (!validIds.has(product.productCategoryId)) product.productCategoryId = category?.productCategories?.[0]?.id || "general";
+    if (!Array.isArray(product.specifications)) product.specifications = [];
+    product.specifications = product.specifications.filter(item => item && (item.label || item.value)).map(item => ({
+      label: String(item.label || ""), labelEn: String(item.labelEn || ""), value: String(item.value || ""), valueEn: String(item.valueEn || "")
+    }));
   });
   return site;
 }
@@ -255,6 +269,11 @@ export async function submitOrder(order){
     message: String(order.message ?? "").replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "").trim().slice(0, 1000),
     quantity: Math.max(1, Math.min(9999, Number.parseInt(order.quantity, 10) || 1)),
     deliveryAddress: clean(order.deliveryAddress, 240),
+    insulation: order.insulation && typeof order.insulation === "object" ? {
+      enabled: Boolean(order.insulation.enabled), qualityId: clean(order.insulation.qualityId, 80),
+      qualityName: clean(order.insulation.qualityName, 160), pricePerSqm: Math.max(0, Number(order.insulation.pricePerSqm) || 0),
+      areaSqm: Math.max(0, Number(order.insulation.areaSqm) || 0), total: Math.max(0, Number(order.insulation.total) || 0)
+    } : { enabled: false, qualityId: "", qualityName: "", pricePerSqm: 0, areaSqm: 0, total: 0 },
     product: order.product && typeof order.product === "object" ? {
       id: clean(order.product.id, 80), name: clean(order.product.name, 160),
       categoryId: clean(order.product.categoryId, 20), categoryName: clean(order.product.categoryName, 120),
@@ -265,7 +284,8 @@ export async function submitOrder(order){
         : [],
       price: Number.isFinite(Number(order.product.price)) ? Number(order.product.price) : null,
       image: /^https?:\/\//i.test(String(order.product.image || "")) ? String(order.product.image).slice(0, 500) : "",
-      link: /^https?:\/\//i.test(String(order.product.link || "")) ? String(order.product.link).slice(0, 500) : ""
+      link: /^https?:\/\//i.test(String(order.product.link || "")) ? String(order.product.link).slice(0, 500) : "",
+      specifications: Array.isArray(order.product.specifications) ? order.product.specifications.slice(0, 30).map(item => ({ label: clean(item.label, 100), value: clean(item.value, 240) })) : []
     } : null,
     attribution: order.attribution && typeof order.attribution === "object" ? {
       landingPath: clean(order.attribution.landingPath, 240), referrer: clean(order.attribution.referrer, 300),

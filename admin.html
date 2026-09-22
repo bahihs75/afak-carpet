@@ -126,6 +126,9 @@
           <div class="field"><label>رابط Worker لرفع R2</label><input type="url" id="setR2UploadUrl" placeholder="https://images.example.workers.dev/upload"></div>
           <div class="field"><label>الرابط العام لـ R2 (اختياري)</label><input type="url" id="setR2PublicUrl" placeholder="https://cdn.example.com"></div>
           <div class="field"><label>رمز Worker (اختياري)</label><input type="password" id="setR2UploadToken" autocomplete="new-password"></div>
+          <div class="field"><label><input type="checkbox" id="setWatermarkEnabled"> إظهار العلامة المائية على صور المنتجات</label></div>
+          <div class="field"><label>نص العلامة المائية</label><input type="text" id="setWatermarkText" maxlength="80" placeholder="AFAK CARPET"></div>
+          <div class="field"><label><input type="checkbox" id="setImageProtectionEnabled"> تفعيل حماية العرض (منع السحب والزر الأيمن)</label></div>
         </div>
         <p class="form-note">كل الصور غير SVG تُحوَّل إلى WebP داخل المتصفح بطريقة مشابهة لـ Squoosh ثم تُرفع إلى المكان الذي تختاره. لا تضع مفتاح R2 السري هنا؛ استخدم رمزًا محدودًا أو حماية Worker.</p>
       </div>
@@ -239,8 +242,13 @@
           <div class="field"><label>الوصف</label><textarea id="pDesc"></textarea></div>
           <div class="field"><label>Description (EN — اختياري)</label><textarea id="pDescEn"></textarea></div>
         </div>
+        <div class="field">
+          <label>خصائص إضافية تظهر في جدول المنتج</label>
+          <div id="pSpecificationsEditor" class="specifications-editor"></div>
+          <button type="button" class="btn btn-outline mt-2" id="addSpecificationBtn">+ إضافة خاصية</button>
+        </div>
         <div class="admin-grid-2">
-          <div class="field"><label><input type="checkbox" id="pFeatured"> منتج مميز (يظهر في سلايدر المساجد)</label></div>
+          <div class="field"><label><input type="checkbox" id="pFeatured"> منتج مميز</label></div>
           <div class="field"><label><input type="checkbox" id="pVisible" checked> ظاهر في الموقع (ألغِ التحديد لإخفائه مؤقتًا)</label></div>
         </div>
         <div class="admin-grid-2">
@@ -986,6 +994,9 @@ function renderSettings(){
   document.getElementById("setR2UploadUrl").value = s.cloudflareR2UploadUrl || "";
   document.getElementById("setR2PublicUrl").value = s.cloudflareR2PublicUrl || "";
   document.getElementById("setR2UploadToken").value = localStorage.getItem("afak-r2-upload-token") || "";
+  document.getElementById("setWatermarkEnabled").checked = s.watermarkEnabled !== false;
+  document.getElementById("setWatermarkText").value = s.watermarkText || "AFAK CARPET";
+  document.getElementById("setImageProtectionEnabled").checked = s.imageProtectionEnabled !== false;
   document.getElementById("setCfToken").value = s.cfAnalyticsToken || "";
   document.getElementById("setMetaPixel").value = s.metaPixelId || "";
   document.getElementById("setTiktokPixel").value = s.tiktokPixelId || "";
@@ -1198,6 +1209,9 @@ document.getElementById("saveSettingsBtn").addEventListener("click", async () =>
     webpQuality: Math.min(1, Math.max(0.1, Number(document.getElementById("setWebpQuality").value) || 0.82)),
     cloudflareR2UploadUrl: document.getElementById("setR2UploadUrl").value.trim().slice(0, 500),
     cloudflareR2PublicUrl: document.getElementById("setR2PublicUrl").value.trim().slice(0, 500),
+    watermarkEnabled: document.getElementById("setWatermarkEnabled").checked,
+    watermarkText: document.getElementById("setWatermarkText").value.trim().slice(0, 80) || "AFAK CARPET",
+    imageProtectionEnabled: document.getElementById("setImageProtectionEnabled").checked,
     cfAnalyticsToken: document.getElementById("setCfToken").value.trim(),
     metaPixelId: document.getElementById("setMetaPixel").value.trim(),
     tiktokPixelId: document.getElementById("setTiktokPixel").value.trim(),
@@ -1644,7 +1658,7 @@ function renderCategoriesTab(){
             <label><input type="checkbox" class="c-visible" ${isVisible ? "checked" : ""}> ظهور القسم بالكامل</label>
           </div>
           <div class="field">
-            <label><input type="checkbox" class="c-show-filter" ${cat.showColorFilter !== false ? "checked" : ""}> تفعيل فلتر الألوان</label>
+            <label><input type="checkbox" class="c-show-filter" ${cat.showColorFilter !== false && cat.id !== "schools" ? "checked" : ""} ${cat.id === "schools" ? "disabled" : ""}> تفعيل فلتر الألوان${cat.id === "schools" ? " (غير متاح للمنازل)" : ""}</label>
           </div>
           <div class="field">
             <label><input type="checkbox" class="c-head-visible" ${headVisible ? "checked" : ""}> ظهور العنوان والوصف</label>
@@ -1655,6 +1669,7 @@ function renderCategoriesTab(){
         </div>
       `;
     const categoryList = row.querySelector(".product-category-admin-list");
+    let syncCategoryRows = () => {};
     const renderProductCategoryAdmin = () => {
       const items = Array.isArray(cat.productCategories) && cat.productCategories.length ? cat.productCategories : [{ id: "general", name: "عام", nameEn: "General" }];
       cat.productCategories = items;
@@ -1663,11 +1678,35 @@ function renderCategoriesTab(){
         return `<div class="product-category-admin-row" data-id="${esc(item.id)}">
           <input class="pc-name" value="${esc(item.name)}" placeholder="اسم التصنيف">
           <input class="pc-name-en" value="${esc(item.nameEn || "")}" placeholder="Name (EN)">
+          <div class="pc-colors"><small>ألوان الفئة:</small>${(SITE.settings.colorPalette || []).map(color => `<label><input type="checkbox" class="pc-color" value="${esc(color.id)}" ${(item.colorIds || []).includes(color.id) ? "checked" : ""}>${esc(color.name)}</label>`).join("")}</div>
+          <div class="pc-insulation"><small>جودات العازل وسعر المتر المربع:</small>${(item.insulationOptions || []).map(option => `<div class="pc-insulation-row" data-insulation-id="${esc(option.id)}"><input class="ins-name" value="${esc(option.name)}" placeholder="الجودة"><input class="ins-name-en" value="${esc(option.nameEn || "")}" placeholder="Quality (EN)"><input class="ins-price" type="number" min="0" step="0.01" value="${esc(option.pricePerSqm || 0)}" placeholder="دج/م²"><button type="button" class="danger ins-delete">حذف</button></div>`).join("")}<button type="button" class="btn btn-outline add-insulation">+ إضافة جودة عازل</button></div>
           <button type="button" class="danger pc-delete" ${used ? "disabled title=\"لا يمكن حذف تصنيف مستخدم\"" : ""}>حذف</button>
           ${used ? '<small class="form-note">مستخدم من منتجات</small>' : ""}
         </div>`;
       }).join("");
+      syncCategoryRows = () => {
+        cat.productCategories = [...categoryList.querySelectorAll(".product-category-admin-row")].map(itemRow => ({
+          id: itemRow.dataset.id, name: itemRow.querySelector(".pc-name").value.trim() || "عام", nameEn: itemRow.querySelector(".pc-name-en").value.trim(),
+          colorIds: [...itemRow.querySelectorAll(".pc-color:checked")].map(input => input.value),
+          insulationOptions: [...itemRow.querySelectorAll(".pc-insulation-row")].map(optionRow => ({ id: optionRow.dataset.insulationId, name: optionRow.querySelector(".ins-name").value.trim() || "جودة", nameEn: optionRow.querySelector(".ins-name-en").value.trim(), pricePerSqm: Math.max(0, Number(optionRow.querySelector(".ins-price").value) || 0) }))
+        }));
+      };
+      categoryList.querySelectorAll(".add-insulation").forEach(button => button.addEventListener("click", () => {
+        syncCategoryRows();
+        const itemRow = button.closest(".product-category-admin-row");
+        const item = cat.productCategories.find(entry => entry.id === itemRow.dataset.id);
+        item.insulationOptions.push({ id: "ins-" + uid(), name: "جودة جديدة", nameEn: "New quality", pricePerSqm: 0 });
+        renderProductCategoryAdmin();
+      }));
+      categoryList.querySelectorAll(".ins-delete").forEach(button => button.addEventListener("click", () => {
+        syncCategoryRows();
+        const row = button.closest(".product-category-admin-row"), optionRow = button.closest(".pc-insulation-row");
+        const item = cat.productCategories.find(entry => entry.id === row.dataset.id);
+        item.insulationOptions = item.insulationOptions.filter(option => option.id !== optionRow.dataset.insulationId);
+        renderProductCategoryAdmin();
+      }));
       categoryList.querySelectorAll(".pc-delete").forEach(button => button.addEventListener("click", () => {
+        syncCategoryRows();
         const itemRow = button.closest(".product-category-admin-row");
         const item = cat.productCategories.find(entry => entry.id === itemRow.dataset.id);
         if (SITE.products.some(product => product.categoryId === cat.id && product.productCategoryId === item?.id)){
@@ -1680,12 +1719,8 @@ function renderCategoriesTab(){
     };
     renderProductCategoryAdmin();
     row.querySelector(".add-product-category").addEventListener("click", () => {
-      cat.productCategories = [...categoryList.querySelectorAll(".product-category-admin-row")].map(itemRow => ({
-        id: itemRow.dataset.id,
-        name: itemRow.querySelector(".pc-name").value.trim() || "عام",
-        nameEn: itemRow.querySelector(".pc-name-en").value.trim()
-      }));
-      cat.productCategories.push({ id: "pc-" + uid(), name: "تصنيف جديد", nameEn: "New category" });
+      syncCategoryRows();
+      cat.productCategories.push({ id: "pc-" + uid(), name: "تصنيف جديد", nameEn: "New category", colorIds: [], insulationOptions: [] });
       renderProductCategoryAdmin();
     });
     row.querySelector(".c-file").addEventListener("change", async (e) => {
@@ -1721,11 +1756,18 @@ document.getElementById("saveCategoriesBtn").addEventListener("click", async () 
     cat.nameEn = row.querySelector(".c-name-en").value.trim();
     cat.desc = row.querySelector(".c-desc").value.trim();
     cat.descEn = row.querySelector(".c-desc-en").value.trim();
-    cat.showColorFilter = row.querySelector(".c-show-filter").checked;
+    cat.showColorFilter = cat.id === "schools" ? false : row.querySelector(".c-show-filter").checked;
     cat.productCategories = [...row.querySelectorAll(".product-category-admin-row")].map(itemRow => ({
       id: itemRow.dataset.id,
       name: itemRow.querySelector(".pc-name").value.trim() || "عام",
-      nameEn: itemRow.querySelector(".pc-name-en").value.trim()
+      nameEn: itemRow.querySelector(".pc-name-en").value.trim(),
+      colorIds: [...itemRow.querySelectorAll(".pc-color:checked")].map(input => input.value),
+      insulationOptions: [...itemRow.querySelectorAll(".pc-insulation-row")].map(optionRow => ({
+        id: optionRow.dataset.insulationId,
+        name: optionRow.querySelector(".ins-name").value.trim() || "جودة",
+        nameEn: optionRow.querySelector(".ins-name-en").value.trim(),
+        pricePerSqm: Math.max(0, Number(optionRow.querySelector(".ins-price").value) || 0)
+      }))
     }));
     if (!cat.productCategories.length) cat.productCategories = [{ id: "general", name: "عام", nameEn: "General" }];
     
@@ -1849,6 +1891,29 @@ function renderProductCategoryOptions(selected = ""){
   select.value = options.some(item => item.id === selected) ? selected : options[0].id;
 }
 document.getElementById("pCategory").addEventListener("change", () => renderProductCategoryOptions());
+let pendingSpecifications = [];
+function renderSpecifications(){
+  const wrap = document.getElementById("pSpecificationsEditor");
+  wrap.innerHTML = pendingSpecifications.map((spec, index) => `<div class="specification-admin-row" data-index="${index}">
+    <input class="spec-label" value="${esc(spec.label || "")}" placeholder="اسم الخاصية">
+    <input class="spec-label-en" value="${esc(spec.labelEn || "")}" placeholder="Name (EN)">
+    <input class="spec-value" value="${esc(spec.value || "")}" placeholder="القيمة">
+    <input class="spec-value-en" value="${esc(spec.valueEn || "")}" placeholder="Value (EN)">
+    <button type="button" class="danger spec-remove">حذف</button>
+  </div>`).join("");
+  wrap.querySelectorAll(".spec-remove").forEach(button => button.addEventListener("click", () => {
+    pendingSpecifications.splice(Number(button.closest(".specification-admin-row").dataset.index), 1);
+    renderSpecifications();
+  }));
+}
+function readSpecifications(){
+  pendingSpecifications = [...document.querySelectorAll("#pSpecificationsEditor .specification-admin-row")].map(row => ({
+    label: row.querySelector(".spec-label").value.trim(), labelEn: row.querySelector(".spec-label-en").value.trim(),
+    value: row.querySelector(".spec-value").value.trim(), valueEn: row.querySelector(".spec-value-en").value.trim()
+  })).filter(spec => spec.label || spec.value);
+  return pendingSpecifications;
+}
+document.getElementById("addSpecificationBtn").addEventListener("click", () => { readSpecifications(); pendingSpecifications.push({ label: "", labelEn: "", value: "", valueEn: "" }); renderSpecifications(); });
 function resetProductForm(){
   ["pName","pNameEn","pSize","pSizeEn","pColor","pMaterial","pMaterialEn","pSku","pPrice","pDesc","pDescEn","pPublishAt","pUnpublishAt","pOfferLabel","pOfferPrice","pOfferStartsAt","pOfferEndsAt"].forEach(id => document.getElementById(id).value = "");
   setCheckedColors([]);
@@ -1857,6 +1922,8 @@ function resetProductForm(){
   document.getElementById("pStatus").value = "draft";
   document.getElementById("pOfferEnabled").checked = false;
   renderProductCategoryOptions("general");
+  pendingSpecifications = [];
+  renderSpecifications();
   document.getElementById("pEditId").value = "";
   document.getElementById("cancelEditBtn").style.display = "none";
   document.getElementById("saveProductBtn").textContent = "إضافة المنتج";
@@ -1884,6 +1951,7 @@ document.getElementById("saveProductBtn").addEventListener("click", async () => 
     secondaryColors: getCheckedColors(),
     material: document.getElementById("pMaterial").value.trim(),
     materialEn: document.getElementById("pMaterialEn").value.trim(),
+    specifications: readSpecifications(),
     price: document.getElementById("pPrice").value.trim(),
     desc: document.getElementById("pDesc").value.trim(),
     descEn: document.getElementById("pDescEn").value.trim(),
@@ -1954,6 +2022,8 @@ function renderProductsTab(){
       setCheckedColors(p.secondaryColors || (p.secondaryColor ? [p.secondaryColor] : []));
       document.getElementById("pMaterial").value = p.material || "";
       document.getElementById("pMaterialEn").value = p.materialEn || "";
+      pendingSpecifications = Array.isArray(p.specifications) ? p.specifications.map(spec => ({ ...spec })) : [];
+      renderSpecifications();
       document.getElementById("pPrice").value = p.price || "";
       document.getElementById("pDesc").value = p.desc || "";
       document.getElementById("pDescEn").value = p.descEn || "";
@@ -2332,7 +2402,7 @@ function getFilteredOrderRecords(){
   const status = document.getElementById("ordersStatusFilter")?.value || "";
   return ORDER_RECORDS.filter(({ data: o }) => {
     const normalized = normalizedOrderStatus(o.status);
-    const text = [o.name, o.phone, o.wilayaName, o.commune, o.deliveryAddress, o.quantity, o.message, o.product?.name, o.product?.sku, o.product?.material, o.attribution?.utmSource, o.attribution?.utmMedium, o.attribution?.utmCampaign].filter(Boolean).join(" ").toLowerCase();
+    const text = [o.name, o.phone, o.wilayaName, o.commune, o.deliveryAddress, o.quantity, o.message, o.product?.name, o.product?.sku, o.product?.material, o.insulation?.qualityName, o.attribution?.utmSource, o.attribution?.utmMedium, o.attribution?.utmCampaign].filter(Boolean).join(" ").toLowerCase();
     const statusMatch = !status || normalized === status || (status === "pending" && o.status === "new");
     return statusMatch && (!search || text.includes(search));
   });
@@ -2348,10 +2418,11 @@ function renderOrdersView(){
     const date = o.createdAt?.toDate ? o.createdAt.toDate().toLocaleString("ar-DZ") : "—";
     const prod = o.product;
     const prodMeta = prod ? [prod.sku && `SKU: ${esc(prod.sku)}`, prod.size && esc(prod.size), prod.color && esc(prod.color), prod.material && esc(prod.material)].filter(Boolean).join(" · ") : "";
+    const insulationCell = o.insulation?.enabled ? `<div style="font-size:11px;color:var(--navy)">عازل: ${esc(o.insulation.qualityName || "نعم")} · ${esc(o.insulation.areaSqm || 0)} م² · ${esc(money(o.insulation.total || 0))}</div>` : "";
     const prodCell = prod
       ? `<div style="display:flex; align-items:center; gap:6px">
            ${prod.image ? `<img src="${esc(prod.image)}" alt="" style="width:32px;height:32px;object-fit:cover;border:1px solid var(--hairline)">` : ""}
-           <div><div style="font-weight:700">${esc(prod.name||"")}</div><div style="font-size:11px; color:var(--muted)">${esc(money(prod.price))} ${prodMeta ? "· " + prodMeta : ""}</div></div>
+           <div><div style="font-weight:700">${esc(prod.name||"")}</div><div style="font-size:11px; color:var(--muted)">${esc(money(prod.price))} ${prodMeta ? "· " + prodMeta : ""}</div>${insulationCell}</div>
          </div>`
       : '<span class="pill muted">بدون منتج محدد</span>';
     const safePhone = String(o.phone || "").replace(/[^0-9+]/g, "");
@@ -2377,10 +2448,10 @@ function renderOrdersView(){
 function csvCell(value){ return `"${String(value ?? "").replace(/"/g, '""').replace(/[\r\n]+/g, " ")}"`; }
 function exportOrdersCsv(){
   const records = getFilteredOrderRecords();
-  const headers = ["Name", "Phone", "Category", "Wilaya", "Commune", "Product", "Quantity", "Delivery Address", "SKU", "Size", "Color", "Material", "UTM Source", "UTM Medium", "UTM Campaign", "Status", "Message", "Created At"];
+  const headers = ["Name", "Phone", "Category", "Wilaya", "Commune", "Product", "Quantity", "Delivery Address", "SKU", "Size", "Color", "Material", "Insulation", "Insulation Area Sqm", "Insulation Total", "UTM Source", "UTM Medium", "UTM Campaign", "Status", "Message", "Created At"];
   const rows = records.map(({ data: o }) => [
     o.name, o.phone, o.category, o.wilayaName, o.commune, o.product?.name, o.quantity, o.deliveryAddress, o.product?.sku, o.product?.size,
-    o.product?.color, o.product?.material, o.attribution?.utmSource, o.attribution?.utmMedium, o.attribution?.utmCampaign,
+    o.product?.color, o.product?.material, o.insulation?.qualityName || "", o.insulation?.areaSqm || "", o.insulation?.total || "", o.attribution?.utmSource, o.attribution?.utmMedium, o.attribution?.utmCampaign,
     normalizedOrderStatus(o.status), o.message, o.createdAt?.toDate ? o.createdAt.toDate().toISOString() : ""
   ]);
   const csv = "\\ufeff" + [headers, ...rows].map(row => row.map(csvCell).join(",")).join("\\r\\n");

@@ -62,8 +62,8 @@ The panel supports:
 |---|---|
 | Site settings | Brand name, logo, contact details, social links, colors, visibility switches, and floating navigation. |
 | Hero slides | Bilingual headings, supporting text, primary and secondary actions, destination links, and images. |
-| Categories | Sector names, descriptions, images, ordering, and color-filter visibility. |
-| Products | Names, translated content, specifications, prices, colors, materials, images, visibility, featuring, and ordering. |
+| Categories | Sector names, descriptions, images, ordering, section visibility, color-filter visibility, category colors, and insulation qualities/prices. |
+| Products | Names, translated content, dynamic specifications, prices, colors, materials, images, visibility, featuring, and ordering. |
 | Projects | Completed-installation gallery items with captions and ordering. |
 | Trust content | Statistics, testimonials, certifications, and independent visibility controls. |
 | Media library | Reusable uploaded images and media selection. |
@@ -82,7 +82,7 @@ AFAK CARPET is intentionally lightweight. It does not require a bundler, a serve
 | Client logic | `index.html`, `admin.html`, and the shared `app.js` data layer. |
 | Data | Cloud Firestore for site content and quote requests [1] [2]. |
 | Authentication | Firebase Authentication for protected admin access [3]. |
-| Image hosting | Admin-selectable ImgBB or Cloudflare R2 upload, with browser-side WebP conversion. |
+| Image hosting | Admin-selectable ImgBB or Cloudflare R2 upload, with browser-side WebP conversion, watermark overlays, and protected Worker delivery. |
 | Administrative data | `algeria-data.js`, containing Arabic wilaya and commune data for the current 58-wilaya structure. |
 | Deployment model | Static hosting, compatible with Cloudflare Pages or any equivalent static host. |
 
@@ -162,9 +162,9 @@ The same URLs will work in the browser.
 
 The admin panel now lets you choose **ImgBB** or **Cloudflare R2** for new uploads. PNG, JPG, JPEG, and other browser-decodable raster images are converted to WebP in the browser before upload, preserving the aspect ratio and using the configured quality value. SVG files remain SVG so that logos and icons do not lose their vector properties. HEIC support depends on the browser's native decoder; if the browser cannot decode HEIC, convert it before uploading.
 
-For Cloudflare R2, deploy [`cloudflare-r2-upload-worker.js`](./cloudflare-r2-upload-worker.js) as a Worker and bind an R2 bucket named `IMAGES`. Configure the Worker variables `PUBLIC_BASE_URL` (the public custom domain or R2 delivery URL) and `UPLOAD_TOKEN` (optional but recommended). The Worker must be deployed with CORS enabled for the site's domain; replace the wildcard origin with the production domain before launch. Paste the Worker URL into **Settings → Image storage → R2 upload Worker URL**, optionally enter the public base URL and the same upload token, then save settings. R2 credentials and S3 secret keys must never be placed in the browser or Firestore.
+For Cloudflare R2, deploy [`cloudflare-r2-upload-worker.js`](./cloudflare-r2-upload-worker.js) as a Worker and bind an R2 bucket named `IMAGES`. Configure `PUBLIC_BASE_URL` to the Worker URL, keep the bucket private, and set a strong `UPLOAD_TOKEN` secret. The Worker now serves stored objects through a controlled GET response with safe content headers, while POST remains upload-authorized. Replace the wildcard CORS origin with the production domain before launch. Paste the Worker URL into **Settings → Image storage → R2 upload Worker URL**, then save settings. Disable the R2 Public Development URL after testing; R2 credentials and S3 secret keys must never be placed in the browser or Firestore.
 
-The included Worker is intentionally small and stores only the uploaded object; configure R2 lifecycle rules, a custom public domain or signed delivery layer, rate limits, and an allowlist for the production origin in Cloudflare before using it publicly.
+The included Worker stores and delivers objects but cannot make a browser-displayed image impossible to copy. The site therefore combines Worker delivery headers, no-referrer delivery, visible logo-plus-text watermarks, disabled drag/context-menu actions, and WebP derivatives. Configure R2 lifecycle rules, rate limits, and an allowlist for the production origin in Cloudflare before using it publicly.
 
 ### Firebase configuration
 
@@ -189,7 +189,7 @@ firebase deploy --only firestore:rules
 
 The quote form is designed to collect enough information for a meaningful first contact without turning the visitor into a long registration flow. It validates the name, phone number, category, wilaya, and message length before submitting a bounded order payload.
 
-A request may optionally include a product snapshot. After creation, the order begins with the `new` storage value and can be moved from the admin panel through the Arabic-labelled workflow of pending, processing, contacted, completed, or cancelled.
+A request may optionally include a product snapshot. For products whose category has insulation qualities, the visitor may choose **نعم**, select a quality, and enter the area in square metres; the selected quality, unit price, area, and estimated total are stored in the order. After creation, the order begins with the `new` storage value and can be moved from the admin panel through the Arabic-labelled workflow of pending, processing, contacted, completed, or cancelled.
 
 WhatsApp links are generated only from normalized phone values. User-controlled text is escaped before being inserted into rendered markup, and public URLs are restricted to safe page anchors or HTTP(S) destinations.
 
