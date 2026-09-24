@@ -2,7 +2,7 @@ import { getSiteOnce, esc, isProductPublic } from "./app.js";
 
 const root = document.querySelector("[data-section-catalog]");
 const sectionId = root?.dataset.section || "mosques";
-const lang = document.documentElement.lang === "fr" ? "fr" : "ar";
+const lang = ["ar", "fr", "en"].includes(document.documentElement.lang) ? document.documentElement.lang : "ar";
 const mainPath = root?.dataset.mainPath || "../../index.html";
 const sectionHash = root?.dataset.sectionHash || sectionId;
 const copy = {
@@ -11,6 +11,9 @@ const copy = {
   },
   fr: {
     filterLabel: "Filtrer les produits", all: "Tous les produits", allColors: "Toutes les couleurs", category: "Catégorie", color: "Couleur", products: "Produits de la section", empty: "Aucun produit publié dans cette section pour le moment.", loading: "Chargement du catalogue…", error: "Impossible de charger le catalogue. Actualisez la page.", quote: "Demander un devis", view: "Voir le catalogue complet", home: "Accueil", contact: "Nous contacter", price: "DA", noDesc: "Produit disponible parmi les solutions AFAK CARPET.", colors: { blue: "Bleu", green: "Vert", red: "Rouge", gray: "Gris", beige: "Beige", brown: "Marron", black: "Noir", white: "Blanc" }
+  },
+  en: {
+    filterLabel: "Filter products", all: "All products", allColors: "All colors", category: "Category", color: "Color", products: "Section products", empty: "No published products are available in this section yet.", loading: "Loading catalog…", error: "Unable to load the catalog. Please refresh the page.", quote: "Get a quote", view: "View full catalog", home: "Home", contact: "Contact us", price: "DA", noDesc: "Product available from AFAK CARPET solutions.", colors: { blue: "Blue", green: "Green", red: "Red", gray: "Gray", beige: "Beige", brown: "Brown", black: "Black", white: "White" }
   }
 }[lang];
 
@@ -24,9 +27,9 @@ let selectedCategory = "";
 let selectedColor = "";
 let section;
 
-function localized(value, english = "") { return lang === "fr" ? (english || value || "") : (value || english || ""); }
+function localized(value, english = "") { return lang === "en" || lang === "fr" ? (english || value || "") : (value || english || ""); }
 function colorName(id) { return copy.colors[id] || id; }
-function money(value) { const number = Number(value); return Number.isFinite(number) ? `${new Intl.NumberFormat(lang === "fr" ? "fr-DZ" : "ar-DZ").format(number)} ${copy.price}` : ""; }
+function money(value) { const number = Number(value); return Number.isFinite(number) ? `${new Intl.NumberFormat(lang === "ar" ? "ar-DZ" : "fr-DZ").format(number)} ${copy.price}` : ""; }
 function imageUrl(value) { return /^https?:\/\//i.test(String(value || "")) ? String(value) : ""; }
 function availableCategory(id) { return section?.productCategories?.find(item => item.id === id); }
 function productColors(product) { return Array.isArray(product.secondaryColors) ? product.secondaryColors : (product.secondaryColor ? [product.secondaryColor] : []); }
@@ -49,7 +52,7 @@ function card(product) {
   const title = localized(product.name, product.nameEn);
   const description = localized(product.desc, product.descEn) || copy.noDesc;
   const image = imageUrl(product.images?.[0]);
-  const colors = productColors(product).map(colorName).join(lang === "fr" ? ", " : "، ");
+  const colors = productColors(product).map(colorName).join(lang === "ar" ? "، " : ", ");
   const category = availableCategory(product.productCategoryId);
   return `<article class="catalog-card">
     <a class="catalog-card-image protected-image" href="${esc(`${mainPath}#${sectionHash}`)}" aria-label="${esc(title)}"><img src="${esc(image)}" alt="${esc(title)}" loading="lazy" decoding="async">${image ? `<span class="catalog-card-index">${esc(sectionId.toUpperCase())}</span>` : ""}</a>
