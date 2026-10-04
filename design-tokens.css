@@ -16,6 +16,10 @@
   --canvas: #FFFFFF;
   --canvas-soft: #F5F5F3;
   --canvas-strong: #ECECE8;
+  --site-bg-blue: #EEF5FF;
+  --site-bg-white: #FFFFFF;
+  --site-pattern-blue: none;
+  --site-pattern-white: none;
   --on-navy: #FFFFFF;
   --success: #2E7D32;
   --danger: #B3261E;
@@ -45,17 +49,22 @@
 
   /* ---- Shape ---- */
   --radius-none: 0;
-  --radius-soft: 6px;
+  --radius-soft: 10px;
+  --radius-card: 24px;
+  --radius-control: 14px;
+  --radius-pill: 999px;
   --radius-circle: 50%;
 
   /* ---- Elevation ---- */
   --shadow-header: 0 1px 0 var(--hairline);
-  --shadow-card: 0 4px 16px rgba(20,23,31,.08);
+  --shadow-card: 0 10px 30px rgba(20,23,31,.08), 0 2px 8px rgba(20,23,31,.04);
+  --shadow-card-hover: 0 18px 44px rgba(20,23,31,.14), 0 4px 12px rgba(20,23,31,.06);
   --shadow-button: 0 6px 16px rgba(20,23,31,.16);
   --shadow-popover: 0 12px 32px rgba(20,23,31,.18);
   --shadow-consent: 0 18px 50px rgba(8,20,40,.16);
   --shadow-drawer: -18px 0 42px rgba(20,23,31,.14);
   --shadow-admin-drawer: -10px 0 30px rgba(0,0,0,.3);
+  --motion-spring: cubic-bezier(.2,.8,.2,1);
 
   /* ---- Layering ---- */
   --z-content: 1;

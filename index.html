@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="design-tokens.css">
 <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body data-site-shell="public">
 <a href="#top" class="skip-link">تخطي إلى المحتوى الرئيسي</a>
 
 <div class="site-loader" id="siteLoader">
@@ -292,7 +292,7 @@
       <section class="detail-gallery-column" aria-label="معرض صور المنتج">
         <div class="detail-gallery-stage" id="detailGalleryStage">
           <button type="button" class="detail-gallery-arrow detail-gallery-prev" id="detailGalleryPrev" aria-label="الصورة السابقة">‹</button>
-          <div class="detail-hero protected-image"><img id="detailImg" src="" alt=""><span class="product-watermark" id="detailWatermark" aria-hidden="true"></span></div>
+          <div class="detail-hero protected-image"><img id="detailImg" src="" alt="" draggable="false"></div>
           <button type="button" class="detail-gallery-arrow detail-gallery-next" id="detailGalleryNext" aria-label="الصورة التالية">›</button>
         </div>
         <div class="detail-thumbnails" id="detailThumbnails" aria-label="صور المنتج"></div>
@@ -315,7 +315,7 @@
     <button type="button" id="lightboxClose" aria-label="إغلاق">✕</button>
   </div>
   <button type="button" class="lightbox-arrow lightbox-prev" id="lightboxPrev" aria-label="الصورة السابقة">‹</button>
-  <div class="image-lightbox-stage protected-image" id="imageLightboxStage"><img id="lightboxImage" src="" alt=""><span class="product-watermark" id="lightboxWatermark" aria-hidden="true"></span></div>
+  <div class="image-lightbox-stage protected-image" id="imageLightboxStage"><img id="lightboxImage" src="" alt="" draggable="false"></div>
   <button type="button" class="lightbox-arrow lightbox-next" id="lightboxNext" aria-label="الصورة التالية">›</button>
   <div class="lightbox-thumbnails" id="lightboxThumbnails" aria-label="صور المنتج"></div>
 </div>
@@ -585,6 +585,16 @@ const I18N = {
 };
 let currentLang = localStorage.getItem("afak_lang") || "ar";
 
+function applySiteBackgrounds(site){
+  const backgrounds = site?.settings?.backgrounds || {};
+  const blue = backgrounds.blue || {};
+  const white = backgrounds.white || {};
+  const style = document.documentElement.style;
+  style.setProperty("--site-bg-blue", safeHexColor(blue.color, "#EEF5FF"));
+  style.setProperty("--site-bg-white", safeHexColor(white.color, "#FFFFFF"));
+  style.setProperty("--site-pattern-blue", blue.patternUrl ? `url("${safeImageUrl(blue.patternUrl)}")` : "none");
+  style.setProperty("--site-pattern-white", white.patternUrl ? `url("${safeImageUrl(white.patternUrl)}")` : "none");
+}
 function applyTranslations(){
   document.documentElement.lang = currentLang;
   document.documentElement.dir = currentLang === "ar" ? "rtl" : "ltr";
@@ -683,15 +693,14 @@ function safeImageUrl(value){
     return ["http:", "https:"].includes(url.protocol) ? url.href : "";
   } catch { return ""; }
 }
-function watermarkMarkup(){
-  const settings = SITE?.settings || {};
-  if (settings.watermarkEnabled === false) return "";
-  const logo = safeImageUrl(settings.logoUrl || "");
-  const text = esc(settings.watermarkText || "AFAK CARPET");
-  return `${logo ? `<img src="${esc(logo)}" alt="">` : ""}<span>${text}</span>`;
-}
-document.addEventListener("contextmenu", event => { if (SITE?.settings?.imageProtectionEnabled !== false && event.target.closest(".protected-image")) event.preventDefault(); });
-document.addEventListener("dragstart", event => { if (SITE?.settings?.imageProtectionEnabled !== false && event.target.closest(".protected-image")) event.preventDefault(); });
+function watermarkMarkup(){ return ""; }
+function imageProtectionEnabled(){ return SITE?.settings?.imageProtectionEnabled !== false; }
+function protectedTarget(target){ return target?.closest?.(".protected-image, .catalog-card-image, .product-card .img"); }
+document.addEventListener("contextmenu", event => { if (imageProtectionEnabled() && protectedTarget(event.target)) event.preventDefault(); });
+document.addEventListener("dragstart", event => { if (imageProtectionEnabled() && protectedTarget(event.target)) event.preventDefault(); });
+document.addEventListener("selectstart", event => { if (imageProtectionEnabled() && protectedTarget(event.target)) event.preventDefault(); });
+document.addEventListener("copy", event => { if (imageProtectionEnabled() && protectedTarget(event.target)) event.preventDefault(); });
+document.addEventListener("pointerdown", event => { if (imageProtectionEnabled() && protectedTarget(event.target) && event.pointerType === "mouse" && event.button === 1) event.preventDefault(); });
 function normalizePhone(value){ return String(value ?? "").replace(/[^0-9+]/g, "").slice(0, 20); }
 function lastSubmittedOrder(){ return window.__afakLastOrder || null; }
 
@@ -929,7 +938,6 @@ const lightboxImage = document.getElementById("lightboxImage");
 function renderLightbox(){
   lightboxImage.src = safeImageUrl(detailImages[detailImageIndex] || "");
   lightboxImage.alt = tf(currentDetailProduct, "name", currentLang);
-  document.getElementById("lightboxWatermark").innerHTML = watermarkMarkup();
   document.getElementById("lightboxImageCount").textContent = `${detailImageIndex + 1} / ${Math.max(1, detailImages.length)}`;
   document.getElementById("lightboxPrev").hidden = detailImages.length < 2;
   document.getElementById("lightboxNext").hidden = detailImages.length < 2;
@@ -969,7 +977,6 @@ function renderDetailImage(){
   const imageEl = document.getElementById("detailImg");
   imageEl.src = safeImageUrl(image);
   imageEl.alt = tf(currentDetailProduct, "name", currentLang);
-  document.getElementById("detailWatermark").innerHTML = watermarkMarkup();
   if (imageLightbox.classList.contains("is-open")){
     renderLightbox();
   }
@@ -1324,7 +1331,6 @@ function productCardHTML(p){
     <div class="product-card ${cardMode}" data-name="${esc(name)}">
       <div class="img protected-image">
         ${imagesHTML}
-        <span class="product-watermark" aria-hidden="true">${watermarkMarkup()}</span>
       </div>
       <div class="info">
         <span class="name">${esc(name)}</span>
@@ -1518,9 +1524,15 @@ function renderTrustBlock(site){
   const statsSection = document.getElementById("statsSection");
   if (vis.stats !== false && stats.length){
     statsSection.style.display = "block";
-    document.getElementById("statsBar").innerHTML = stats.map(s => `
-      <div><div class="stat-num">${esc(s.number||"")}</div><div class="stat-label">${esc(tf(s,'label',currentLang))}</div></div>
-    `).join("");
+    document.getElementById("statsBar").innerHTML = stats.map(s => {
+      const raw = String(s.number || "");
+      const match = raw.match(/([0-9][0-9,.]*)/);
+      const numeric = match ? Number(match[1].replace(/,/g, "")) : 0;
+      const prefix = match ? raw.slice(0, match.index) : raw;
+      const suffix = match ? raw.slice(match.index + match[0].length) : "";
+      return `<div class="stat-item"><div class="stat-num" data-counter-target="${numeric}" data-counter-prefix="${esc(prefix)}" data-counter-suffix="${esc(suffix)}">${esc(raw)}</div><div class="stat-label">${esc(tf(s,'label',currentLang))}</div></div>`;
+    }).join("");
+    animateStats();
   } else statsSection.style.display = "none";
 
   const testimonials = (site.testimonials || []).slice().sort((a,b)=>(a.order||0)-(b.order||0));
@@ -1544,6 +1556,27 @@ function renderTrustBlock(site){
         <span>${esc(tf(c,'name',currentLang))}</span>
       </div>`).join("");
   } else certsSection.style.display = "none";
+}
+
+function animateStats(){
+  const counters = [...document.querySelectorAll("[data-counter-target]")];
+  if (!counters.length) return;
+  const format = value => new Intl.NumberFormat(currentLang === "ar" ? "ar-DZ" : "en-US", { maximumFractionDigits: 0 }).format(value);
+  const run = el => {
+    const target = Number(el.dataset.counterTarget || 0);
+    const start = performance.now();
+    const duration = 1200;
+    const tick = now => {
+      const progress = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      el.textContent = `${el.dataset.counterPrefix || ""}${format(Math.round(target * eased))}${el.dataset.counterSuffix || ""}`;
+      if (progress < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  };
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches){ counters.forEach(el => { el.textContent = `${el.dataset.counterPrefix || ""}${format(Number(el.dataset.counterTarget || 0))}${el.dataset.counterSuffix || ""}`; }); return; }
+  const observer = new IntersectionObserver(entries => entries.forEach(entry => { if (entry.isIntersecting && !entry.target.dataset.counted){ entry.target.dataset.counted = "1"; run(entry.target); } }), { threshold: .35 });
+  counters.forEach(el => observer.observe(el));
 }
 
 /* ---------------- Icon sets (monoline SVG, matches the navy/minimal identity) ---------------- */
@@ -1712,6 +1745,7 @@ function trackMarketingEvent(eventName, params = {}){
 
 /* ---------------- Master render + boot ---------------- */
 function renderAll(){
+  applySiteBackgrounds(SITE);
   const sv = SITE.settings?.sectionsVisible || {};
   
   renderHero(SITE.hero.slides || []);

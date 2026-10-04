@@ -32,8 +32,12 @@ export const DEFAULT_SITE = {
     cloudflareR2PublicUrl: "",
     cloudflareR2UploadToken: "",
     imageProtectionEnabled: true,
-    watermarkEnabled: true,
-    watermarkText: "AFAK CARPET",
+    watermarkEnabled: false,
+    watermarkText: "",
+    backgrounds: {
+      blue: { color: "#EEF5FF", patternUrl: "" },
+      white: { color: "#FFFFFF", patternUrl: "" }
+    },
     webpQuality: 0.82,
     phone: "",
     whatsapp: "",

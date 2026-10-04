@@ -840,3 +840,27 @@ body.image-lightbox-open{ overflow:hidden; }
 @media (prefers-reduced-motion:reduce){.consent-banner{animation:none}}
 
 .privacy-settings-link{border:0;background:none;color:inherit;font:inherit;font-size:.78rem;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:4px 0;opacity:.82}.privacy-settings-link:hover{opacity:1}
+
+
+/* ==========================================================================
+   AFAK 2026 UI refinement — Apple-inspired geometry, calm depth, and motion
+   ========================================================================== */
+body[data-site-shell="public"]{ background-color:var(--site-bg-white); background-image:var(--site-pattern-white); background-size:cover; background-attachment:fixed; }
+body[data-site-shell="public"] .section-soft{ background-color:var(--site-bg-blue); background-image:var(--site-pattern-blue); background-size:cover; }
+.section{ padding-block:clamp(64px,8vw,112px); }
+.section-head{ margin-bottom:clamp(32px,5vw,56px); }
+.btn{ min-height:48px; border-radius:var(--radius-control); }
+.btn-primary{ box-shadow:0 8px 20px rgba(23,35,63,.18); }
+.btn-primary:hover{ box-shadow:0 14px 30px rgba(23,35,63,.24); }
+.cat-card,.product-card,.catalog-card,.testimonial-card,.project-tile,.admin-card{ border-radius:var(--radius-card); box-shadow:var(--shadow-card); overflow:hidden; }
+.cat-card,.product-card,.catalog-card{ transition:transform 360ms var(--motion-spring), box-shadow 360ms var(--motion-spring); }
+.cat-card:hover,.product-card:hover,.catalog-card:hover{ transform:translateY(-6px); box-shadow:var(--shadow-card-hover); }
+.product-card .img,.catalog-card-image,.detail-hero,.image-lightbox-stage{ border-radius:var(--radius-card); overflow:hidden; }
+.stats-bar{ gap:16px; }
+.stat-item{ min-height:132px; padding:24px 18px; border:1px solid color-mix(in srgb, var(--navy) 12%, transparent); border-radius:var(--radius-card); background:color-mix(in srgb, var(--canvas) 72%, transparent); box-shadow:var(--shadow-card); }
+.stat-num{ font-variant-numeric:tabular-nums; letter-spacing:-.04em; }
+.protected-image,.catalog-card-image,.product-card .img{ user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
+.protected-image > img,.catalog-card-image img,.product-card .img img{ -webkit-user-drag:none; pointer-events:none; }
+.product-watermark{ display:none !important; }
+.admin-bg-preview{ display:block; width:100%; max-width:220px; height:80px; object-fit:cover; margin-top:8px; border-radius:var(--radius-control); border:1px solid var(--hairline); }
+@media (prefers-reduced-motion:reduce){ .cat-card:hover,.product-card:hover,.catalog-card:hover{ transform:none; } }
