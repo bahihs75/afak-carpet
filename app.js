@@ -63,6 +63,7 @@ export const DEFAULT_SITE = {
     // Independent visibility switches for the "trust" blocks — a block also
     // auto-hides itself when it has zero items, regardless of this switch.
     sectionsVisible: { projects: true, testimonials: true, stats: true, certifications: true },
+    sectionCopy: {},
     // Floating "jump to section" menu (mobile) — fully admin-editable list.
     navMenuItems: [
       { id: "m1", icon: "🕌", label: "المساجد", labelEn: "Mosques", link: "#mosques", order: 1 },

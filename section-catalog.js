@@ -19,6 +19,7 @@ const colorFilters = document.getElementById("catalogColors");
 let products = [];
 let selectedCategory = "";
 let selectedColor = "";
+let selectedSort = "default";
 let section;
 
 function localized(value, english = "") { return lang === "en" || lang === "fr" ? (english || value || "") : (value || english || ""); }
@@ -54,6 +55,12 @@ function renderFilters() {
   const ids = [...new Set(source.flatMap(productColors))];
   colorFilters.innerHTML = `<button type="button" class="catalog-filter is-active" data-value="">${esc(copy.allColors)}</button>${ids.map(id => `<button type="button" class="catalog-filter" data-value="${esc(id)}"><span class="catalog-color-dot" style="--dot:${esc(id)}"></span>${esc(colorName(id))}</button>`).join("")}`;
   colorFilters.querySelectorAll("button").forEach(button => button.addEventListener("click", () => { selectedColor = button.dataset.value; renderProducts(); }));
+  let sort = document.getElementById("catalogPriceSort");
+  if (!sort) { sort=document.createElement("select"); sort.id="catalogPriceSort"; sort.className="catalog-price-sort"; sort.innerHTML=`<option value="default">${esc(lang === "ar" ? "الترتيب الافتراضي" : lang === "fr" ? "Ordre par défaut" : "Default order")}</option><option value="asc">${esc(lang === "ar" ? "السعر: من الأقل إلى الأعلى" : lang === "fr" ? "Prix croissant" : "Price: low to high")}</option><option value="desc">${esc(lang === "ar" ? "السعر: من الأعلى إلى الأقل" : lang === "fr" ? "Prix décroissant" : "Price: high to low")}</option>`; colorFilters.closest(".catalog-filter-panel")?.append(sort); sort.addEventListener("change",()=>{selectedSort=sort.value; renderProducts();}); }
+  sort.value=selectedSort;
+  let sort = document.getElementById("catalogPriceSort");
+  if (!sort) { sort=document.createElement("select"); sort.id="catalogPriceSort"; sort.className="catalog-price-sort"; sort.innerHTML=`<option value="default">${esc(lang === "ar" ? "الترتيب الافتراضي" : lang === "fr" ? "Ordre par défaut" : "Default order")}</option><option value="asc">${esc(lang === "ar" ? "السعر: من الأقل إلى الأعلى" : lang === "fr" ? "Prix croissant" : "Price: low to high")}</option><option value="desc">${esc(lang === "ar" ? "السعر: من الأعلى إلى الأقل" : lang === "fr" ? "Prix décroissant" : "Price: high to low")}</option>`; colorFilters.closest(".catalog-filter-panel")?.append(sort); sort.addEventListener("change",()=>{selectedSort=sort.value; renderProducts();}); }
+  sort.value=selectedSort;
   setActive(categoryFilters, selectedCategory); setActive(colorFilters, selectedColor);
 }
 function card(product) {
@@ -65,7 +72,9 @@ function card(product) {
   return `<article class="catalog-card"><a class="catalog-card-image protected-image" href="${esc(`${mainPath}#${sectionHash}`)}" aria-label="${esc(title)}"><img src="${esc(image)}" alt="${esc(title)}" loading="lazy" decoding="async" draggable="false">${image ? `<span class="catalog-card-index">${esc(sectionId.toUpperCase())}</span>` : ""}</a><div class="catalog-card-body"><div class="catalog-card-meta"><span>${esc(localized(category?.name, category?.nameEn) || copy.category)}</span>${colors ? `<span>${esc(colors)}</span>` : ""}</div><h3>${esc(title)}</h3><p>${esc(description)}</p><div class="catalog-card-footer">${product.price !== "" && product.price != null ? `<strong>${esc(money(product.price))}</strong>` : "<span></span>"}<a class="btn btn-primary" href="${esc(`${mainPath}#${sectionHash}`)}">${esc(copy.quote)}</a></div></div></article>`;
 }
 function renderProducts() {
-  const visible = products.filter(product => (!selectedCategory || product.productCategoryId === selectedCategory) && (!selectedColor || productColors(product).includes(selectedColor)));
+  let visible = products.filter(product => (!selectedCategory || product.productCategoryId === selectedCategory) && (!selectedColor || productColors(product).includes(selectedColor)));
+  if (selectedSort !== "default") visible = [...visible].sort((a,b) => { const pa=Number(a.price)||0, pb=Number(b.price)||0; return selectedSort === "asc" ? pa-pb : pb-pa; });
+  if (selectedSort !== "default") visible = [...visible].sort((a,b) => { const pa=Number(a.price)||0, pb=Number(b.price)||0; return selectedSort === "asc" ? pa-pb : pb-pa; });
   grid.innerHTML = visible.map(card).join(""); empty.hidden = visible.length > 0; status.textContent = `${visible.length} / ${products.length}`; setActive(categoryFilters, selectedCategory); setActive(colorFilters, selectedColor);
 }
 async function init() {

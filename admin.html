@@ -1650,6 +1650,7 @@ document.getElementById("saveHeroBtn").addEventListener("click", async () => {
 
 /* ---------------- CATEGORIES TAB ---------------- */
 function renderCategoriesTab(){
+  if (!SITE.settings.sectionCopy) SITE.settings.sectionCopy = {};
   const list = document.getElementById("categoriesList");
   list.innerHTML = "";
     SITE.categories.forEach((cat) => {
@@ -1668,6 +1669,12 @@ function renderCategoriesTab(){
         <div class="admin-grid-2">
           <div class="field"><label>الوصف القصير</label><input type="text" class="c-desc" value="${esc(cat.desc||"")}"></div>
           <div class="field"><label>Description (EN — اختياري)</label><input type="text" class="c-desc-en" value="${esc(cat.descEn||'')}"></div>
+        </div>
+        <div class="admin-grid-2 section-copy-editor">
+          <div class="field"><label>عنوان واجهة القسم</label><input type="text" class="c-section-title" value="${esc(SITE.settings.sectionCopy?.[cat.id]?.title || cat.name || "")}" placeholder="عنوان القسم"></div>
+          <div class="field"><label>Section title (EN)</label><input type="text" class="c-section-title-en" value="${esc(SITE.settings.sectionCopy?.[cat.id]?.titleEn || cat.nameEn || "")}" placeholder="Section title"></div>
+          <div class="field"><label>نص واجهة القسم</label><textarea class="c-section-text" rows="2" placeholder="وصف قصير للقسم">${esc(SITE.settings.sectionCopy?.[cat.id]?.text || cat.desc || "")}</textarea></div>
+          <div class="field"><label>Section text (EN)</label><textarea class="c-section-text-en" rows="2" placeholder="Short section description">${esc(SITE.settings.sectionCopy?.[cat.id]?.textEn || cat.descEn || "")}</textarea></div>
         </div>
         <div class="field">
           <label>صورة البطاقة</label>
