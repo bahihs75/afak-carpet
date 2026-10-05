@@ -58,9 +58,6 @@ function renderFilters() {
   let sort = document.getElementById("catalogPriceSort");
   if (!sort) { sort=document.createElement("select"); sort.id="catalogPriceSort"; sort.className="catalog-price-sort"; sort.innerHTML=`<option value="default">${esc(lang === "ar" ? "الترتيب الافتراضي" : lang === "fr" ? "Ordre par défaut" : "Default order")}</option><option value="asc">${esc(lang === "ar" ? "السعر: من الأقل إلى الأعلى" : lang === "fr" ? "Prix croissant" : "Price: low to high")}</option><option value="desc">${esc(lang === "ar" ? "السعر: من الأعلى إلى الأقل" : lang === "fr" ? "Prix décroissant" : "Price: high to low")}</option>`; colorFilters.closest(".catalog-filter-panel")?.append(sort); sort.addEventListener("change",()=>{selectedSort=sort.value; renderProducts();}); }
   sort.value=selectedSort;
-  let sort = document.getElementById("catalogPriceSort");
-  if (!sort) { sort=document.createElement("select"); sort.id="catalogPriceSort"; sort.className="catalog-price-sort"; sort.innerHTML=`<option value="default">${esc(lang === "ar" ? "الترتيب الافتراضي" : lang === "fr" ? "Ordre par défaut" : "Default order")}</option><option value="asc">${esc(lang === "ar" ? "السعر: من الأقل إلى الأعلى" : lang === "fr" ? "Prix croissant" : "Price: low to high")}</option><option value="desc">${esc(lang === "ar" ? "السعر: من الأعلى إلى الأقل" : lang === "fr" ? "Prix décroissant" : "Price: high to low")}</option>`; colorFilters.closest(".catalog-filter-panel")?.append(sort); sort.addEventListener("change",()=>{selectedSort=sort.value; renderProducts();}); }
-  sort.value=selectedSort;
   setActive(categoryFilters, selectedCategory); setActive(colorFilters, selectedColor);
 }
 function card(product) {

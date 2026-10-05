@@ -329,3 +329,10 @@
     animation-duration: .001ms !important;
   }
 }
+
+/* Keep localized catalog controls aligned with the main Apple-style system */
+.catalog-filter-panel{border-radius:var(--radius-card);box-shadow:var(--shadow-card);}
+.catalog-filter,.catalog-price-sort,.catalog-empty,.catalog-term-list span,.seo-lang-link{border-radius:var(--radius-control);}
+.catalog-price-sort{min-height:42px;padding:0 14px;border:1px solid var(--hairline);background:#fff;color:var(--ink);font:inherit;box-shadow:0 4px 14px rgba(20,23,31,.05);}
+.catalog-filter:hover,.catalog-price-sort:focus{box-shadow:0 6px 18px rgba(20,23,31,.10);}
+.catalog-card-image img{content-visibility:auto;}

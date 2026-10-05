@@ -886,3 +886,22 @@ body[data-site-shell="public"] .section-soft{ background-color:var(--site-bg-blu
 .section-copy-editor{margin:12px 0;padding:12px;border:1px dashed var(--hairline);border-radius:16px;background:rgba(255,255,255,.55)}
 @media(max-width:560px){.product-sort{justify-content:stretch;flex-direction:column;align-items:stretch}.product-sort select,.catalog-price-sort{width:100%;margin-inline-start:0}.detail-sticky-action .btn{flex-basis:100%}}
 @media(prefers-reduced-motion:reduce){.hamburger span,.contact-info li{transition:none}}
+
+/* Final consistency pass: one rounded control language across public/admin UI */
+:where(input,select,textarea,.btn,.lang-toggle,.hamburger,.detail-back,.detail-gallery-arrow,.lightbox-arrow,.col-toggle button,.product-category-filter,.color-swatch,.product-sort select,.btn-call,.detail-thumbnail,.lightbox-thumbnail){border-radius:var(--radius-control)}
+:where(input,select,textarea){min-height:44px}
+:where(input,select,textarea){border:1px solid var(--hairline);background:rgba(255,255,255,.92);color:var(--ink);font:inherit;transition:border-color .25s var(--motion-spring),box-shadow .25s var(--motion-spring),background .25s ease}
+:where(input,select,textarea):focus{border-color:var(--navy);box-shadow:0 0 0 4px rgba(23,35,63,.10);outline:none}
+.detail-back{width:46px;height:46px;padding:0;display:inline-flex;align-items:center;justify-content:center;color:var(--navy);background:var(--canvas-soft);border:1px solid var(--hairline);transition:transform .3s var(--motion-spring),background .25s ease,box-shadow .25s ease}
+.detail-back svg{width:21px;height:21px;transition:transform .3s var(--motion-spring)}
+.detail-back:hover{transform:translateY(-2px);background:#fff;box-shadow:var(--shadow-card)}
+html[dir="rtl"] .detail-back svg{transform:rotate(180deg)}
+html[dir="rtl"] .detail-back:hover svg{transform:rotate(180deg) translateX(-3px)}
+html[dir="ltr"] .detail-back:hover svg{transform:translateX(-3px)}
+.detail-overlay.is-open .detail-head{animation:detail-head-in .45s var(--motion-spring) both}
+.detail-overlay.is-open .detail-gallery-column,.detail-overlay.is-open .detail-info-column{animation:detail-content-in .55s var(--motion-spring) both}
+@keyframes detail-head-in{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+@keyframes detail-content-in{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.product-grid .product-card{animation:card-in .55s var(--motion-spring) both}
+@keyframes card-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.detail-overlay.is-open .detail-head,.detail-overlay.is-open .detail-gallery-column,.detail-overlay.is-open .detail-info-column,.product-grid .product-card{animation:none}}

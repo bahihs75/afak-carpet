@@ -285,7 +285,7 @@
 <!-- ===================== PRODUCT DETAIL OVERLAY ===================== -->
 <div class="detail-overlay" id="detailOverlay" role="dialog" aria-modal="true" aria-hidden="true">
   <div class="detail-head">
-    <button class="detail-back" id="detailClose">‹ <span data-i18n="detail.back">رجوع</span></button>
+    <button class="detail-back" id="detailClose" aria-label="العودة إلى المنتجات"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg><span class="sr-only" data-i18n="detail.back">رجوع</span></button>
   </div>
   <div class="detail-body">
     <div class="detail-layout">
@@ -1446,7 +1446,7 @@ function renderMosques(products, categories){
   mosquesCountEl.textContent = all.length ? `${all.length} ${I18N[currentLang]["products.count"]}` : "";
   mosquesCountEl.dataset.count = all.length;
 
-  renderProductCategoryFilters("mosquesProductCategories", "mosques", cat, cat?.showProductCategoryFilter !== false, refresh);
+  renderProductCategoryFilters("mosquesProductCategories", "mosques", cat, cat?.showProductCategoryFilter !== false, () => { renderSwatches("mosquesSwatches", "mosques", cat?.showColorFilter !== false, refresh); refresh(); });
   renderSwatches("mosquesSwatches", "mosques", cat?.showColorFilter !== false, refresh);
   bindProductSort("mosques", refresh);
 
@@ -1498,7 +1498,7 @@ function renderPlainGrid(products, categoryId, gridId, emptyId, swatchId, countI
   countEl.textContent = all.length ? `${all.length} ${I18N[currentLang]["products.count"]}` : "";
   countEl.dataset.count = all.length;
 
-  renderProductCategoryFilters(categoryId + "ProductCategories", categoryId, cat, cat?.showProductCategoryFilter !== false, refresh);
+  renderProductCategoryFilters(categoryId + "ProductCategories", categoryId, cat, cat?.showProductCategoryFilter !== false, () => { renderSwatches(swatchId, categoryId, cat?.showColorFilter !== false, refresh); refresh(); });
   renderSwatches(swatchId, categoryId, cat?.showColorFilter !== false, refresh);
   bindProductSort(categoryId, refresh);
 
@@ -1520,7 +1520,10 @@ function renderPlainGrid(products, categoryId, gridId, emptyId, swatchId, countI
 function renderAbout(site){
   document.getElementById("aboutTitle").textContent = tf(site.about, "title", currentLang);
   document.getElementById("aboutText").textContent = tf(site.about, "text", currentLang);
-  document.getElementById("aboutImg").src = safeImageUrl(site.about.image || "");
+  const aboutImage = document.getElementById("aboutImg");
+  aboutImage.loading = "lazy";
+  aboutImage.decoding = "async";
+  aboutImage.src = safeImageUrl(site.about.image || "");
 }
 
 /* ---------------- Render: projects gallery ---------------- */
