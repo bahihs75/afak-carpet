@@ -6,8 +6,10 @@
 function corsHeaders(request, env) {
   const origin = request.headers.get("Origin") || "";
   const allowed = String(env.ALLOWED_ORIGIN || "*");
+  const allowedOrigins = allowed.split(",").map(value => value.trim()).filter(Boolean);
+  const originAllowed = allowedOrigins.includes("*") || allowedOrigins.includes(origin);
   return {
-    "Access-Control-Allow-Origin": allowed === "*" || origin === allowed ? (origin || allowed) : allowed,
+    "Access-Control-Allow-Origin": originAllowed ? (origin || "*") : "null",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Authorization, Content-Type, X-File-Name",
     "Vary": "Origin"
@@ -53,7 +55,8 @@ export default {
       return json({ error: "Unauthorized" }, 401, request, env);
     }
     const contentType = request.headers.get("Content-Type") || "";
-    if (contentType !== "image/webp" && contentType !== "image/svg+xml") return json({ error: "Only WebP and SVG are accepted" }, 415, request, env);
+    const allowedTypes = new Set(["image/webp", "image/svg+xml", "video/mp4", "video/webm"]);
+    if (!allowedTypes.has(contentType)) return json({ error: "Only WebP, SVG, MP4, and WebM are accepted" }, 415, request, env);
     const fileName = decodeURIComponent(request.headers.get("X-File-Name") || "image.webp")
       .replace(/[^a-zA-Z0-9._-]/g, "-").slice(-120);
     const key = `${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}-${fileName}`;

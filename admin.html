@@ -85,6 +85,11 @@
               <div class="form-note">يُرفع مباشرة إلى imgbb ويُخزَّن الرابط فقط.</div>
             </div>
           </div>
+          <div class="field">
+            <label>أيقونة المتصفح ونتائج البحث (Favicon)</label>
+            <div class="img-upload-field"><img id="setFaviconPreview" class="admin-bg-preview" alt="" hidden><input type="file" id="setFaviconFile" accept="image/png,image/webp,image/jpeg,image/x-icon"><button type="button" class="media-picker-btn" data-picker-for="setFaviconPreview">اختر من المكتبة</button></div>
+            <p class="form-note">يفضل صورة مربعة 512×512. إذا تركتها فارغة سيُستخدم الشعار.</p>
+          </div>
         </div>
       </div>
       <div class="admin-card">
@@ -138,8 +143,8 @@
         <div class="admin-grid-2">
           <div class="field"><label for="setBlueBgColor">لون الخلفية الزرقاء</label><input type="color" id="setBlueBgColor" value="#EEF5FF"></div>
           <div class="field"><label for="setWhiteBgColor">لون الخلفية البيضاء</label><input type="color" id="setWhiteBgColor" value="#FFFFFF"></div>
-          <div class="field"><label for="setBlueBgFile">نمط/صورة الخلفية الزرقاء</label><input type="file" id="setBlueBgFile" accept="image/png,image/webp,image/jpeg"><img id="setBlueBgPreview" class="admin-bg-preview" alt="" hidden></div>
-          <div class="field"><label for="setWhiteBgFile">نمط/صورة الخلفية البيضاء</label><input type="file" id="setWhiteBgFile" accept="image/png,image/webp,image/jpeg"><img id="setWhiteBgPreview" class="admin-bg-preview" alt="" hidden></div>
+          <div class="field"><label for="setBlueBgFile">نمط/صورة الخلفية الزرقاء</label><input type="file" id="setBlueBgFile" accept="image/png,image/webp,image/jpeg"><img id="setBlueBgPreview" class="admin-bg-preview" alt="" hidden><button type="button" class="btn btn-text clear-bg-btn" data-preview="setBlueBgPreview">إزالة نمط الخلفية الأزرق</button></div>
+          <div class="field"><label for="setWhiteBgFile">نمط/صورة الخلفية البيضاء</label><input type="file" id="setWhiteBgFile" accept="image/png,image/webp,image/jpeg"><img id="setWhiteBgPreview" class="admin-bg-preview" alt="" hidden><button type="button" class="btn btn-text clear-bg-btn" data-preview="setWhiteBgPreview">إزالة نمط الخلفية الأبيض</button></div>
         </div>
       </div>
       <div class="admin-card">
@@ -396,6 +401,8 @@
         <p class="empty-state" id="ordersEmpty" style="display:none">لا توجد طلبات بعد.</p>
       </div>
     </div>
+
+    <div class="admin-order-modal" id="adminOrderModal" aria-hidden="true"><div class="admin-order-modal-box" role="dialog" aria-modal="true" aria-labelledby="adminOrderModalTitle"><div class="admin-order-modal-head"><h3 id="adminOrderModalTitle">تفاصيل الطلب</h3><button type="button" class="modal-close" id="adminOrderModalClose" aria-label="إغلاق">✕</button></div><div id="adminOrderModalContent" class="admin-order-details"></div></div></div>
 
     <!-- ---- ANALYTICS ---- -->
     <div class="admin-tab-panel" data-panel="analytics" style="display:none">
@@ -795,7 +802,7 @@ function makeCompactRows(list, summaryFn, options = {}){
 }
 
 /* ---------------- imgbb upload + media library tracking ---------------- */
-async function uploadOne(file){
+async function uploadOne(file, options = {}){
   const settings = {
     ...SITE.settings,
     imageStorageProvider: document.getElementById("setImageStorageProvider")?.value || SITE.settings.imageStorageProvider || "imgbb",
@@ -803,11 +810,12 @@ async function uploadOne(file){
     cloudflareR2UploadUrl: document.getElementById("setR2UploadUrl")?.value || SITE.settings.cloudflareR2UploadUrl,
     cloudflareR2PublicUrl: document.getElementById("setR2PublicUrl")?.value || SITE.settings.cloudflareR2PublicUrl,
     cloudflareR2UploadToken: document.getElementById("setR2UploadToken")?.value || localStorage.getItem("afak-r2-upload-token") || "",
-    webpQuality: Number(document.getElementById("setWebpQuality")?.value || SITE.settings.webpQuality || 0.82)
+    webpQuality: Number(document.getElementById("setWebpQuality")?.value || SITE.settings.webpQuality || 0.82),
+    ...options
   };
   const url = settings.imageStorageProvider === "cloudflare-r2"
     ? await uploadToCloudflareR2(file, settings)
-    : await uploadToImgbb(file, settings.imgbbKey);
+    : (options.allowVideo ? (() => { throw new Error("رفع الفيديو يتطلب اختيار Cloudflare R2 كمكان تخزين"); })() : await uploadToImgbb(file, settings.imgbbKey));
   if (!SITE.mediaLibrary.includes(url)){
     SITE.mediaLibrary.push(url);
     saveSite({ mediaLibrary: SITE.mediaLibrary }).catch(() => {});
@@ -1029,6 +1037,8 @@ function renderSettings(){
     const img = document.getElementById("setLogoPreview");
     img.src = s.logoUrl; img.style.display = "block"; img.dataset.value = s.logoUrl;
   }
+  const faviconPreview = document.getElementById("setFaviconPreview");
+  if (faviconPreview && (s.faviconUrl || s.logoUrl)) { faviconPreview.src = s.faviconUrl || s.logoUrl; faviconPreview.hidden = false; faviconPreview.dataset.value = s.faviconUrl || ""; }
 }
 function exportSerializable(value){
   if (value && typeof value.toDate === "function") return value.toDate().toISOString();
@@ -1207,6 +1217,8 @@ async function bindBackgroundUpload(inputId, previewId){
 }
 bindBackgroundUpload("setBlueBgFile", "setBlueBgPreview");
 bindBackgroundUpload("setWhiteBgFile", "setWhiteBgPreview");
+document.querySelectorAll(".clear-bg-btn").forEach(btn => btn.addEventListener("click", () => { const img=document.getElementById(btn.dataset.preview); img.removeAttribute("src"); img.hidden=true; img.dataset.value=""; toast("تمت إزالة نمط الخلفية؛ اضغط حفظ الإعدادات"); }));
+document.getElementById("setFaviconFile")?.addEventListener("change", async e => { const file=e.target.files?.[0]; if(!file) return; try { const url=await uploadOne(file); const img=document.getElementById("setFaviconPreview"); img.src=url; img.hidden=false; img.dataset.value=url; toast("تم رفع أيقونة المتصفح"); } catch(err){ toast("فشل رفع الأيقونة: "+err.message); } });
 
 document.getElementById("setLogoFile").addEventListener("change", async (e) => {
   const file = e.target.files[0]; if (!file) return;
@@ -1225,6 +1237,7 @@ document.getElementById("saveSettingsBtn").addEventListener("click", async () =>
     ...SITE.settings,
     siteName: document.getElementById("setSiteName").value.trim(),
     logoUrl: logoImg.dataset.value || SITE.settings.logoUrl || "",
+    faviconUrl: document.getElementById("setFaviconPreview")?.dataset.value || "",
     phone: document.getElementById("setPhone").value.trim(),
     whatsapp: document.getElementById("setWhatsapp").value.trim(),
     email: document.getElementById("setEmail").value.trim(),
@@ -1237,8 +1250,8 @@ document.getElementById("saveSettingsBtn").addEventListener("click", async () =>
     watermarkEnabled: false,
     watermarkText: "",
     backgrounds: {
-      blue: { color: document.getElementById("setBlueBgColor").value, patternUrl: document.getElementById("setBlueBgPreview").dataset.value || SITE.settings.backgrounds?.blue?.patternUrl || "" },
-      white: { color: document.getElementById("setWhiteBgColor").value, patternUrl: document.getElementById("setWhiteBgPreview").dataset.value || SITE.settings.backgrounds?.white?.patternUrl || "" }
+      blue: { color: document.getElementById("setBlueBgColor").value, patternUrl: document.getElementById("setBlueBgPreview").dataset.value || "" },
+      white: { color: document.getElementById("setWhiteBgColor").value, patternUrl: document.getElementById("setWhiteBgPreview").dataset.value || "" }
     },
     imageProtectionEnabled: document.getElementById("setImageProtectionEnabled").checked,
     cfAnalyticsToken: document.getElementById("setCfToken").value.trim(),
@@ -1456,6 +1469,10 @@ function renderHeroTab(){
           <p class="form-note">تُستخدم على الهاتف فقط. إذا تُركت فارغة، تُستخدم صورة سطح المكتب تلقائياً.</p>
         </div>
       </div>
+      <div class="admin-grid-2 hero-media-choice">
+        <div class="field"><label>نوع خلفية الشريحة</label><select class="s-media-type"><option value="image" ${slide.mediaType !== "video" ? "selected" : ""}>صورة</option><option value="video" ${slide.mediaType === "video" ? "selected" : ""}>فيديو قصير (أقل من دقيقة)</option></select></div>
+        <div class="field"><label>رابط فيديو MP4/WebM</label><input type="url" class="s-video-url" value="${esc(slide.videoUrl || "")}" placeholder="https://..." maxlength="500"><input type="file" class="s-video-file" accept="video/mp4,video/webm"><p class="form-note">الفيديو يُشغّل تلقائيًا بصمت وبشكل متكرر. الحد المقترح 60 ثانية و50MB.</p></div>
+      </div>
       <div class="field mt-2">
         <label><input type="checkbox" class="s-reflection" ${slide.reflection ? "checked" : ""}> تفعيل التظليل العلوي (Reflection) لتحسين وضوح الشعار والقائمة</label>
       </div>
@@ -1591,6 +1608,7 @@ function renderHeroTab(){
     };
     bindImagePicker("desktop", ".s-desktop-pick", ".s-desktop-file");
     bindImagePicker("mobile", ".s-mobile-pick", ".s-mobile-file");
+    row.querySelector(".s-video-file")?.addEventListener("change", async e => { const file=e.target.files?.[0]; if(!file) return; if(file.size > 50*1024*1024) { toast("الفيديو أكبر من 50MB"); return; } try { toast("جارٍ رفع الفيديو..."); const url=await uploadOne(file, {allowVideo:true}); row.querySelector(".s-video-url").value=url; toast("تم رفع الفيديو"); } catch(err){ toast("فشل رفع الفيديو: "+err.message); } });
     row.querySelector(".remove-slide").addEventListener("click", () => {
       SITE.hero.slides = SITE.hero.slides.filter(s => s.id !== slide.id);
       renderHeroTab();
@@ -1607,7 +1625,7 @@ document.getElementById("addSlideBtn").addEventListener("click", () => {
     text:"", textEn:"", ctaLabel:"اطلب عرض سعر", ctaLabelEn:"",
     secondaryLabel:"استكشف المنتجات", secondaryLabelEn:"", secondaryLink:"#mosques",
     reflection: false, textBackdrop: false,
-    desktopImage:"", mobileImage:"",
+    desktopImage:"", mobileImage:"", mediaType:"image", videoUrl:"",
     textColorMode:"auto", textColor:"#ffffff", autoTextColor:"#ffffff"
   });
   renderHeroTab();
@@ -1633,6 +1651,8 @@ document.getElementById("saveHeroBtn").addEventListener("click", async () => {
     slide.desktopImage = (desktopImageEl?.value || slide.desktopImage || slide.image || "").trim();
     slide.mobileImage = (mobileImageEl?.value || slide.mobileImage || "").trim();
     slide.image = slide.desktopImage || slide.image || slide.mobileImage || "";
+    slide.mediaType = row.querySelector(".s-media-type")?.value === "video" ? "video" : "image";
+    slide.videoUrl = (row.querySelector(".s-video-url")?.value || "").trim();
     const reflectionEl = row.querySelector(".s-reflection");
     slide.reflection = reflectionEl ? reflectionEl.checked : false;
     const textBackdropEl = row.querySelector(".s-text-backdrop");
@@ -2458,6 +2478,17 @@ function getFilteredOrderRecords(){
     return statusMatch && (!search || text.includes(search));
   });
 }
+function openOrderModal(orderId){
+  const record=ORDER_RECORDS.find(item=>item.id===orderId); if(!record) return;
+  const o=record.data||{}; const product=o.product||{}; const rows=[
+    ["الاسم",o.name],["الهاتف",o.phone],["البريد الإلكتروني",o.email],["المجال",o.category],["الولاية",o.wilayaName],["البلدية",o.commune],["العنوان",o.deliveryAddress],["المنتج",product.name],["السعر",product.price ? money(product.price) : "—"],["الكمية",o.quantity],["العازل",o.insulation?.enabled ? `${o.insulation.qualityName||"نعم"} — ${o.insulation.areaSqm||0} م² — ${money(o.insulation.total||0)}` : "لا"],["المصدر",o.attribution?.utmSource || "مباشر"],["الحملة",o.attribution?.utmCampaign || "—"],["الملاحظات",o.message],["التاريخ",formatAdminDate(o.createdAt)]
+  ];
+  document.getElementById("adminOrderModalContent").innerHTML=rows.filter(([,v])=>v!==undefined && v!==null && v!=="").map(([k,v])=>`<div class="order-detail-row"><span>${esc(k)}</span><strong>${esc(v)}</strong></div>`).join("");
+  const modal=document.getElementById("adminOrderModal"); modal.classList.add("is-open"); modal.setAttribute("aria-hidden","false");
+}
+function closeOrderModal(){ const modal=document.getElementById("adminOrderModal"); modal.classList.remove("is-open"); modal.setAttribute("aria-hidden","true"); }
+document.getElementById("adminOrderModalClose")?.addEventListener("click", closeOrderModal);
+document.getElementById("adminOrderModal")?.addEventListener("click", e=>{if(e.target.id==="adminOrderModal") closeOrderModal();});
 function renderOrdersView(){
   const body = document.getElementById("ordersTableBody");
   const empty = document.getElementById("ordersEmpty");
@@ -2492,10 +2523,11 @@ function renderOrdersView(){
       <td>${orderStatusSelect(id, o.status)}</td>
       <td>${esc(o.message || "—")}</td>
       <td style="font-family:var(--font-mono); font-size:12px">${date}</td>
-      <td><button type="button" class="danger order-delete-btn" data-order-id="${esc(id)}" title="حذف الطلب">حذف</button></td>
+      <td><div class="order-actions"><button type="button" class="btn btn-outline order-view-btn" data-order-id="${esc(id)}">عرض</button><button type="button" class="danger order-delete-btn" data-order-id="${esc(id)}" title="حذف الطلب">حذف</button></div></td>
     </tr>`;
   }).join("");
   body.querySelectorAll(".order-status-select").forEach(select => select.addEventListener("change", () => changeOrderStatus(select)));
+  body.querySelectorAll(".order-view-btn").forEach(button => button.addEventListener("click", () => openOrderModal(button.dataset.orderId)));
   body.querySelectorAll(".order-delete-btn").forEach(button => button.addEventListener("click", () => deleteOrder(button)));
 }
 function csvCell(value){ return `"${String(value ?? "").replace(/"/g, '""').replace(/[\r\n]+/g, " ")}"`; }

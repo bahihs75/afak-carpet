@@ -71,7 +71,6 @@ function card(product) {
 function renderProducts() {
   let visible = products.filter(product => (!selectedCategory || product.productCategoryId === selectedCategory) && (!selectedColor || productColors(product).includes(selectedColor)));
   if (selectedSort !== "default") visible = [...visible].sort((a,b) => { const pa=Number(a.price)||0, pb=Number(b.price)||0; return selectedSort === "asc" ? pa-pb : pb-pa; });
-  if (selectedSort !== "default") visible = [...visible].sort((a,b) => { const pa=Number(a.price)||0, pb=Number(b.price)||0; return selectedSort === "asc" ? pa-pb : pb-pa; });
   grid.innerHTML = visible.map(card).join(""); empty.hidden = visible.length > 0; status.textContent = `${visible.length} / ${products.length}`; setActive(categoryFilters, selectedCategory); setActive(colorFilters, selectedColor);
 }
 async function init() {

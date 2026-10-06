@@ -26,6 +26,7 @@ export const DEFAULT_SITE = {
   settings: {
     siteName: "AFAK CARPET",
     logoUrl: "",
+    faviconUrl: "",
     imgbbKey: DEFAULT_IMGBB_KEY,
     imageStorageProvider: "imgbb",
     cloudflareR2UploadUrl: "",
@@ -79,6 +80,8 @@ export const DEFAULT_SITE = {
       {
         id: "s1",
         image: "",
+        mediaType: "image",
+        videoUrl: "",
         eyebrow: "AFAK CARPET", eyebrowEn: "",
         title: "سجاد يُصنع ليُصلَّى عليه ويدوم", titleEn: "",
         text: "تجهيز المساجد والفنادق والمؤسسات بسجاد عالي الجودة، بمقاسات مخصصة وتنفيذ دقيق.", textEn: "",
@@ -410,15 +413,19 @@ export async function uploadToImgbb(file, apiKey){
 }
 
 export async function uploadToCloudflareR2(file, settings = {}){
-  if (!file || !String(file.type || "").startsWith("image/")) throw new Error("اختر ملف صورة صالحًا");
-  if (file.size > 25 * 1024 * 1024) throw new Error("حجم الصورة يتجاوز 25MB");
+  const allowVideo = settings.allowVideo === true;
+  if (!file || (!String(file.type || "").startsWith("image/") && !(allowVideo && String(file.type || "").startsWith("video/")))) throw new Error(allowVideo ? "اختر صورة أو فيديو صالحًا" : "اختر ملف صورة صالحًا");
+  if (!allowVideo && file.size > 25 * 1024 * 1024) throw new Error("حجم الصورة يتجاوز 25MB");
   await validateSvgFile(file);
+  if (allowVideo && file.size > 50 * 1024 * 1024) throw new Error("حجم الفيديو يتجاوز 50MB");
   const endpoint = String(settings.cloudflareR2UploadUrl || "").trim().replace(/\/$/, "");
   if (!endpoint) throw new Error("أدخل رابط Cloudflare R2 Worker أولًا");
-  const converted = await convertImageToWebp(file, { quality: settings.webpQuality || 0.82 });
+  const converted = allowVideo && String(file.type || "").startsWith("video/") ? file : await convertImageToWebp(file, { quality: settings.webpQuality || 0.82 });
   const headers = { "Content-Type": converted.type, "X-File-Name": encodeURIComponent(converted.name) };
   if (settings.cloudflareR2UploadToken) headers.Authorization = `Bearer ${settings.cloudflareR2UploadToken}`;
-  const response = await fetch(endpoint, { method: "POST", headers, body: converted });
+  let response;
+  try { response = await fetch(endpoint, { method: "POST", headers, body: converted }); }
+  catch (error) { throw new Error(`تعذر الوصول إلى Worker. تحقق من رابط الرفع وCORS (ALLOWED_ORIGIN). ${error.message || "Failed to fetch"}`); }
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(payload.error || "فشل رفع الصورة إلى Cloudflare R2");
   const url = payload.url || payload.publicUrl || (settings.cloudflareR2PublicUrl ? `${String(settings.cloudflareR2PublicUrl).replace(/\/$/, "")}/${encodeURIComponent(converted.name)}` : "");
