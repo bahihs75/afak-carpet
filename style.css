@@ -922,3 +922,22 @@ html[dir="ltr"] .detail-back:hover svg{transform:translateX(-3px)}
 .go-up-btn:hover svg{transform:translateY(-2px)}
 .section-menu-btn.is-open svg{transform:rotate(45deg) scale(1.08)}
 @media(prefers-reduced-motion:reduce){.go-up-btn,.section-menu-btn,.floating-call-btn,.go-up-btn svg,.section-menu-btn svg{transition:none}}
+
+/* Current language control: compact segmented switch for desktop and phones */
+.language-switcher{display:inline-flex;align-items:center;gap:3px;padding:4px;border:1px solid var(--hairline);border-radius:999px;background:rgba(255,255,255,.86);box-shadow:0 6px 18px rgba(20,23,31,.08);direction:ltr}
+.language-option{min-width:48px;min-height:34px;padding:0 11px;border:0;border-radius:999px;background:transparent;color:var(--muted);font:600 12px var(--font-body);cursor:pointer;transition:color .2s ease,background .2s ease,transform .2s var(--motion-spring)}
+.language-option:hover{transform:translateY(-1px);color:var(--navy)}.language-option.is-active{background:var(--navy);color:#fff;box-shadow:0 5px 12px rgba(23,35,63,.2)}
+body.detail-open .floating-call-btn{display:none}
+.floating-call-btn{left:24px;right:auto;bottom:82px}
+.detail-overlay{background-color:var(--site-bg-detail,#fff);background-image:var(--site-pattern-detail,none);background-size:cover;background-attachment:fixed}
+.detail-head,.detail-sticky-action{background-color:color-mix(in srgb,var(--site-bg-detail,#fff) 92%,transparent);background-image:var(--site-pattern-detail,none);background-size:cover}
+.detail-hero{position:relative}
+@media (hover:hover) and (pointer:fine){.detail-hero::after{content:"＋";position:absolute;inset:50% auto auto 50%;transform:translate(-50%,-50%) scale(.85);width:54px;height:54px;display:grid;place-items:center;border-radius:50%;background:rgba(23,35,63,.84);color:#fff;font-size:30px;line-height:1;opacity:0;pointer-events:none;box-shadow:0 10px 24px rgba(23,35,63,.28);transition:opacity .2s ease,transform .25s var(--motion-spring)}.detail-hero:hover::after{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+.section-soft .section-head{padding:clamp(18px,3vw,30px);border-radius:var(--radius-card);background-color:var(--site-bg-blue);background-image:var(--site-pattern-blue);background-size:cover;box-shadow:var(--shadow-card)}
+@media(max-width:560px){.language-switcher{padding:3px}.language-option{min-width:42px;min-height:32px;padding:0 8px;font-size:11px}.floating-call-btn{left:14px;right:auto;bottom:140px;width:48px;height:48px}.section-soft .section-head{padding:16px}}
+
+/* The managed blue surface also covers every section title band */
+body[data-site-shell="public"] .segment-hero{background-color:var(--site-bg-blue);background-image:var(--site-pattern-blue);background-size:cover;color:var(--ink)}
+body[data-site-shell="public"] .segment-hero h1{color:var(--ink)}
+body[data-site-shell="public"] .segment-hero p{color:color-mix(in srgb,var(--ink) 72%,transparent)}
+body[data-site-shell="public"] .segment-hero .label-eyebrow{color:color-mix(in srgb,var(--ink) 60%,transparent)!important}

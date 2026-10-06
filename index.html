@@ -36,7 +36,7 @@
       <a class="nav-link" href="#contact" data-i18n="nav.contact">تواصل معنا</a>
     </nav>
     <div class="nav-cta">
-      <button class="lang-toggle" id="langToggle" aria-label="تبديل اللغة" aria-live="polite"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3c2.4 2.5 3.6 5.5 3.6 9S14.4 18.5 12 21c-2.4-2.5-3.6-5.5-3.6-9S9.6 5.5 12 3Z"></path></svg><span data-lang-btn="ar" class="is-active">العربية</span><span class="lang-divider">/</span><span data-lang-btn="en">EN</span></button>
+      <div class="language-switcher" id="languageSwitcher" role="group" aria-label="اختيار اللغة"><button type="button" class="language-option is-active" data-language="ar" aria-pressed="true">العربية</button><button type="button" class="language-option" data-language="en" aria-pressed="false">EN</button></div>
       <button class="btn btn-primary" data-open-quote data-i18n="cta.quote">اطلب عرض سعر</button>
       <button class="hamburger" id="hamburgerBtn" aria-label="القائمة" aria-controls="drawer" aria-expanded="false"><span></span><span></span><span></span></button>
     </div>
@@ -492,6 +492,10 @@ function productColors(p){
   if (Array.isArray(p.secondaryColors)) return p.secondaryColors;
   return p.secondaryColor ? [p.secondaryColor] : [];
 }
+function colorLabel(id){
+  const item = SITE?.settings?.colorPalette?.find(color => color.id === id);
+  return item ? (tf(item, "name", currentLang) || item.name || id) : (I18N[currentLang]?.colors?.[id] || id);
+}
 function renderProductCategoryFilters(containerId, sectionKey, category, show, onChange){
   const wrap = document.getElementById(containerId);
   const items = Array.isArray(category?.productCategories) ? category.productCategories : [];
@@ -604,6 +608,8 @@ function applySiteBackgrounds(site){
   style.setProperty("--site-bg-white", safeHexColor(white.color, "#FFFFFF"));
   style.setProperty("--site-pattern-blue", blue.patternUrl ? `url("${safeImageUrl(blue.patternUrl)}")` : "none");
   style.setProperty("--site-pattern-white", white.patternUrl ? `url("${safeImageUrl(white.patternUrl)}")` : "none");
+  style.setProperty("--site-bg-detail", safeHexColor(backgrounds.detail?.color, "#FFFFFF"));
+  style.setProperty("--site-pattern-detail", backgrounds.detail?.patternUrl ? `url("${safeImageUrl(backgrounds.detail.patternUrl)}")` : "none");
 }
 function applyTranslations(){
   document.documentElement.lang = currentLang;
@@ -617,16 +623,20 @@ function applyTranslations(){
     const key = el.dataset.i18nPlaceholder;
     if (dict[key] !== undefined) el.placeholder = dict[key];
   });
-  document.querySelectorAll("[data-lang-btn]").forEach(el => {
-    el.classList.toggle("is-active", el.dataset.langBtn === currentLang);
+  document.querySelectorAll("[data-language]").forEach(el => {
+    const active = el.dataset.language === currentLang;
+    el.classList.toggle("is-active", active);
+    el.setAttribute("aria-pressed", String(active));
   });
   if (SITE) renderAll();
 }
-document.getElementById("langToggle").addEventListener("click", () => {
-  currentLang = currentLang === "ar" ? "en" : "ar";
+document.querySelectorAll("[data-language]").forEach(button => button.addEventListener("click", () => {
+  const next = button.dataset.language;
+  if (!next || next === currentLang) return;
+  currentLang = next;
   localStorage.setItem("afak_lang", currentLang);
   applyTranslations();
-});
+}));
 
 /* ---------------- Header scroll + drawer ---------------- */
 const header = document.getElementById("siteHeader");
@@ -874,6 +884,8 @@ function setDetailOpen(open){
   }
   detailOverlay.setAttribute("aria-hidden", String(!isOpen));
   document.body.classList.toggle("detail-open", isOpen);
+  const floatingCall = document.getElementById("floatingCallBtn");
+  if (floatingCall) floatingCall.hidden = isOpen || !normalizePhone(SITE?.settings?.phone);
   if (isOpen) requestAnimationFrame(() => document.getElementById("detailClose")?.focus());
   else { lastDetailFocus?.focus?.(); lastDetailFocus = null; }
 }
@@ -1055,7 +1067,7 @@ function openDetail(p, categoryName, categoryId){
   };
   const L = SPEC_LABELS[currentLang];
   const rows = [
-    [L.size, tf(p,"size",currentLang) || p.size], [L.color, [p.color, ...(p.secondaryColors || [])].filter(Boolean).join(", ")],
+    [L.size, tf(p,"size",currentLang) || p.size], [L.color, [p.color, ...productColors(p).map(colorLabel)].filter(Boolean).join(", ")],
     [L.material, tf(p,"material",currentLang) || p.material],
     [L.sku, p.sku]
   ];
@@ -1780,7 +1792,7 @@ function renderAll(){
   if (favicon) favicon.href = safeImageUrl(SITE.settings?.faviconUrl || SITE.settings?.logoUrl || "");
   const floatingCall = document.getElementById("floatingCallBtn");
   const sitePhone = normalizePhone(SITE.settings?.phone);
-  if (floatingCall) { floatingCall.href = sitePhone ? `tel:${sitePhone}` : "tel:"; floatingCall.hidden = !sitePhone; }
+  if (floatingCall) { floatingCall.href = sitePhone ? `tel:${sitePhone}` : "tel:"; floatingCall.hidden = !sitePhone || detailOverlay?.classList.contains("is-open"); }
   applyAdminSectionCopy();
   const sv = SITE.settings?.sectionsVisible || {};
   

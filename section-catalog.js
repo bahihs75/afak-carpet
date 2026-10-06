@@ -23,7 +23,8 @@ let selectedSort = "default";
 let section;
 
 function localized(value, english = "") { return lang === "en" || lang === "fr" ? (english || value || "") : (value || english || ""); }
-function colorName(id) { return copy.colors[id] || id; }
+function colorName(id) { const item = palette.find(color => color.id === id); return item ? (localized(item.name, item.nameEn) || item.name || id) : (copy.colors[id] || id); }
+function colorHex(id) { return palette.find(color => color.id === id)?.hex || id; }
 function money(value) { const number = Number(value); return Number.isFinite(number) ? `${new Intl.NumberFormat(lang === "ar" ? "ar-DZ" : "fr-DZ").format(number)} ${copy.price}` : ""; }
 function imageUrl(value) { return /^https?:\/\//i.test(String(value || "")) ? String(value) : ""; }
 function availableCategory(id) { return section?.productCategories?.find(item => item.id === id); }
@@ -53,7 +54,7 @@ function renderFilters() {
   if (sectionId === "schools" || section?.showColorFilter === false) { colorFilters.closest(".catalog-filter-group")?.remove(); return; }
   const source = selectedCategory ? products.filter(product => product.productCategoryId === selectedCategory) : products;
   const ids = [...new Set(source.flatMap(productColors))];
-  colorFilters.innerHTML = `<button type="button" class="catalog-filter is-active" data-value="">${esc(copy.allColors)}</button>${ids.map(id => `<button type="button" class="catalog-filter" data-value="${esc(id)}"><span class="catalog-color-dot" style="--dot:${esc(id)}"></span>${esc(colorName(id))}</button>`).join("")}`;
+  colorFilters.innerHTML = `<button type="button" class="catalog-filter is-active" data-value="">${esc(copy.allColors)}</button>${ids.map(id => `<button type="button" class="catalog-filter" data-value="${esc(id)}"><span class="catalog-color-dot" style="--dot:${esc(colorHex(id))}"></span>${esc(colorName(id))}</button>`).join("")}`;
   colorFilters.querySelectorAll("button").forEach(button => button.addEventListener("click", () => { selectedColor = button.dataset.value; renderProducts(); }));
   let sort = document.getElementById("catalogPriceSort");
   if (!sort) { sort=document.createElement("select"); sort.id="catalogPriceSort"; sort.className="catalog-price-sort"; sort.innerHTML=`<option value="default">${esc(lang === "ar" ? "الترتيب الافتراضي" : lang === "fr" ? "Ordre par défaut" : "Default order")}</option><option value="asc">${esc(lang === "ar" ? "السعر: من الأقل إلى الأعلى" : lang === "fr" ? "Prix croissant" : "Price: low to high")}</option><option value="desc">${esc(lang === "ar" ? "السعر: من الأعلى إلى الأقل" : lang === "fr" ? "Prix décroissant" : "Price: high to low")}</option>`; colorFilters.closest(".catalog-filter-panel")?.append(sort); sort.addEventListener("change",()=>{selectedSort=sort.value; renderProducts();}); }
@@ -73,9 +74,19 @@ function renderProducts() {
   if (selectedSort !== "default") visible = [...visible].sort((a,b) => { const pa=Number(a.price)||0, pb=Number(b.price)||0; return selectedSort === "asc" ? pa-pb : pb-pa; });
   grid.innerHTML = visible.map(card).join(""); empty.hidden = visible.length > 0; status.textContent = `${visible.length} / ${products.length}`; setActive(categoryFilters, selectedCategory); setActive(colorFilters, selectedColor);
 }
+function ensureCatalogUtilities(){
+  if (document.getElementById("catalogFloatingTop")) return;
+  const wrap = document.createElement("div"); wrap.className = "catalog-floating-utilities";
+  wrap.innerHTML = `<button type="button" id="catalogFloatingTop" aria-label="${copy.home}">↑</button><a href="#contact" id="catalogFloatingCall" aria-label="${copy.contact}"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 0 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></a>`;
+  document.body.appendChild(wrap);
+  const top = wrap.querySelector("#catalogFloatingTop"); top.addEventListener("click", () => window.scrollTo({top:0,behavior:"smooth"}));
+  const phone = String(site?.settings?.phone || "").replace(/[^0-9+]/g, "");
+  const call = wrap.querySelector("#catalogFloatingCall"); call.href = phone ? `tel:${phone}` : `${mainPath}#contact`;
+  window.addEventListener("scroll", () => top.classList.toggle("is-visible", window.scrollY > window.innerHeight * .55), {passive:true});
+}
 async function init() {
   status.textContent = copy.loading;
-  try { const site = await getSiteOnce(); applySiteBackgrounds(site); section = (site.categories || []).find(item => item.id === sectionId) || { productCategories: [] }; section.imageProtectionEnabled = site.settings?.imageProtectionEnabled !== false; products = (site.products || []).filter(product => product.categoryId === sectionId && isProductPublic(product)).sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0)); renderFilters(); renderProducts(); protectImages(); }
+  try { site = await getSiteOnce(); applySiteBackgrounds(site); ensureCatalogUtilities(); section = (site.categories || []).find(item => item.id === sectionId) || { productCategories: [] }; section.imageProtectionEnabled = site.settings?.imageProtectionEnabled !== false; products = (site.products || []).filter(product => product.categoryId === sectionId && isProductPublic(product)).sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0)); renderFilters(); renderProducts(); protectImages(); }
   catch (error) { console.error(error); status.textContent = copy.error; empty.hidden = false; }
 }
 init();

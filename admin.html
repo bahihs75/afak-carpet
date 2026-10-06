@@ -145,6 +145,8 @@
           <div class="field"><label for="setWhiteBgColor">لون الخلفية البيضاء</label><input type="color" id="setWhiteBgColor" value="#FFFFFF"></div>
           <div class="field"><label for="setBlueBgFile">نمط/صورة الخلفية الزرقاء</label><input type="file" id="setBlueBgFile" accept="image/png,image/webp,image/jpeg"><img id="setBlueBgPreview" class="admin-bg-preview" alt="" hidden><button type="button" class="btn btn-text clear-bg-btn" data-preview="setBlueBgPreview">إزالة نمط الخلفية الأزرق</button></div>
           <div class="field"><label for="setWhiteBgFile">نمط/صورة الخلفية البيضاء</label><input type="file" id="setWhiteBgFile" accept="image/png,image/webp,image/jpeg"><img id="setWhiteBgPreview" class="admin-bg-preview" alt="" hidden><button type="button" class="btn btn-text clear-bg-btn" data-preview="setWhiteBgPreview">إزالة نمط الخلفية الأبيض</button></div>
+          <div class="field"><label for="setDetailBgColor">لون خلفية صفحة المنتج</label><input type="color" id="setDetailBgColor" value="#FFFFFF"></div>
+          <div class="field"><label for="setDetailBgFile">نمط/صورة خلفية صفحة المنتج</label><input type="file" id="setDetailBgFile" accept="image/png,image/webp,image/jpeg"><img id="setDetailBgPreview" class="admin-bg-preview" alt="" hidden><button type="button" class="btn btn-text clear-bg-btn" data-preview="setDetailBgPreview">إزالة نمط خلفية المنتج</button></div>
         </div>
       </div>
       <div class="admin-card">
@@ -1018,7 +1020,8 @@ function renderSettings(){
   const backgrounds = s.backgrounds || {};
   document.getElementById("setBlueBgColor").value = backgrounds.blue?.color || "#EEF5FF";
   document.getElementById("setWhiteBgColor").value = backgrounds.white?.color || "#FFFFFF";
-  [ ["setBlueBgPreview", backgrounds.blue?.patternUrl], ["setWhiteBgPreview", backgrounds.white?.patternUrl] ].forEach(([id, url]) => { const img = document.getElementById(id); if (url) { img.src = url; img.hidden = false; img.dataset.value = url; } });
+  document.getElementById("setDetailBgColor").value = backgrounds.detail?.color || "#FFFFFF";
+  [ ["setBlueBgPreview", backgrounds.blue?.patternUrl], ["setWhiteBgPreview", backgrounds.white?.patternUrl], ["setDetailBgPreview", backgrounds.detail?.patternUrl] ].forEach(([id, url]) => { const img = document.getElementById(id); if (url) { img.src = url; img.hidden = false; img.dataset.value = url; } });
   document.getElementById("setImageProtectionEnabled").checked = s.imageProtectionEnabled !== false;
   document.getElementById("setCfToken").value = s.cfAnalyticsToken || "";
   document.getElementById("setMetaPixel").value = s.metaPixelId || "";
@@ -1217,6 +1220,7 @@ async function bindBackgroundUpload(inputId, previewId){
 }
 bindBackgroundUpload("setBlueBgFile", "setBlueBgPreview");
 bindBackgroundUpload("setWhiteBgFile", "setWhiteBgPreview");
+bindBackgroundUpload("setDetailBgFile", "setDetailBgPreview");
 document.querySelectorAll(".clear-bg-btn").forEach(btn => btn.addEventListener("click", () => { const img=document.getElementById(btn.dataset.preview); img.removeAttribute("src"); img.hidden=true; img.dataset.value=""; toast("تمت إزالة نمط الخلفية؛ اضغط حفظ الإعدادات"); }));
 document.getElementById("setFaviconFile")?.addEventListener("change", async e => { const file=e.target.files?.[0]; if(!file) return; try { const url=await uploadOne(file); const img=document.getElementById("setFaviconPreview"); img.src=url; img.hidden=false; img.dataset.value=url; toast("تم رفع أيقونة المتصفح"); } catch(err){ toast("فشل رفع الأيقونة: "+err.message); } });
 
@@ -1251,7 +1255,8 @@ document.getElementById("saveSettingsBtn").addEventListener("click", async () =>
     watermarkText: "",
     backgrounds: {
       blue: { color: document.getElementById("setBlueBgColor").value, patternUrl: document.getElementById("setBlueBgPreview").dataset.value || "" },
-      white: { color: document.getElementById("setWhiteBgColor").value, patternUrl: document.getElementById("setWhiteBgPreview").dataset.value || "" }
+      white: { color: document.getElementById("setWhiteBgColor").value, patternUrl: document.getElementById("setWhiteBgPreview").dataset.value || "" },
+      detail: { color: document.getElementById("setDetailBgColor").value, patternUrl: document.getElementById("setDetailBgPreview").dataset.value || "" }
     },
     imageProtectionEnabled: document.getElementById("setImageProtectionEnabled").checked,
     cfAnalyticsToken: document.getElementById("setCfToken").value.trim(),
