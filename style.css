@@ -941,3 +941,70 @@ body[data-site-shell="public"] .segment-hero{background-color:var(--site-bg-blue
 body[data-site-shell="public"] .segment-hero h1{color:var(--ink)}
 body[data-site-shell="public"] .segment-hero p{color:color-mix(in srgb,var(--ink) 72%,transparent)}
 body[data-site-shell="public"] .segment-hero .label-eyebrow{color:color-mix(in srgb,var(--ink) 60%,transparent)!important}
+
+
+/* ==========================================================================
+   AFAK public UI consistency pass — one geometry language for cards and contact
+   ========================================================================== */
+body[data-site-shell="public"]{
+  --public-card-radius:var(--radius-card);
+  --public-control-radius:var(--radius-control);
+  --public-icon-radius:16px;
+}
+body[data-site-shell="public"] :where(.cat-card,.product-card,.catalog-card,.testimonial-card,.project-tile,.stat-item,.contact-info li,.contact-actions,.contact-panel,.about-grid .img-wrap,.admin-bg-preview){
+  border-radius:var(--public-card-radius);
+}
+body[data-site-shell="public"] :where(.btn,.btn-primary,.btn-outline,.btn-whatsapp,.btn-call,.product-sort select,.catalog-price-sort,input,select,textarea){
+  border-radius:var(--public-control-radius);
+}
+body[data-site-shell="public"] :where(.cat-card,.product-card,.catalog-card,.testimonial-card,.stat-item,.contact-info li,.contact-actions){
+  box-shadow:var(--shadow-card);
+}
+body[data-site-shell="public"] :where(.cat-card,.product-card,.catalog-card,.testimonial-card,.stat-item,.contact-info li,.contact-actions){
+  border:1px solid color-mix(in srgb,var(--navy) 10%,var(--hairline));
+}
+
+/* Contact information cards: clear hierarchy, equal height and premium icon tiles */
+body[data-site-shell="public"] #contact .contact-grid{align-items:stretch;gap:clamp(24px,5vw,72px)}
+body[data-site-shell="public"] #contact .contact-grid > div:first-child{min-width:0}
+body[data-site-shell="public"] #contact .contact-grid > div:last-child{display:flex;align-items:center}
+body[data-site-shell="public"] .contact-info{display:grid;gap:12px;margin-top:24px}
+body[data-site-shell="public"] .contact-info li{display:grid;grid-template-columns:48px minmax(0,1fr) 24px;align-items:center;gap:14px;min-height:82px;padding:14px 16px;background:color-mix(in srgb,var(--canvas) 88%,transparent);border-bottom:0;transition:transform .22s var(--motion-spring),box-shadow .22s var(--motion-spring),border-color .22s ease}
+body[data-site-shell="public"] .contact-info li:hover{transform:translateY(-3px);box-shadow:var(--shadow-card-hover);border-color:color-mix(in srgb,var(--navy) 24%,var(--hairline))}
+body[data-site-shell="public"] .contact-item-icon{width:48px;height:48px;display:grid;place-items:center;border-radius:var(--public-icon-radius);background:var(--navy);color:#fff;box-shadow:0 8px 18px rgba(23,35,63,.18)}
+body[data-site-shell="public"] .contact-item-icon svg{width:23px;height:23px;display:block}
+body[data-site-shell="public"] .contact-item-copy{display:grid;gap:4px;min-width:0}
+body[data-site-shell="public"] .contact-item-copy .k{font-family:var(--font-body);font-size:12px;font-weight:700;letter-spacing:0;color:var(--muted);text-transform:none}
+body[data-site-shell="public"] .contact-item-copy a,.contact-item-copy .contact-value{min-width:0;color:var(--ink);font-size:clamp(14px,1.5vw,17px);line-height:1.55;overflow-wrap:anywhere;text-decoration:none}
+body[data-site-shell="public"] .contact-item-copy a:hover{color:var(--navy);text-decoration:underline;text-underline-offset:4px}
+body[data-site-shell="public"] .contact-item-arrow{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;color:var(--navy);font-size:16px;opacity:.62;transition:transform .22s var(--motion-spring),opacity .2s ease}
+body[data-site-shell="public"] .contact-info li:hover .contact-item-arrow{opacity:1;transform:translate(2px,-2px)}
+html[dir="rtl"] body[data-site-shell="public"] .contact-info li:hover .contact-item-arrow{transform:translate(-2px,-2px)}
+
+/* Social links use the same control radius, icon tile and elevation */
+body[data-site-shell="public"] .social-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:18px}
+body[data-site-shell="public"] .social-row a{min-height:58px;padding:9px 11px;border:1px solid var(--hairline);border-radius:var(--public-control-radius);background:color-mix(in srgb,var(--canvas) 84%,transparent);box-shadow:0 5px 16px rgba(20,23,31,.05);display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;transition:transform .22s var(--motion-spring),background .22s ease,color .22s ease,border-color .22s ease,box-shadow .22s ease}
+body[data-site-shell="public"] .social-row a:hover{transform:translateY(-3px);background:var(--navy);border-color:var(--navy);color:#fff;box-shadow:0 12px 24px rgba(23,35,63,.18)}
+body[data-site-shell="public"] .social-icon{width:30px;height:30px;display:grid;place-items:center;border-radius:10px;background:color-mix(in srgb,var(--navy) 10%,transparent);color:var(--navy);transition:background .22s ease,color .22s ease}
+body[data-site-shell="public"] .social-icon svg{width:17px;height:17px}
+body[data-site-shell="public"] .social-row a:hover .social-icon{background:rgba(255,255,255,.14);color:#fff}
+body[data-site-shell="public"] .social-arrow{font-size:13px;opacity:.48;transition:transform .22s var(--motion-spring),opacity .2s ease}
+body[data-site-shell="public"] .social-row a:hover .social-arrow{opacity:1;transform:translate(2px,-2px)}
+html[dir="rtl"] body[data-site-shell="public"] .social-row a:hover .social-arrow{transform:translate(-2px,-2px)}
+
+/* The two contact CTAs are equal, aligned controls rather than unrelated boxes */
+body[data-site-shell="public"] .contact-actions{width:100%;padding:clamp(18px,3vw,28px);background:color-mix(in srgb,var(--site-bg-blue) 72%,var(--canvas));gap:12px}
+body[data-site-shell="public"] .contact-actions .btn,.contact-actions .btn-whatsapp{width:100%;min-height:56px;height:auto;padding:0 18px;border-radius:var(--public-control-radius);font:700 14px var(--font-body);box-shadow:0 8px 20px rgba(23,35,63,.12)}
+body[data-site-shell="public"] .contact-actions .btn-whatsapp{border-color:var(--hairline);background:var(--canvas);color:var(--navy)}
+body[data-site-shell="public"] .contact-actions .btn-whatsapp:hover{background:var(--navy);border-color:var(--navy);color:#fff}
+body[data-site-shell="public"] .contact-actions .btn-whatsapp svg{width:21px;height:21px}
+
+/* Consistent public cards and controls on small screens */
+@media(max-width:700px){
+  body[data-site-shell="public"] .social-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+  body[data-site-shell="public"] .contact-info li{min-height:76px;grid-template-columns:44px minmax(0,1fr) 20px;padding:12px}
+  body[data-site-shell="public"] .contact-item-icon{width:44px;height:44px;border-radius:14px}
+  body[data-site-shell="public"] .contact-item-icon svg{width:21px;height:21px}
+  body[data-site-shell="public"] .contact-actions{padding:14px;border-radius:var(--public-card-radius)}
+}
+@media(prefers-reduced-motion:reduce){body[data-site-shell="public"] .contact-info li,body[data-site-shell="public"] .social-row a,body[data-site-shell="public"] .contact-item-arrow,body[data-site-shell="public"] .social-arrow{transition:none}}

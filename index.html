@@ -1643,7 +1643,7 @@ function renderContact(site){
     ["العنوان", cleanText(s.address, 240), null, CONTACT_ICONS.pin]
   ].filter(r => r[1]);
   contactList.innerHTML = rows.map(([k,v,href,icon]) => `
-    <li><span class="k" style="display:flex; align-items:center; gap:8px"><span style="width:16px; height:16px; display:inline-flex">${icon}</span>${esc(k)}</span>${href ? `<a href="${esc(href)}">${esc(v)}</a>` : `<span>${esc(v)}</span>`}</li>
+    <li class="contact-item"><span class="contact-item-icon" aria-hidden="true">${icon}</span><span class="contact-item-copy"><span class="k">${esc(k)}</span>${href ? `<a href="${esc(href)}">${esc(v)}</a>` : `<span class="contact-value">${esc(v)}</span>`}</span><span class="contact-item-arrow" aria-hidden="true">↗</span></li>
   `).join("") || '<li class="empty-state">أضف بيانات التواصل من لوحة التحكم.</li>';
   footerContact.innerHTML = rows.map(([k,v,href]) => `
     <li>${href ? `<a href="${esc(href)}">${esc(v)}</a>` : esc(v)}</li>
@@ -1654,7 +1654,7 @@ function renderContact(site){
   socialRow.innerHTML = Object.entries(s.socials || {})
     .map(([key,url]) => [key, safePageUrl(url, "")])
     .filter(([,url]) => url)
-    .map(([key,url]) => `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer"><span class="social-icon">${SOCIAL_ICONS[key]||"•"}</span><span>${esc(socialLabels[key] || key)}</span></a>`)
+    .map(([key,url]) => `<a class="social-link social-${esc(key)}" href="${esc(url)}" target="_blank" rel="noopener noreferrer"><span class="social-icon" aria-hidden="true">${SOCIAL_ICONS[key]||"•"}</span><span>${esc(socialLabels[key] || key)}</span><span class="social-arrow" aria-hidden="true">↗</span></a>`)
     .join("");
 
   const waBtn = document.getElementById("contactWhatsappBtn");
