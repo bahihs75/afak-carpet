@@ -1642,9 +1642,10 @@ function renderContact(site){
     ["البريد الإلكتروني", email, validEmail ? `mailto:${email}` : null, CONTACT_ICONS.mail],
     ["العنوان", cleanText(s.address, 240), null, CONTACT_ICONS.pin]
   ].filter(r => r[1]);
-  contactList.innerHTML = rows.map(([k,v,href,icon]) => `
-    <li class="contact-item"><span class="contact-item-icon" aria-hidden="true">${icon}</span><span class="contact-item-copy"><span class="k">${esc(k)}</span>${href ? `<a href="${esc(href)}">${esc(v)}</a>` : `<span class="contact-value">${esc(v)}</span>`}</span><span class="contact-item-arrow" aria-hidden="true">↗</span></li>
-  `).join("") || '<li class="empty-state">أضف بيانات التواصل من لوحة التحكم.</li>';
+  contactList.innerHTML = rows.map(([k,v,href,icon]) => {
+    const content = `<span class="contact-item-icon contact-icon-${esc(k === "الهاتف" ? "phone" : k === "واتساب" ? "whatsapp" : k === "البريد الإلكتروني" ? "mail" : "pin")}" aria-hidden="true">${icon}</span><span class="contact-item-copy"><span class="k">${esc(k)}</span>${href ? `<span class="contact-value">${esc(v)}</span>` : `<span class="contact-value">${esc(v)}</span>`}</span>`;
+    return href ? `<a class="contact-item contact-item-link" href="${esc(href)}">${content}</a>` : `<li class="contact-item">${content}</li>`;
+  }).join("") || '<li class="empty-state">أضف بيانات التواصل من لوحة التحكم.</li>';
   footerContact.innerHTML = rows.map(([k,v,href]) => `
     <li>${href ? `<a href="${esc(href)}">${esc(v)}</a>` : esc(v)}</li>
   `).join("");
@@ -1654,7 +1655,7 @@ function renderContact(site){
   socialRow.innerHTML = Object.entries(s.socials || {})
     .map(([key,url]) => [key, safePageUrl(url, "")])
     .filter(([,url]) => url)
-    .map(([key,url]) => `<a class="social-link social-${esc(key)}" href="${esc(url)}" target="_blank" rel="noopener noreferrer"><span class="social-icon" aria-hidden="true">${SOCIAL_ICONS[key]||"•"}</span><span>${esc(socialLabels[key] || key)}</span><span class="social-arrow" aria-hidden="true">↗</span></a>`)
+    .map(([key,url]) => `<a class="social-link social-${esc(key)}" href="${esc(url)}" target="_blank" rel="noopener noreferrer"><span class="social-icon" aria-hidden="true">${SOCIAL_ICONS[key]||"•"}</span><span>${esc(socialLabels[key] || key)}</span></a>`)
     .join("");
 
   const waBtn = document.getElementById("contactWhatsappBtn");

@@ -978,8 +978,8 @@ body[data-site-shell="public"] .contact-item-copy .k{font-family:var(--font-body
 body[data-site-shell="public"] .contact-item-copy a,.contact-item-copy .contact-value{min-width:0;color:var(--ink);font-size:clamp(14px,1.5vw,17px);line-height:1.55;overflow-wrap:anywhere;text-decoration:none}
 body[data-site-shell="public"] .contact-item-copy a:hover{color:var(--navy);text-decoration:underline;text-underline-offset:4px}
 body[data-site-shell="public"] .contact-item-arrow{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;color:var(--navy);font-size:16px;opacity:.62;transition:transform .22s var(--motion-spring),opacity .2s ease}
-body[data-site-shell="public"] .contact-info li:hover .contact-item-arrow{opacity:1;transform:translate(2px,-2px)}
-html[dir="rtl"] body[data-site-shell="public"] .contact-info li:hover .contact-item-arrow{transform:translate(-2px,-2px)}
+body[data-site-shell="public"] .contact-info .contact-item:hover .contact-item-arrow{opacity:1;transform:translate(2px,-2px)}
+html[dir="rtl"] body[data-site-shell="public"] .contact-info .contact-item:hover .contact-item-arrow{transform:translate(-2px,-2px)}
 
 /* Social links use the same control radius, icon tile and elevation */
 body[data-site-shell="public"] .social-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:18px}
@@ -1008,3 +1008,74 @@ body[data-site-shell="public"] .contact-actions .btn-whatsapp svg{width:21px;hei
   body[data-site-shell="public"] .contact-actions{padding:14px;border-radius:var(--public-card-radius)}
 }
 @media(prefers-reduced-motion:reduce){body[data-site-shell="public"] .contact-info li,body[data-site-shell="public"] .social-row a,body[data-site-shell="public"] .contact-item-arrow,body[data-site-shell="public"] .social-arrow{transition:none}}
+
+
+/* ==========================================================================
+   AFAK unified visual system — creamy canvas, colored touch targets, no ornament arrows
+   ========================================================================== */
+:root{
+  --canvas:#FFFEFB;
+  --canvas-soft:#F7F8F6;
+  --canvas-strong:#EEF0ED;
+  --site-bg-white:#FFFEFB;
+  --cream-shadow:0 12px 30px rgba(255,255,255,.84),0 3px 10px rgba(20,23,31,.055);
+  --cream-shadow-hover:0 18px 42px rgba(255,255,255,.94),0 8px 20px rgba(20,23,31,.10);
+  --icon-phone:#1D4ED8;
+  --icon-whatsapp:#16A34A;
+  --icon-mail:#C27803;
+  --icon-pin:#D24A4A;
+  --icon-instagram:#D62976;
+  --icon-facebook:#1877F2;
+  --icon-tiktok:#111827;
+  --icon-linkedin:#0A66C2;
+}
+body[data-site-shell="public"]{background-color:var(--site-bg-white);color:var(--ink)}
+body[data-site-shell="public"] :where(.cat-card,.product-card,.catalog-card,.testimonial-card,.project-tile,.stat-item,.contact-info li,.contact-actions,.about-grid .img-wrap,.social-row a,.section-head,.catalog-filter-panel){background-color:var(--canvas);box-shadow:var(--cream-shadow)}
+body[data-site-shell="public"] :where(.cat-card,.product-card,.catalog-card,.testimonial-card,.project-tile,.stat-item,.contact-info li,.contact-actions,.about-grid .img-wrap,.social-row a,.section-head,.catalog-filter-panel){border-color:#E8E9E5}
+body[data-site-shell="public"] :where(.btn,.btn-primary,.btn-whatsapp,.btn-call,.language-switcher,.product-sort select,.catalog-price-sort){min-height:48px}
+body[data-site-shell="public"] :where(.btn,.btn-primary,.btn-whatsapp,.btn-call){border-radius:var(--radius-control)}
+
+/* Real tap targets: the contact icon and card are the clickable control */
+body[data-site-shell="public"] .contact-info{gap:14px}
+body[data-site-shell="public"] .contact-info .contact-item{display:grid;grid-template-columns:52px minmax(0,1fr);align-items:center;min-height:84px;padding:14px 16px;border:1px solid #E8E9E5;border-radius:var(--radius-card);background:var(--canvas);box-shadow:var(--cream-shadow);text-decoration:none;color:inherit;transition:transform .22s var(--motion-spring),box-shadow .22s var(--motion-spring)}
+body[data-site-shell="public"] .contact-info .contact-item::after{display:none}
+body[data-site-shell="public"] .contact-item-link{cursor:pointer}
+body[data-site-shell="public"] .contact-item-link:hover{transform:translateY(-3px);box-shadow:var(--cream-shadow-hover);text-decoration:none}
+body[data-site-shell="public"] .contact-item-icon{width:52px;height:52px;display:grid;place-items:center;border-radius:16px;color:#fff;box-shadow:0 8px 18px rgba(20,23,31,.14)}
+body[data-site-shell="public"] .contact-item-icon svg{width:27px;height:27px;display:block}
+body[data-site-shell="public"] .contact-icon-phone{background:var(--icon-phone)}
+body[data-site-shell="public"] .contact-icon-whatsapp{background:var(--icon-whatsapp)}
+body[data-site-shell="public"] .contact-icon-mail{background:var(--icon-mail)}
+body[data-site-shell="public"] .contact-icon-pin{background:var(--icon-pin)}
+body[data-site-shell="public"] .contact-item-copy{padding-inline-start:2px}
+body[data-site-shell="public"] .contact-item-copy .k{font-size:12px;font-weight:700;color:var(--muted);font-family:var(--font-body);text-transform:none}
+body[data-site-shell="public"] .contact-item-copy .contact-value{display:block;margin-top:3px;color:var(--ink);font-size:clamp(15px,1.6vw,18px);line-height:1.55;overflow-wrap:anywhere}
+body[data-site-shell="public"] .contact-item-link:focus-visible{outline:3px solid color-mix(in srgb,var(--navy) 28%,transparent);outline-offset:3px}
+
+/* Colored modern social icons — no decorative arrow badges */
+body[data-site-shell="public"] .social-row{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+body[data-site-shell="public"] .social-row a{min-height:64px;border-radius:var(--radius-control);padding:10px 12px;color:var(--ink);background:var(--canvas);box-shadow:var(--cream-shadow);text-decoration:none}
+body[data-site-shell="public"] .social-row a:hover{transform:translateY(-3px);box-shadow:var(--cream-shadow-hover)}
+body[data-site-shell="public"] .social-icon{width:42px;height:42px;border-radius:14px;color:#fff;flex:0 0 42px}
+body[data-site-shell="public"] .social-icon svg{width:23px;height:23px}
+body[data-site-shell="public"] .social-instagram .social-icon{background:var(--icon-instagram)}
+body[data-site-shell="public"] .social-facebook .social-icon{background:var(--icon-facebook)}
+body[data-site-shell="public"] .social-tiktok .social-icon{background:var(--icon-tiktok)}
+body[data-site-shell="public"] .social-linkedin .social-icon{background:var(--icon-linkedin)}
+body[data-site-shell="public"] .social-row a:hover .social-icon{color:#fff;background:inherit}
+body[data-site-shell="public"] .social-row a:focus-visible{outline:3px solid color-mix(in srgb,var(--navy) 28%,transparent);outline-offset:3px}
+
+/* Keep CTA controls together without a second competing card */
+body[data-site-shell="public"] .contact-actions{padding:0;background:transparent;border:0;box-shadow:none}
+body[data-site-shell="public"] .contact-actions .btn,.contact-actions .btn-whatsapp{min-height:56px;box-shadow:var(--cream-shadow)}
+body[data-site-shell="public"] .contact-actions .btn-whatsapp{background:var(--canvas);border:1px solid #E8E9E5}
+
+@media(max-width:700px){
+  body[data-site-shell="public"] .social-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  body[data-site-shell="public"] .social-row a{min-height:60px;padding:8px}
+  body[data-site-shell="public"] .social-icon{width:40px;height:40px;flex-basis:40px;border-radius:13px}
+  body[data-site-shell="public"] .contact-info .contact-item{grid-template-columns:48px minmax(0,1fr);min-height:78px;padding:12px}
+  body[data-site-shell="public"] .contact-item-icon{width:48px;height:48px;border-radius:15px}
+  body[data-site-shell="public"] .contact-item-icon svg{width:25px;height:25px}
+}
+@media(prefers-reduced-motion:reduce){body[data-site-shell="public"] .contact-item-link,body[data-site-shell="public"] .social-row a{transition:none}}

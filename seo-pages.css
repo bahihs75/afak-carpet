@@ -345,3 +345,9 @@
 .catalog-floating-utilities{position:fixed;inset-inline-start:24px;inset-block-end:24px;z-index:var(--z-utility);display:flex;flex-direction:column;gap:10px}.catalog-floating-utilities button,.catalog-floating-utilities a{width:46px;height:46px;display:grid;place-items:center;border:0;border-radius:50%;background:var(--navy);color:#fff;text-decoration:none;box-shadow:0 10px 24px rgba(23,35,63,.2);font-size:21px;opacity:0;transform:translateY(10px);pointer-events:none;transition:opacity .22s ease,transform .25s var(--motion-spring)}.catalog-floating-utilities a{opacity:1;transform:none;pointer-events:auto;font-size:20px}.catalog-floating-utilities button.is-visible{opacity:1;transform:none;pointer-events:auto}@media(max-width:560px){.catalog-floating-utilities{inset-inline-start:14px;inset-block-end:18px}.catalog-floating-utilities button,.catalog-floating-utilities a{width:44px;height:44px}}
 
 .catalog-floating-utilities a svg{width:20px;height:20px}
+
+
+/* Shared public canvas for every localized catalog */
+.catalog-page{background-color:var(--site-bg-white);color:var(--ink)}
+.catalog-page :where(.catalog-filter-panel,.catalog-card,.catalog-empty,.catalog-seo-grid){background-color:var(--canvas);border-color:#E8E9E5;box-shadow:var(--cream-shadow)}
+.catalog-page .catalog-card:hover{box-shadow:var(--cream-shadow-hover)}

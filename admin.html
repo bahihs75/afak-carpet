@@ -142,10 +142,10 @@
         <p class="form-note mt-2">تحكم في لون الخلفية الزرقاء للأقسام الناعمة والخلفية البيضاء لباقي الصفحات، وأضف نمطًا أو صورة PNG/WebP مرفوعة إلى R2.</p>
         <div class="admin-grid-2">
           <div class="field"><label for="setBlueBgColor">لون الخلفية الزرقاء</label><input type="color" id="setBlueBgColor" value="#EEF5FF"></div>
-          <div class="field"><label for="setWhiteBgColor">لون الخلفية البيضاء</label><input type="color" id="setWhiteBgColor" value="#FFFFFF"></div>
+          <div class="field"><label for="setWhiteBgColor">لون الخلفية البيضاء</label><input type="color" id="setWhiteBgColor" value="#FFFEFB"></div>
           <div class="field"><label for="setBlueBgFile">نمط/صورة الخلفية الزرقاء</label><input type="file" id="setBlueBgFile" accept="image/png,image/webp,image/jpeg"><img id="setBlueBgPreview" class="admin-bg-preview" alt="" hidden><button type="button" class="btn btn-text clear-bg-btn" data-preview="setBlueBgPreview">إزالة نمط الخلفية الأزرق</button></div>
           <div class="field"><label for="setWhiteBgFile">نمط/صورة الخلفية البيضاء</label><input type="file" id="setWhiteBgFile" accept="image/png,image/webp,image/jpeg"><img id="setWhiteBgPreview" class="admin-bg-preview" alt="" hidden><button type="button" class="btn btn-text clear-bg-btn" data-preview="setWhiteBgPreview">إزالة نمط الخلفية الأبيض</button></div>
-          <div class="field"><label for="setDetailBgColor">لون خلفية صفحة المنتج</label><input type="color" id="setDetailBgColor" value="#FFFFFF"></div>
+          <div class="field"><label for="setDetailBgColor">لون خلفية صفحة المنتج</label><input type="color" id="setDetailBgColor" value="#FFFEFB"></div>
           <div class="field"><label for="setDetailBgFile">نمط/صورة خلفية صفحة المنتج</label><input type="file" id="setDetailBgFile" accept="image/png,image/webp,image/jpeg"><img id="setDetailBgPreview" class="admin-bg-preview" alt="" hidden><button type="button" class="btn btn-text clear-bg-btn" data-preview="setDetailBgPreview">إزالة نمط خلفية المنتج</button></div>
         </div>
       </div>
@@ -1019,8 +1019,8 @@ function renderSettings(){
   document.getElementById("setWatermarkText").value = "";
   const backgrounds = s.backgrounds || {};
   document.getElementById("setBlueBgColor").value = backgrounds.blue?.color || "#EEF5FF";
-  document.getElementById("setWhiteBgColor").value = backgrounds.white?.color || "#FFFFFF";
-  document.getElementById("setDetailBgColor").value = backgrounds.detail?.color || "#FFFFFF";
+  document.getElementById("setWhiteBgColor").value = backgrounds.white?.color || "#FFFEFB";
+  document.getElementById("setDetailBgColor").value = backgrounds.detail?.color || "#FFFEFB";
   [ ["setBlueBgPreview", backgrounds.blue?.patternUrl], ["setWhiteBgPreview", backgrounds.white?.patternUrl], ["setDetailBgPreview", backgrounds.detail?.patternUrl] ].forEach(([id, url]) => { const img = document.getElementById(id); if (url) { img.src = url; img.hidden = false; img.dataset.value = url; } });
   document.getElementById("setImageProtectionEnabled").checked = s.imageProtectionEnabled !== false;
   document.getElementById("setCfToken").value = s.cfAnalyticsToken || "";

@@ -37,8 +37,8 @@ export const DEFAULT_SITE = {
     watermarkText: "",
     backgrounds: {
       blue: { color: "#EEF5FF", patternUrl: "" },
-      white: { color: "#FFFFFF", patternUrl: "" },
-      detail: { color: "#FFFFFF", patternUrl: "" }
+      white: { color: "#FFFEFB", patternUrl: "" },
+      detail: { color: "#FFFEFB", patternUrl: "" }
     },
     webpQuality: 0.82,
     phone: "",
